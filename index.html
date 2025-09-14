@@ -24,13 +24,14 @@
     .ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
     .bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
     table{border-collapse:collapse;width:100%}
-    th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left}
+    th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
     th{background:#f9fafb}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
     pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
     .stat{font-size:13px;color:#374151}
     nav a{color:#2563eb;text-decoration:none}
     nav a:hover{text-decoration:underline}
+    .filetag{font-size:13px;color:#374151;margin:6px 0 0}
   </style>
 
   <!-- pdf.js（ESM） -->
@@ -50,11 +51,11 @@
     <header>
       <h1>高中職小論文格式自檢系統</h1>
       <p>純前端、本機解析、不上傳。支援 PDF（含頁首/頁碼/邊界 2cm）與 DOCX（文字規則）。</p>
-      <div class="stat" id="counterBox" style="display:none">目前累積自我檢查人次：<span id="counter">—</span></div>
-    <div class="muted" style="margin-top:12px">
-      網站建置：<b>國立佳冬高農 圖書館</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
-      © 2025 CTVS Library 凡事皆正面  · Email: r91628120@ctvs.ptc.edu.tw
-    </div>
+      <div class="stat" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
+      <div class="muted" style="margin-top:12px">
+        網站建置：<b>國立佳冬高農 圖書館</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
+        © 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw
+      </div>
     </header>
 
     <section class="card">
@@ -96,6 +97,7 @@
 
     <section id="resultCard" class="card" style="display:none">
       <h3>檢查結果</h3>
+      <div id="fileTag" class="filetag"></div>
       <table>
         <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
         <tbody id="tbody"></tbody>
@@ -133,7 +135,7 @@
           <li>可下載 HTML 報告保存。</li>
         </ol>
         <ul>
-          <li><b>PDF 專屬檢查：</b>頁首是否存在、頁碼是否置中且連號、邊界是否 ≥ 2 公分。</li>
+          <li><b>PDF 專屬檢查：</b>頁首檔名是否出現在頁首帶、頁碼是否置中且連號、邊界是否 ≥ 2 公分。</li>
           <li><b>PDF/DOCX 共同檢查：</b>六大段落順序、作者—年份引註、直接引文 ≤ 50（不含標點與空白）、參考文獻 ≥ 3、去個資。</li>
           <li><b>建議教學流程：</b>先由學生自檢 → 以 GPT 建議修正 → 再交付老師。</li>
         </ul>
@@ -158,12 +160,12 @@
           <thead><tr><th>版本</th><th>日期</th><th>內容</th></tr></thead>
           <tbody>
             <tr>
-              <td class="mono">v1.1</td><td>2025-09-14</td>
-              <td>新增 PDF 空間檢查（頁首、置中頁碼、邊界 2cm）、DOCX 解析、GAS 計數、引文長度（去標點與空白）。</td>
+              <td class="mono">v1.2</td><td>2025-09-15</td>
+              <td>方案A每次累加；結果列顯示檔名；頁首檢查改為只檢查檔名位於頁首帶；隱私檢查升級為完整校名樣式。</td>
             </tr>
             <tr>
-              <td class="mono">v1.0</td><td>2025-09-10</td>
-              <td>基本規則：頁數、六大段落、作者—年份引註、直接引文 ≤ 50、參考文獻 ≥ 3、隱私。</td>
+              <td class="mono">v1.1</td><td>2025-09-14</td>
+              <td>新增 PDF 空間檢查（頁首、置中頁碼、邊界 2cm）、DOCX 解析、GAS 計數、引文長度（去標點與空白）。</td>
             </tr>
           </tbody>
         </table>
@@ -176,9 +178,9 @@
 
   <script>
     // ====== 可調參數 ======
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8npGiI4DupgWSm_s5bpwttPlr65KzFtdO1y0zhjY8yYuK_lRmamqxEnnuaNJ805E/exec"; // ← 換成你自己的
-    const ENABLE_COUNTER = true; // 若未部署 GAS，可設為 false
-    // document.getElementById('openGpts').href = "https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong"; // 可改成你的自訂 GPT 連結
+    const GAS_WEB_APP_URL = "https://script.googleusercontent.com/AKfycbx8npGiI4DupgWSm_s5bpwttPlr65KzFtdO1y0zhjY8yYuK_lRmamqxEnnuaNJ805E/echo?YOUR_DEPLOYED_URL"; // ★ 改成你可回 {"count":0} 的網址
+    const ENABLE_COUNTER = true;
+    // document.getElementById('openGpts').href = "https://chat.openai.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong";
 
     // ====== UI元素 ======
     const consent = document.getElementById('consent');
@@ -195,10 +197,12 @@
     const jsonPreview = document.getElementById('jsonPreview');
     const counterBox = document.getElementById('counterBox');
     const counterEl = document.getElementById('counter');
+    const fileTagEl = document.getElementById('fileTag');
 
     // ====== 狀態 ======
     let arrayBuffer = null;
     let fileName = null;
+    let fileBase = null;
     let fileExt = null;
     let lastSummaryJSON = null;
     const _rowsBuffer = [];
@@ -209,18 +213,23 @@
       minPages: 4,
       maxPages: 10,
       maxSizeMB: 5,
-      forbiddenKeywords: ['高中','高級中學','國立','市立','縣立','學校','姓名','班級'],
+      // 六段
       sixSections: ['前言','文獻探討','研究方法','研究分析與結果','研究結論與建議','參考文獻'],
       quoteMaxChars: 50,
-      // 空間檢查（PDF 專用）
+      // PDF 空間檢查
       marginCM: 2.0,
-      headerBandFactor: 0.6,
-      footerBandFactor: 0.6,
+      headerBandFactor: 0.6, // 距離上邊界 0.6*margin 內視為頁首帶
+      footerBandFactor: 0.6, // 距離下邊界 0.6*margin 內視為頁尾帶
       centerWidthPT: 100
     };
     const CM_TO_PT = (cm)=> cm * 72 / 2.54;
     const MARGIN_PT = CM_TO_PT(RULES.marginCM);
     const PUNCTUATION_REGEX = /[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
+
+    // 校名樣式（僅完整稱謂才算違規）
+    const SCHOOL_PATTERNS = [
+      /(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部|學校)/g
+    ];
 
     // ====== 啟用上傳 ======
     function setUploadEnabled(enabled){
@@ -258,23 +267,27 @@
       if (f) handleFile(f);
     });
 
+    function baseName(name){
+      return (name || '').replace(/\.[^.]+$/,'').trim();
+    }
     async function handleFile(f){
       const ext = (f.name.split('.').pop()||'').toLowerCase();
       if (!['pdf','docx'].includes(ext)){ statusEl.textContent = '僅支援 PDF 或 DOCX'; return; }
       if (f.size > RULES.maxSizeMB * 1024 * 1024){ statusEl.textContent = `檔案超過 ${RULES.maxSizeMB}MB 上限。`; return; }
-      fileName = f.name; fileExt = ext;
+      fileName = f.name; fileBase = baseName(f.name); fileExt = ext;
       arrayBuffer = await f.arrayBuffer();
       startBtn.disabled = !consent.checked; clearBtn.disabled = !consent.checked;
       statusEl.textContent = `已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;
     }
 
     clearBtn.addEventListener('click', ()=>{
-      fileInput.value = ''; arrayBuffer = null; fileName = null; fileExt = null;
-      startBtn.disabled = true; clearBtn.disabled = true;
+      fileInput.value=''; arrayBuffer=null; fileName=null; fileBase=null; fileExt=null;
+      startBtn.disabled=true; clearBtn.disabled=true;
       resultCard.style.display='none'; tbody.innerHTML='';
-      statusEl.textContent = '已清除選擇。';
-      jsonPreview.textContent = ''; lastSummaryJSON = null;
-      _rowsBuffer.length = 0;
+      fileTagEl.textContent='';
+      statusEl.textContent='已清除選擇。';
+      jsonPreview.textContent=''; lastSummaryJSON=null;
+      _rowsBuffer.length=0;
     });
 
     // ====== 主流程 ======
@@ -292,17 +305,18 @@
 
         // 顯示
         resultCard.style.display='block';
+        fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
         statusEl.textContent = '完成檢查。';
+
         // 釋放原始檔（隱私）
-        arrayBuffer = null; fileInput.value=''; startBtn.disabled = true; clearBtn.disabled = true;
+        arrayBuffer = null; fileInput.value=''; startBtn.disabled=true; clearBtn.disabled=true;
 
         // 產生摘要 JSON（給 GPTs）
-        const rowsForSummary = _rowsBuffer.slice();
-        buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: rowsForSummary });
+        buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
 
-        // 第一次完成檢查 → GAS +1 & 取最新數
+        // 方案A：每次檢查都 +1
         if (ENABLE_COUNTER) {
-          await bumpCounterOnce();
+          await bumpCounterEveryTime();
           await fetchCounter();
         }
       }catch(err){
@@ -322,10 +336,16 @@
 
       // 解析頁面與座標
       let fullText = '';
-      let headerOkPages = [];
-      let pageNumOkPages = [];
+      const headerHasTitle = new Set();
+      const bodyHasTitle = new Set();
+      const pageNumOkPages = [];
       let sequentialOk = true;
-      let minLeft = Infinity, minRight = Infinity, minTop = Infinity, minBottom = Infinity;
+
+      // 邊界推估
+      let minLeft=Infinity, minRight=Infinity, minTop=Infinity, minBottom=Infinity;
+
+      const norm = s => (s||'').replace(/\s/g,'').toLowerCase();
+      const baseNorm = norm(fileBase||'');
 
       for (let p=1; p<=numPages; p++){
         const page = await pdf.getPage(p);
@@ -333,25 +353,23 @@
         const W = viewport.width, H = viewport.height;
         const tc = await page.getTextContent();
 
-        // 頁文字
-        const txt = tc.items.map(it=>it.str).join('');
-        fullText += `\n\n[[PAGE_${p}]]\n` + txt;
-
-        // 區帶
         const headerBandY = H - (MARGIN_PT * RULES.headerBandFactor);
         const footerBandY = (MARGIN_PT * RULES.footerBandFactor);
         const centerLeft = W/2 - RULES.centerWidthPT;
         const centerRight = W/2 + RULES.centerWidthPT;
 
-        let hasHeader = false;
         let hasCenterPageNum = false;
 
+        const txt = tc.items.map(it=>it.str).join('');
+        fullText += `\n\n[[PAGE_${p}]]\n` + txt;
+
         for (const it of tc.items){
-          const tr = it.transform; const x = tr[4]; const y = tr[5]; const w = (typeof it.width==='number')?it.width:0;
+          const tr = it.transform; const x = tr[4]; const y = tr[5];
+          const w = (typeof it.width==='number')?it.width:0;
           const pure = (it.str||'').trim();
+          const pureNorm = norm(pure);
 
-          if (y >= headerBandY) hasHeader = true;
-
+          // 檢查頁碼（頁尾置中）
           if (y <= footerBandY && x >= centerLeft && (x+w) <= centerRight){
             if (/^\d+$/.test(pure)) {
               hasCenterPageNum = true;
@@ -359,6 +377,16 @@
             }
           }
 
+          // 檔名出現在「頁首帶」 or 「正文區」？
+          if (baseNorm && pureNorm.includes(baseNorm)){
+            if (y >= headerBandY){
+              headerHasTitle.add(p);
+            } else if (y > MARGIN_PT && y < (H - MARGIN_PT)){
+              bodyHasTitle.add(p);
+            }
+          }
+
+          // 用正文區字框推估四周邊界
           const inBodyZone = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
           if (inBodyZone){
             const distLeft = x;
@@ -371,44 +399,53 @@
             if (distTop < minTop) minTop = distTop;
           }
         }
-        if (hasHeader) headerOkPages.push(p);
         if (hasCenterPageNum) pageNumOkPages.push(p);
       }
 
-      // 2) 頁首/頁碼
-      const headerPass = (headerOkPages.length === numPages);
+      // 2) 頁首檔名（僅看頁首帶；若只在正文出現視為錯誤）
+      const missHeaderPages = [];
+      for (let p=1;p<=numPages;p++){
+        if (!headerHasTitle.has(p)) missHeaderPages.push(p);
+      }
+      const wrongPlacement = [];
+      for (const p of bodyHasTitle){
+        if (!headerHasTitle.has(p)) wrongPlacement.push(p); // 只在正文、未在頁首
+      }
+      const headerPass = missHeaderPages.length===0 && wrongPlacement.length===0;
+      const headerEvidence = headerPass
+        ? '所有頁面之頁首帶均偵測到檔名'
+        : [
+            missHeaderPages.length ? `缺少頁首檔名頁次：${missHeaderPages.join(', ')}` : '',
+            wrongPlacement.length ? `檔名疑似出現在正文而非頁首：${wrongPlacement.join(', ')}` : ''
+          ].filter(Boolean).join('；');
+      addRow('每頁需在頁首帶包含檔名（非正文區）', headerPass, headerEvidence,
+             '請將檔名／篇名設定於頁首頁首帶（建議 10pt 置中）；不可放在正文區。');
+
+      // 3) 頁碼置中
       const pageNumPass = (pageNumOkPages.length === numPages);
-      addRow('每頁需有頁首文字（頂端帶）', headerPass,
-             headerPass ? '所有頁面皆偵測到頁首區文字' :
-                          `缺少頁首頁次：${missingRange(headerOkPages, numPages)}`,
-             '請在每頁頂端加入篇名（建議 10pt 置中）。');
       addRow('每頁需有置中頁碼（底端帶）', pageNumPass,
              pageNumPass ? '所有頁底中央皆有頁碼' :
                            `缺少頁碼頁次：${missingRange(pageNumOkPages, numPages)}`,
              '請在頁尾置中放置阿拉伯數字頁碼；建議 10pt。' + (pageNumPass && !sequentialOk ? '（注意：疑似非連號）' : ''));
 
-      // 3) 邊界 2 公分（正文推估）
+      // 4) 邊界 2 公分（正文推估）
       const marginPass =
         (minLeft >= MARGIN_PT) && (minRight >= MARGIN_PT) &&
         (minBottom >= MARGIN_PT) && (minTop >= MARGIN_PT);
       const marginInfo = `估計最小邊界（pt）：左 ${minLeft.toFixed(1)}、右 ${minRight.toFixed(1)}、上 ${minTop.toFixed(1)}、下 ${minBottom.toFixed(1)}（門檻 ≈ ${MARGIN_PT.toFixed(1)}）`;
       addRow('四周邊界 ≥ 2 公分（正文區推估）', marginPass, marginInfo, '請確認版面設定至少 2 公分。');
 
-      // 4) 文字規則
-      runTextRules(fullText, numPages);
-      _lastPageCount = numPages;
+      // 5) 文字規則
+      runTextRules(fullText);
     }
 
     // ====== DOCX 檢查（文字規則；不含空間檢查） ======
     async function runDocxChecks(buf){
-      // mammoth 轉 HTML（不需上傳）
       const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
       const fullText = stripHtml(html);
-      _lastPageCount = 0; // DOCX 無頁數；可留 0
-
+      _lastPageCount = 0; // DOCX 無頁數
       addRow('頁數 4–10（DOCX）', true, 'DOCX 無法精確估算頁數，建議匯出 PDF 再檢查空間規則。', '匯出 PDF 以進行頁首/頁碼/邊界檢查。');
-
-      runTextRules(fullText, 0);
+      runTextRules(fullText);
     }
 
     function stripHtml(html){
@@ -417,10 +454,16 @@
     }
 
     // ====== 通用文字規則（PDF/DOCX 共用） ======
-    function runTextRules(fullText, numPages){
-      // 隱私掃描
-      const hits = RULES.forbiddenKeywords.filter(k => fullText.includes(k));
-      addRow('不得含校名/姓名', hits.length===0, hits.length?`偵測到：${hits.join('、')}`:'未發現', '請去識別化（以 XXX 取代）。');
+    function runTextRules(fullText){
+      // 隱私：僅完整校名樣式才算違規
+      const schoolHits = [];
+      for (const re of SCHOOL_PATTERNS){
+        const m = fullText.match(re);
+        if (m && m.length) schoolHits.push(...m);
+      }
+      addRow('不得含校名/姓名', schoolHits.length===0,
+             schoolHits.length ? `偵測到疑似校名：${[...new Set(schoolHits)].join('、')}` : '未發現',
+             '請去識別化（以 XXX 取代完整校名）。');
 
       // 六大段落依序
       const sec = RULES.sixSections;
@@ -469,7 +512,7 @@
 
       const map = {
         '頁數 4–10': {rule_id:'file.pages', category:'檔案規格', severity:'critical'},
-        '每頁需有頁首文字（頂端帶）': {rule_id:'header.exists', category:'頁首', severity:'critical'},
+        '每頁需在頁首帶包含檔名（非正文區）': {rule_id:'header.filename_in_header', category:'頁首', severity:'critical'},
         '每頁需有置中頁碼（底端帶）': {rule_id:'footer.pagenum', category:'頁碼', severity:'critical'},
         '四周邊界 ≥ 2 公分（正文區推估）': {rule_id:'layout.margins', category:'版面', severity:'major'},
         '不得含校名/姓名': {rule_id:'privacy.no_school_or_name', category:'隱私', severity:'critical'},
@@ -500,7 +543,7 @@
           report_id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
           generated_at: new Date().toISOString(),
           file: { name: fileName, pages, type: fileExt },
-          rules_version: 'v1.1'
+          rules_version: 'v1.2'
         },
         summary: {
           score,
@@ -538,28 +581,34 @@
       URL.revokeObjectURL(a.href);
     });
 
-    // ====== GAS 累積人次 ======
-    async function bumpCounterOnce(){
+    // ====== GAS 累積人次（方案 A：每次檢查都加一） ======
+    async function bumpCounterEveryTime(){
       try{
-        const key = 'essayguard_firstCheck';
-        if (localStorage.getItem(key)) return; // 已記錄過
         await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ action: 'increment', site: 'essayguard' })
         });
-        localStorage.setItem(key, '1');
       }catch(e){ console.warn('GAS increment failed', e); }
     }
     async function fetchCounter(){
       try{
-        const res = await fetch(GAS_WEB_APP_URL + '?action=get&site=essayguard');
-        const data = await res.json();
+        const res = await fetch(GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') + 'action=get&site=essayguard', {headers:{'Accept':'application/json'}});
+        const text = await res.text();
+        let data; try { data = JSON.parse(text); } catch { data = {}; }
         if (typeof data.count === 'number'){
           counterEl.textContent = data.count.toLocaleString();
           counterBox.style.display = 'block';
+        } else {
+          counterBox.style.display = 'block';
+          counterEl.textContent = '暫不可用';
+          console.warn('Counter response:', text);
         }
-      }catch(e){ console.warn('GAS get failed', e); }
+      }catch(e){
+        counterBox.style.display = 'block';
+        counterEl.textContent = '暫不可用';
+        console.warn('GAS get failed', e);
+      }
     }
     if (ENABLE_COUNTER) fetchCounter();
   </script>
