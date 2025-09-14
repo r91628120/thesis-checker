@@ -1,0 +1,55 @@
+{
+  "rules_version": "v1.0",
+  "rules": [
+    {
+      "id": "file.format",
+      "category": "檔案規格",
+      "description": "僅接受 PDF（正式版可再開 DOCX），大小 ≤ 5MB",
+      "check": { "ext": ["pdf"], "maxSizeMB": 5 },
+      "severity": "critical"
+    },
+    {
+      "id": "file.pages",
+      "category": "檔案規格",
+      "description": "總頁數需介於 4–10 頁（含附錄）",
+      "check": { "minPages": 4, "maxPages": 10 },
+      "severity": "critical"
+    },
+    {
+      "id": "structure.sections_order",
+      "category": "結構",
+      "description": "必須依序包含：前言、文獻探討、研究方法、研究分析與結果、研究結論與建議、參考文獻",
+      "check": { "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"] },
+      "severity": "critical"
+    },
+    {
+      "id": "references.count",
+      "category": "參考文獻",
+      "description": "至少 3 筆參考文獻（不可全部為網路來源；此處先只檢數量）",
+      "check": { "minRefs": 3 },
+      "severity": "critical"
+    },
+    {
+      "id": "references.citation_style",
+      "category": "參考文獻",
+      "description": "內文引註採（姓名，年份）或 姓名（年份）樣式",
+      "check": { "citationStyle": "authorYear" },
+      "severity": "major"
+    },
+    {
+      "id": "quotes.limit",
+      "category": "引文",
+      "description": "直接引文同一處不得超過 50 字（不含標點與空白）",
+      "check": { "quoteMaxChars": 50, "excludePunctuationAndSpaces": true },
+      "severity": "major",
+      "exception": "詩文、歌詞、劇本、法律條文"
+    },
+    {
+      "id": "privacy.no_school_or_name",
+      "category": "隱私",
+      "description": "檔案內容不得出現學校名稱與個人姓名（平台政策）",
+      "check": { "disallowKeywords": ["高中","高級中學","國立","市立","縣立","學校","姓名","班級"] },
+      "severity": "critical"
+    }
+  ]
+}
