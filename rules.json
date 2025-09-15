@@ -1,55 +1,134 @@
 {
-  "rules_version": "v1.0",
+  "rules_version": "v2.1",
+  "defaults": {
+    "quoteMaxChars": 50,
+    "marginsCM": 2.0,
+    "headerBandFactor": 0.6,
+    "footerBandFactor": 0.6,
+    "centerWidthPT": 100,
+    "schoolPatterns": [
+      "(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部|學校)"
+    ]
+  },
   "rules": [
     {
-      "id": "file.format",
-      "category": "檔案規格",
-      "description": "僅接受 PDF（正式版可再開 DOCX），大小 ≤ 5MB",
-      "check": { "ext": ["pdf"], "maxSizeMB": 5 },
-      "severity": "critical"
-    },
-    {
       "id": "file.pages",
-      "category": "檔案規格",
-      "description": "總頁數需介於 4–10 頁（含附錄）",
-      "check": { "minPages": 4, "maxPages": 10 },
-      "severity": "critical"
+      "title": "頁數 4–10",
+      "severity": "critical",
+      "scope": ["pdf"],
+      "type": "pages_range",
+      "params": { "min": 4, "max": 10 },
+      "messages": {
+        "pass": "共 {{pages}} 頁",
+        "fail": "共 {{pages}} 頁",
+        "suggest": "若少於4或多於10頁，請修訂篇幅。"
+      }
     },
     {
-      "id": "structure.sections_order",
-      "category": "結構",
-      "description": "必須依序包含：前言、文獻探討、研究方法、研究分析與結果、研究結論與建議、參考文獻",
-      "check": { "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"] },
-      "severity": "critical"
+      "id": "header.filename_in_header",
+      "title": "每頁頁首需包含檔名（僅檢查是否存在）",
+      "severity": "critical",
+      "scope": ["pdf"],
+      "type": "header_contains_filename",
+      "params": {
+        "reportBodyHits": true
+      },
+      "messages": {
+        "pass": "所有頁面的頁首帶皆偵測到檔名",
+        "fail": "缺少頁首檔名頁次：{{missing_pages}}{{body_hint}}",
+        "suggest": "請將檔名（篇名）放在每頁頁首帶（建議 10pt 置中）。"
+      }
     },
     {
-      "id": "references.count",
-      "category": "參考文獻",
-      "description": "至少 3 筆參考文獻（不可全部為網路來源；此處先只檢數量）",
-      "check": { "minRefs": 3 },
-      "severity": "critical"
+      "id": "footer.center_pagenum",
+      "title": "每頁需有置中頁碼（底端帶）",
+      "severity": "critical",
+      "scope": ["pdf"],
+      "type": "footer_center_pagenum",
+      "params": {},
+      "messages": {
+        "pass": "所有頁底中央皆有頁碼",
+        "fail": "缺少頁碼頁次：{{missing_pages}}",
+        "suggest": "請在頁尾置中放置阿拉伯數字頁碼；建議10pt。"
+      }
     },
     {
-      "id": "references.citation_style",
-      "category": "參考文獻",
-      "description": "內文引註採（姓名，年份）或 姓名（年份）樣式",
-      "check": { "citationStyle": "authorYear" },
-      "severity": "major"
-    },
-    {
-      "id": "quotes.limit",
-      "category": "引文",
-      "description": "直接引文同一處不得超過 50 字（不含標點與空白）",
-      "check": { "quoteMaxChars": 50, "excludePunctuationAndSpaces": true },
+      "id": "layout.margins",
+      "title": "四周邊界 ≥ 2 公分（正文區推估）",
       "severity": "major",
-      "exception": "詩文、歌詞、劇本、法律條文"
+      "scope": ["pdf"],
+      "type": "margins_min_cm",
+      "params": {},
+      "messages": {
+        "pass": "估計最小邊界（pt）：左 {{left}}、右 {{right}}、上 {{top}}、下 {{bottom}}（門檻 ≈ {{threshold}}）",
+        "fail": "估計最小邊界（pt）：左 {{left}}、右 {{right}}、上 {{top}}、下 {{bottom}}（門檻 ≈ {{threshold}}）",
+        "suggest": "請確認版面設定至少 2 公分。"
+      }
     },
     {
       "id": "privacy.no_school_or_name",
-      "category": "隱私",
-      "description": "檔案內容不得出現學校名稱與個人姓名（平台政策）",
-      "check": { "disallowKeywords": ["高中","高級中學","國立","市立","縣立","學校","姓名","班級"] },
-      "severity": "critical"
+      "title": "不得含校名/姓名",
+      "severity": "critical",
+      "scope": ["both"],
+      "type": "privacy_schoolname_regex",
+      "params": {},
+      "messages": {
+        "pass": "未發現",
+        "fail": "偵測到疑似校名：{{hits}}",
+        "suggest": "請去識別化（以 XXX 取代完整校名）。"
+      }
+    },
+    {
+      "id": "structure.sections_order",
+      "title": "六大段落依序",
+      "severity": "critical",
+      "scope": ["both"],
+      "type": "sections_order",
+      "params": { "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"] },
+      "messages": {
+        "pass": "順序正確",
+        "fail": "{{reason}}",
+        "suggest": "請補齊並按規定順序排列：前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻"
+      }
+    },
+    {
+      "id": "references.citation_style",
+      "title": "內文引註採 作者-年份",
+      "severity": "major",
+      "scope": ["both"],
+      "type": "citation_style",
+      "params": {},
+      "messages": {
+        "pass": "檢出 {{count}} 處",
+        "fail": "未檢出引註樣式",
+        "suggest": "請使用（姓名，年份）或 姓名（年份）。"
+      }
+    },
+    {
+      "id": "quotes.limit",
+      "title": "直接引文 ≤ 50 字（不含標點與空白）",
+      "severity": "major",
+      "scope": ["both"],
+      "type": "quote_len_limit",
+      "params": { "max": 50 },
+      "messages": {
+        "pass": "OK",
+        "fail": "超標處：{{over_count}} 處",
+        "suggest": "請改為摘要轉述，或刪減直接引文。"
+      }
+    },
+    {
+      "id": "references.count",
+      "title": "參考文獻 ≥ 3",
+      "severity": "critical",
+      "scope": ["both"],
+      "type": "refs_min_count",
+      "params": { "min": 3 },
+      "messages": {
+        "pass": "估計 {{count}} 筆",
+        "fail": "估計 {{count}} 筆",
+        "suggest": "請補足至少三筆參考文獻。"
+      }
     }
   ]
 }
