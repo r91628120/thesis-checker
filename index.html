@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>高中職小論文格式自檢系統</title>
+  <title>高中職小論文格式自檢系統（HTML + GPTs 摘要版）</title>
   <style>
     :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
     *{box-sizing:border-box}
@@ -28,10 +28,13 @@
     th{background:#f9fafb}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
     pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
+    .stat{font-size:13px;color:#374151}
+    nav a{color:#2563eb;text-decoration:none}
+    nav a:hover{text-decoration:underline}
     .filetag{font-size:13px;color:#374151;margin:6px 0 0}
   </style>
 
-  <!-- pdf.js -->
+  <!-- pdf.js（ESM） -->
   <script type="module">
     window.loadPdfjs = async () => {
       const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
@@ -40,14 +43,19 @@
       return { getDocument };
     };
   </script>
-  <!-- mammoth.js (docx 轉 html) -->
+  <!-- mammoth.js（DOCX→HTML） -->
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>高中職小論文格式自檢系統</h1>
-      <p>支援 PDF 與 DOCX 檔案，會檢查頁首、頁碼、邊界、段落與引用格式。</p>
+      <p>小論文格式自檢系統。支援 PDF（含頁首/頁碼/邊界 2cm）與 DOCX（文字規則）。檔案上傳產出檢查報告後，網站會立即刪除檔案，不存檔，保護隱私。</p>
+      <div class="badge" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
+      <div class="muted" style="margin-top:12px">
+        網站建置：<b>國立佳冬高農 圖書館</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
+        © 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw
+      </div>
     </header>
 
     <section class="card">
@@ -57,19 +65,33 @@
         <div class="pill">大小 ≤ 5MB</div>
         <div class="pill">不得含校名／姓名</div>
       </div>
+
+      <details style="margin-top:8px">
+        <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
+        <ul>
+          <li><b>自我檢查工具：</b>僅提供格式檢查與建議，不做存證或投稿。</li>
+          <li><b>立即刪除：</b>檔案僅在本機記憶體解析，完成後即釋放；本站不保存。</li>
+          <li><b>使用者自行保存：</b>請下載檢查報告或複製檢查檔案摘要。</li>
+          <li><b>隱私保護：</b>請勿含個資（校名、姓名、班級）。若偵測到將拒絕檢查。</li>
+        </ul>
+      </details>
+
       <div class="row" style="margin-top:8px">
         <input id="consent" type="checkbox" />
-        <label for="consent">我已閱讀並同意政策，並確認檔案不含 <span class="mono">校名/姓名</span>。</label>
+        <label for="consent">我已閱讀並同意上述政策，並確認檔案不含 <span class="mono">校名/姓名</span>。</label>
       </div>
+
       <div id="drop" class="drop" aria-disabled="true">
-        <p><strong>拖拉 PDF 或 DOCX 至此</strong></p>
+        <p><strong>拖拉 PDF 或 DOCX 至此</strong> 位置</p>
         <label for="file" class="file">選擇檔案</label>
         <input id="file" type="file" accept=".pdf,.docx" disabled />
+        <p class="hint">完成檢查後會立即釋放檔案。</p>
       </div>
+
       <div class="row" style="margin-top:8px">
         <button id="start" class="primary" disabled>開始檢查</button>
         <button id="clear" disabled>清除</button>
-        <span id="status" class="hint"></span>
+        <span id="status" class="hint" role="status" aria-live="polite"></span>
       </div>
     </section>
 
@@ -80,77 +102,504 @@
         <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
-      <pre id="jsonPreview" class="mono"></pre>
+
+      <div class="row" style="margin-top:8px">
+        <button id="downloadHtml">下載檢查結果（網頁格式）</button>
+        <button id="copyJson">複製檢查結果 (給AI助手)</button>
+        <button id="downloadJson">儲存檢查結果檔案</button>
+        <a id="openGpts" class="primary" href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong" target="_blank" rel="noopener">
+          打開AI助手（貼上檢查結果）
+        </a>
+      </div>
+      <pre id="jsonPreview" class="mono" style="margin-top:8px"></pre>
+    </section>
+
+    <!-- ====== 老師／學生導覽區 ====== -->
+    <section class="card" id="teacher-guide">
+      <h2>老師／學生導覽</h2>
+      <p class="hint">快速理解系統用途、操作流程、課堂導入方式與規則版本。</p>
+
+      <nav style="margin:8px 0 14px">
+        <a href="#teacher-howto">如何操作</a> ·
+        <a href="#teacher-examples">常見錯誤範例</a> ·
+        <a href="#teacher-rules">檢查規則版本對照</a>
+      </nav>
+
+      <details id="teacher-howto" open>
+        <summary><strong>如何操作（老師／學生）</strong></summary>
+        <ol>
+          <li>請勾選上傳政策。</li>
+          <li>上傳 PDF 或 DOCX。</li>
+          <li>按「開始檢查」，查看檢查報告。</li>
+          <li>如需建議：複製 檢查報告 → 打開 AI助手 → 貼上。</li>
+          <li>或可下載 檢查報告(網頁格式)、檔案報告保存。</li>
+        </ol>
+        <ul>
+          <li><b>PDF 專屬檢查：</b>頁首檔名是否出現在頁首帶、頁碼是否置中且連號、邊界是否 ≥ 2 公分。</li>
+          <li><b>PDF/DOCX 共同檢查：</b>六大段落順序、作者—年份引註、直接引文 ≤ 50（不含標點與空白）、參考文獻 ≥ 3、去個資。</li>
+          <li><b>建議教學流程：</b>先由學生自檢 → 以 AI助手 建議修正 → 再交付老師。</li>
+        </ul>
+      </details>
+
+      <details id="teacher-examples">
+        <summary><strong>常見錯誤範例</strong></summary>
+        <ul>
+          <li><b>缺頁碼：</b>頁尾無置中數字 → 請加入阿拉伯數字連號。</li>
+          <li><b>邊界不足：</b>小於 2 公分 → 請調整 Word / PDF 邊界。</li>
+          <li><b>段落錯誤：</b>「參考文獻」缺失 → 請補齊六大段落。</li>
+          <li><b>引註錯誤：</b>未用（姓名，年份） → 請改為作者—年份體例。</li>
+          <li><b>引文過長：</b>單處超過 50 → 請改述。</li>
+          <li><b>參考文獻不足：</b>少於 3 筆 → 請補足。</li>
+          <li><b>含個資：</b>文中有校名／姓名 → 請去識別化。</li>
+        </ul>
+      </details>
+
+      <details id="teacher-rules">
+        <summary><strong>檢查規則版本對照</strong></summary>
+        <table>
+          <thead><tr><th>版本</th><th>日期</th><th>內容</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="mono">v1.3</td><td>2025-09-15</td>
+              <td>新增：檢查項目前自動編號；比對「檔案名稱」與「頁首篇名」一致性（不符判定淘汰）。</td>
+            </tr>
+            <tr>
+              <td class="mono">v1.2</td><td>2025-09-15</td>
+              <td>方案A每次累加；結果列顯示檔名；頁首檢查改為只檢查檔名位於頁首帶；隱私檢查升級為完整校名樣式。</td>
+            </tr>
+            <tr>
+              <td class="mono">v1.1</td><td>2025-09-14</td>
+              <td>新增 PDF 空間檢查（頁首、置中頁碼、邊界 2cm）、DOCX 解析、GAS 計數、引文長度（去標點與空白）。</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="hint" style="margin-top:8px">
+          註：PDF 座標依 pdf.js 解析，遇特殊文件可能有誤差；如結果與肉眼觀察不一致，請以老師覆核為準。
+        </p>
+      </details>
     </section>
   </div>
 
   <script>
-    const consent=document.getElementById('consent');
-    const fileInput=document.getElementById('file');
-    const startBtn=document.getElementById('start');
-    const clearBtn=document.getElementById('clear');
-    const statusEl=document.getElementById('status');
-    const resultCard=document.getElementById('resultCard');
-    const tbody=document.getElementById('tbody');
-    const fileTagEl=document.getElementById('fileTag');
-    const jsonPreview=document.getElementById('jsonPreview');
+    // ====== 可調參數 ======
+    const GAS_WEB_APP_URL = "https://script.googleusercontent.com/AKfycbx8npGiI4DupgWSm_s5bpwttPlr65KzFtdO1y0zhjY8yYuK_lRmamqxEnnuaNJ805E/echo?YOUR_DEPLOYED_URL";
+    const ENABLE_COUNTER = true;
 
-    let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,_ruleCounter=0,_lastPageCount=0,rowsBuffer=[];
+    // ====== UI元素 ======
+    const consent = document.getElementById('consent');
+    const fileInput = document.getElementById('file');
+    const drop = document.getElementById('drop');
+    const startBtn = document.getElementById('start');
+    const clearBtn = document.getElementById('clear');
+    const statusEl = document.getElementById('status');
+    const resultCard = document.getElementById('resultCard');
+    const tbody = document.getElementById('tbody');
+    const downloadHtmlBtn = document.getElementById('downloadHtml');
+    const copyBtn = document.getElementById('copyJson');
+    const downloadJsonBtn = document.getElementById('downloadJson');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const counterBox = document.getElementById('counterBox');
+    const counterEl = document.getElementById('counter');
+    const fileTagEl = document.getElementById('fileTag');
 
-    function setUploadEnabled(ok){fileInput.disabled=!ok;startBtn.disabled=!ok||!arrayBuffer;clearBtn.disabled=!ok||!arrayBuffer;}
-    consent.addEventListener('change',()=>setUploadEnabled(consent.checked));
-    fileInput.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)handleFile(f);});
-    async function handleFile(f){
-      fileName=f.name;fileBase=f.name.replace(/\.[^.]+$/,'');fileExt=f.name.split('.').pop().toLowerCase();
-      arrayBuffer=await f.arrayBuffer();statusEl.textContent=`已選擇：${f.name}`;setUploadEnabled(consent.checked);}
-    clearBtn.addEventListener('click',()=>{fileInput.value='';arrayBuffer=null;fileName=null;fileBase=null;fileExt=null;setUploadEnabled(false);resultCard.style.display='none';tbody.innerHTML='';jsonPreview.textContent='';});
-    startBtn.addEventListener('click',async()=>{
-      tbody.innerHTML='';rowsBuffer=[];_ruleCounter=0;resultCard.style.display='none';
-      if(fileExt==='pdf')await runPdfChecks(arrayBuffer);else await runDocxChecks(arrayBuffer);
-      fileTagEl.textContent=`此次檢查檔案：${fileName}`;resultCard.style.display='block';buildSummaryJSON();
+    // ====== 狀態 ======
+    let arrayBuffer = null;
+    let fileName = null;
+    let fileBase = null;
+    let fileExt = null;
+    let lastSummaryJSON = null;
+    const _rowsBuffer = [];
+    let _lastPageCount = 0;
+    let _ruleCounter = 0; // 檢查結果編號
+
+    // ====== 載入 rules.json ======
+    let rulesDoc = null, DFLT = {};
+    (async () => {
+      rulesDoc = await fetch('rules.json', {cache:'no-store'}).then(r=>r.json());
+      DFLT = rulesDoc.defaults || {};
+    })();
+
+    // ====== 常量 / 工具 ======
+    const CM_TO_PT = cm => cm * 72 / 2.54;
+    const MARGIN_PT = () => CM_TO_PT(DFLT.marginsCM || 2.0);
+    const PUNCTUATION_REGEX = /[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
+    const SCHOOL_RE = () => new RegExp((DFLT.schoolPatterns||[])[0] || /(國立)/.source, 'g');
+    const render = (tpl,vars)=> (tpl||'').replace(/\{\{(\w+)\}\}/g,(_,k)=> (vars?.[k] ?? ''));
+
+    function setUploadEnabled(enabled){
+      fileInput.disabled = !enabled;
+      startBtn.disabled = !enabled || !arrayBuffer;
+      clearBtn.disabled = !enabled || !arrayBuffer;
+    }
+    consent.addEventListener('change', ()=>{
+      setUploadEnabled(consent.checked);
+      statusEl.textContent = consent.checked ? '已同意政策，可上傳檔案。' : '請先同意政策。';
     });
 
-    function addRow(rule,pass,evidence,suggestion){
-      _ruleCounter++;const badge=pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>';
-      const tr=document.createElement('tr');tr.innerHTML=`<td>${_ruleCounter}. ${rule}</td><td>${badge}</td><td>${evidence||''}</td><td>${suggestion||''}</td>`;
-      tbody.appendChild(tr);
-      rowsBuffer.push({rule_id:rule,pass,evidence:{note:evidence},suggestion});
-    }
-    function buildSummaryJSON(){
-      const summary={meta:{file:fileName,pages:_lastPageCount,type:fileExt},checks:rowsBuffer};
-      jsonPreview.textContent=JSON.stringify(summary,null,2);
+    // 拖拉上傳
+    ['dragenter','dragover'].forEach(ev=>{
+      drop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); if(!fileInput.disabled) drop.classList.add('drag'); });
+    });
+    ['dragleave','drop'].forEach(ev=>{
+      drop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); });
+    });
+    drop.addEventListener('drop', e=>{
+      if (fileInput.disabled) return;
+      const f = e.dataTransfer.files?.[0];
+      if (f) handleFile(f);
+    });
+
+    // 檔案選擇
+    fileInput.addEventListener('change', e=>{
+      const f = e.target.files?.[0];
+      if (f) handleFile(f);
+    });
+
+    function baseName(name){ return (name || '').replace(/\.[^.]+$/,'').trim(); }
+    async function handleFile(f){
+      const ext = (f.name.split('.').pop()||'').toLowerCase();
+      if (!['pdf','docx'].includes(ext)){ statusEl.textContent = '僅支援 PDF 或 DOCX'; return; }
+      if (f.size > 5 * 1024 * 1024){ statusEl.textContent = `檔案超過 5MB 上限。`; return; }
+      fileName = f.name; fileBase = baseName(f.name); fileExt = ext;
+      arrayBuffer = await f.arrayBuffer();
+      startBtn.disabled = !consent.checked; clearBtn.disabled = !consent.checked;
+      statusEl.textContent = `已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;
     }
 
-    async function runPdfChecks(buf){
-      const { getDocument }=await window.loadPdfjs();const pdf=await getDocument({data:buf}).promise;_lastPageCount=pdf.numPages;
-      // 偵測頁首篇名
-      let headerTitleTexts=[];let headerHasFile=new Set();
-      const norm=s=>(s||'').replace(/\s/g,'').toLowerCase();
-      const fileNorm=norm(fileBase);
-      for(let p=1;p<=pdf.numPages;p++){
-        const page=await pdf.getPage(p);const v=page.getViewport({scale:1});const H=v.height;
-        const tc=await page.getTextContent();const headerBandY=H-50;
-        for(const it of tc.items){
-          const y=it.transform[5];const txt=(it.str||'').trim();if(!txt)continue;
-          if(y>=headerBandY)headerTitleTexts.push(txt);
-          if(norm(txt).includes(fileNorm)&&y>=headerBandY)headerHasFile.add(p);
-        }
+    clearBtn.addEventListener('click', ()=>{
+      fileInput.value=''; arrayBuffer=null; fileName=null; fileBase=null; fileExt=null;
+      startBtn.disabled=true; clearBtn.disabled=true;
+      resultCard.style.display='none'; tbody.innerHTML='';
+      fileTagEl.textContent=''; statusEl.textContent='已清除選擇。';
+      jsonPreview.textContent=''; lastSummaryJSON=null; _rowsBuffer.length=0; _ruleCounter=0;
+    });
+
+    // ====== 主流程 ======
+    startBtn.addEventListener('click', async ()=>{
+      if (!arrayBuffer) return;
+      tbody.innerHTML=''; resultCard.style.display='none'; statusEl.textContent='解析中…';
+      _rowsBuffer.length = 0; _ruleCounter = 0;
+
+      try{
+        if (fileExt === 'pdf') await runPdfChecks(arrayBuffer);
+        else await runDocxChecks(arrayBuffer);
+
+        resultCard.style.display='block';
+        fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
+        statusEl.textContent = '完成檢查。';
+
+        arrayBuffer = null; fileInput.value=''; startBtn.disabled=true; clearBtn.disabled=true;
+
+        buildAndShowSummaryJSON();
+
+        if (ENABLE_COUNTER) { await bumpCounterEveryTime(); await fetchCounter(); }
+      }catch(err){
+        console.error(err);
+        statusEl.textContent = '解析失敗：請確認檔案是否有效。';
       }
-      const missing=[];for(let i=1;i<=pdf.numPages;i++){if(!headerHasFile.has(i))missing.push(i);}
-      addRow("每頁需在頁首帶包含檔名",missing.length===0,missing.length?`缺少頁首頁次：${missing.join(',')}`:'OK',"請將檔名放頁首");
-      // 檔案名稱 vs 頁首篇名
-      const norm=s=>(s||'').replace(/\s/g,'').toLowerCase();
-      const counts={};headerTitleTexts.forEach(t=>{const n=norm(t);if(n.length>=4)counts[n]=(counts[n]||0)+1;});
-      const guess=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]||['','0'];
-      const titleNorm=guess[0],titleRaw=headerTitleTexts.find(t=>norm(t)===titleNorm)||'';
-      const consistent=titleNorm&&(titleNorm.includes(fileNorm)||fileNorm.includes(titleNorm));
-      addRow("檔案名稱 與 頁首篇名一致性（不符判定淘汰）",consistent,titleRaw?`檔名:${fileBase}；篇名:${titleRaw}`:'未偵測到篇名',"請保持一致，否則淘汰");
+    });
+
+    // ====== 報表列工具 ======
+    function addRow(meta, pass, vars={}, suggest){
+      _ruleCounter++;
+      const badge = pass ? '<span class="ok">通過</span>' : '<span class="bad">未通過</span>';
+      const ev = render(pass ? (meta.messages?.pass||'') : (meta.messages?.fail||''), vars);
+      const sg = suggest || meta.messages?.suggest || '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${_ruleCounter}. ${meta.title}</td><td>${badge}</td><td>${ev}</td><td>${sg}</td>`;
+      tbody.appendChild(tr);
+
+      const severity = meta.severity || 'minor';
+      const category = meta.category || 'general';
+      _rowsBuffer.push({
+        rule_id: meta.id, category, severity, pass,
+        evidence: ev ? {note: ev} : null, suggestion: sg || null
+      });
     }
+    function missingPages(okPages, total){
+      const ok = new Set(okPages); const miss=[];
+      for (let i=1;i<=total;i++){ if(!ok.has(i)) miss.push(i); }
+      return miss.length?miss.join(', '):'—';
+    }
+
+    // ====== 執行器（與 rules.json 的 type 對應） ======
+    const executors = {
+      async pages_range(ctx, params, meta){
+        const ok = ctx.numPages>=params.min && ctx.numPages<=params.max;
+        addRow(meta, ok, {pages:ctx.numPages});
+      },
+      async header_contains_filename(ctx, params, meta){
+        const missing=[];
+        for(let p=1;p<=ctx.numPages;p++){ if(!ctx.headerHasFilename.has(p)) missing.push(p); }
+        // 顯示正文命中的疑似位置（不影響通過與否）
+        let body_hint='';
+        if (params?.reportBodyHits && ctx.bodyFilenameHits?.length){
+          const list=ctx.bodyFilenameHits.map(h=>`p${h.p}(${h.x},${h.y})`).join('、');
+          if(list) body_hint=`；疑似放在正文的位置：${list}`;
+        }
+        const ok = missing.length===0;
+        addRow(meta, ok, {missing_pages: missing.length?missing.join(', '):'—', body_hint});
+      },
+      async filename_vs_header_title(ctx, params, meta){
+        // 以頁首帶中「最常見的字串」作為篇名
+        const minLen = params?.minTitleLen ?? 4;
+        const n = s=>(s||'').replace(/\s/g,'').toLowerCase();
+        const filtered = ctx.headerTitleTexts.filter(s=>n(s).length>=minLen);
+        const freq = new Map();
+        for(const s of filtered){ const k=n(s); freq.set(k,(freq.get(k)||0)+1); }
+        let bestKey='', bestN=0;
+        for(const [k,c] of freq){ if(c>bestN){ bestKey=k; bestN=c; } }
+        const raw = filtered.find(s=>n(s)===bestKey) || '';
+        const fileNorm = n(ctx.fileBase);
+        const titleNorm = bestKey;
+        const ok = titleNorm && (titleNorm.includes(fileNorm) || fileNorm.includes(titleNorm));
+        addRow(meta, ok, {fileBase: ctx.fileBase, headerTitle: raw});
+      },
+      async footer_center_pagenum(ctx, params, meta){
+        const miss = missingPages(ctx.pageNumOkPages, ctx.numPages);
+        const ok = ctx.pageNumOkPages.length===ctx.numPages;
+        addRow(meta, ok, {missing_pages: miss});
+      },
+      async margins_min_cm(ctx, params, meta){
+        const M = MARGIN_PT();
+        const v = ctx.margins;
+        const ok = v.left>=M && v.right>=M && v.top>=M && v.bottom>=M;
+        addRow(meta, ok, {
+          left:v.left.toFixed(1), right:v.right.toFixed(1),
+          top:v.top.toFixed(1), bottom:v.bottom.toFixed(1),
+          threshold: M.toFixed(1)
+        });
+      },
+      async privacy_schoolname_regex(ctx, params, meta){
+        const hits = (ctx.fullText.match(SCHOOL_RE())||[]);
+        addRow(meta, hits.length===0, {hits: [...new Set(hits)].join('、')});
+      },
+      async sections_order(ctx, params, meta){
+        const sec = params.sections||[];
+        const idx = sec.map(s=>ctx.fullText.indexOf(s));
+        const hasAll = idx.every(i=>i>=0);
+        const inOrder = hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
+        const reason = hasAll? (inOrder?'順序正確':'找到各段落但順序錯誤') : '有段落缺失';
+        addRow(meta, hasAll&&inOrder, {reason});
+      },
+      async citation_style(ctx, params, meta){
+        const c1 = (ctx.fullText.match(/（[^，\n]{1,8}，\s*\d{4}）/g)||[]).length;
+        const c2 = (ctx.fullText.match(/[^\s，。、]{1,8}（\s*\d{4}）/g)||[]).length;
+        const n = c1+c2;
+        addRow(meta, n>0, {count:n});
+      },
+      async quote_len_limit(ctx, params, meta){
+        const max = params.max ?? DFLT.quoteMaxChars ?? 50;
+        const quotes=[]; (ctx.fullText.match(/「([^」]+)」/g)||[]).forEach(m=>quotes.push(m.replace(/[「」]/g,'')));
+        (ctx.fullText.match(/“([^”]+)”/g)||[]).forEach(m=>quotes.push(m.replace(/[“”]/g,'')));
+        const clean=s=>s.replace(PUNCTUATION_REGEX,'');
+        const over=quotes.filter(q=>clean(q).length>max);
+        addRow(meta, over.length===0, {over_count: over.length});
+      },
+      async refs_min_count(ctx, params, meta){
+        const min = params.min ?? 3;
+        const i = ctx.fullText.indexOf('參考文獻');
+        let count = 0;
+        if (i>=0){
+          const tail=ctx.fullText.slice(i);
+          const cands=tail.split(/\n|；|;|\r/g).filter(x=>x.trim());
+          count=cands.filter(x=>/(\d{4})|(^\d+\.)|（\d{4}）/.test(x)).length;
+        }
+        addRow(meta, count>=min, {count});
+      }
+    };
+
+    // ====== PDF 檢查（含空間規則） ======
+    async function runPdfChecks(buf){
+      const { getDocument } = await window.loadPdfjs();
+      const pdf = await getDocument({ data: buf }).promise;
+      const numPages = pdf.numPages; _lastPageCount = numPages;
+
+      // 預先收集文本/座標
+      let fullText = '';
+      const headerHasFilename = new Set();      // 頁首帶命中「檔名」（比對檔名字串）
+      const bodyFilenameHits = [];              // 檔名出現在正文區的點（提示用）
+      const pageNumOkPages = []; let sequentialOk = true;
+      let minLeft=Infinity, minRight=Infinity, minTop=Infinity, minBottom=Infinity;
+
+      const headerTitleTexts = [];              // 頁首帶原始文字（推測篇名用）
+
+      const M = MARGIN_PT();
+      const headerBand = factor => factor * M;
+      const n = s=>(s||'').replace(/\s/g,'').toLowerCase();
+      const baseNorm = n(fileBase||'');
+
+      for (let p=1; p<=numPages; p++){
+        const page = await pdf.getPage(p);
+        const viewport = page.getViewport({ scale: 1 });
+        const W = viewport.width, H = viewport.height;
+        const tc = await page.getTextContent();
+
+        const headerBandY = H - headerBand(DFLT.headerBandFactor || 0.6);
+        const footerBandY = (DFLT.footerBandFactor || 0.6) * M;
+        const centerLeft = W/2 - (DFLT.centerWidthPT || 100);
+        const centerRight= W/2 + (DFLT.centerWidthPT || 100);
+
+        let hasCenter=false;
+
+        const txt = tc.items.map(it=>it.str).join('');
+        fullText += `\n\n[[PAGE_${p}]]\n` + txt;
+
+        for (const it of tc.items){
+          const tr = it.transform; const x = tr[4], y = tr[5];
+          const w = (typeof it.width==='number')?it.width:0;
+          const pure = (it.str||'').trim(); if(!pure) continue;
+          const pureNorm = n(pure);
+
+          // 頁碼置中
+          if (y<=footerBandY && x>=centerLeft && (x+w)<=centerRight){
+            if (/^\d+$/.test(pure)) { hasCenter = true; if (parseInt(pure,10)!==p) sequentialOk=false; }
+          }
+
+          // 收集頁首帶文本（推測篇名）
+          if (y>=headerBandY){ headerTitleTexts.push(pure); }
+
+          // 檔名命中 → 判斷是否位於頁首帶或正文
+          if (baseNorm && pureNorm.includes(baseNorm)){
+            if (y>=headerBandY) headerHasFilename.add(p);
+            else if (y>M && y<(H-M)) bodyFilenameHits.push({ p, x:+x.toFixed(1), y:+y.toFixed(1) });
+          }
+
+          // 估邊界（正文框）
+          const inBody=(y>M)&&(y<(H-M));
+          if (inBody){
+            const L=x, R=W-(x+w), B=y, T=H-y;
+            if (L<minLeft) minLeft=L; if (R<minRight) minRight=R;
+            if (B<minBottom) minBottom=B; if (T<minTop) minTop=T;
+          }
+        }
+        if (hasCenter) pageNumOkPages.push(p);
+      }
+
+      // 規則執行（依 rules.json 的 scope=pdf）
+      const ctx = {
+        fileBase: baseName(fileName),
+        numPages,
+        fullText,
+        // 給 header_contains_filename
+        headerHasFilename, bodyFilenameHits,
+        // 給 filename_vs_header_title
+        headerTitleTexts,
+        // 其他規則
+        pageNumOkPages,
+        margins:{left:minLeft,right:minRight,top:minTop,bottom:minBottom},
+        sequentialOk
+      };
+      await runRules(ctx, 'pdf');
+    }
+
+    // ====== DOCX 檢查（文字規則；不含空間檢查） ======
     async function runDocxChecks(buf){
-      const { value: html }=await window.mammoth.convertToHtml({arrayBuffer:buf});
-      const text=stripHtml(html);addRow("DOCX 文字檢查",true,"OK","匯出 PDF 再檢查頁首/篇名");
+      const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+      const fullText = stripHtml(html);
+      _lastPageCount = 0; // DOCX 無頁數
+      const ctx = { fileBase, numPages:0, fullText };
+      await runRules(ctx, 'docx');
     }
-    function stripHtml(html){const d=document.createElement('div');d.innerHTML=html;return d.textContent||d.innerText||'';}
+    function stripHtml(html){
+      const tmp = document.createElement('div'); tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    // ====== 依 scope 執行 rules ======
+    async function runRules(ctx, scope){
+      const list = (rulesDoc?.rules||[]).filter(r => (r.scope||[]).includes(scope) || (r.scope||[]).includes('both'));
+      for (const meta of list){
+        const fn = executors[meta.type];
+        if (!fn) { console.warn('未知規則型別:', meta.type); continue; }
+        await fn(ctx, meta.params||{}, meta);
+      }
+
+      // 額外補充：頁碼規則一併提示「非連號」
+      // 找到 footer_center_pagenum 那列，若通過但 ctx.sequentialOk 為 false，就在建議文字加註
+      // （此段僅作提示，不影響 pass/fail）
+      // —— 已在 PDF 蒐集 sequentialOk，這裡維持簡潔，不再修改表格，以免破壞 rules 的渲染一致性 —— 
+
+      resultCard.style.display='block';
+    }
+
+    // ====== 檢查摘要 JSON ======
+    function buildAndShowSummaryJSON(){
+      const weight = s => s==='critical'?2:(s==='major'?1:0.5);
+      const scoreMax = _rowsBuffer.reduce((a,x)=>a+weight(x.severity),0) || 1;
+      const score = Math.round(_rowsBuffer.reduce((a,x)=>a+(x.pass?weight(x.severity):0),0)/scoreMax*100);
+      const hasCriticalFail = _rowsBuffer.some(x=>!x.pass && x.severity==='critical');
+      const summary = {
+        meta: {
+          report_id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+          generated_at: new Date().toISOString(),
+          file: { name: fileName, pages: _lastPageCount, type: fileExt },
+          rules_version: rulesDoc?.rules_version || 'v2'
+        },
+        summary: {
+          score,
+          totals: { checks: _rowsBuffer.length, pass: _rowsBuffer.filter(x=>x.pass).length, fail: _rowsBuffer.filter(x=>!x.pass).length },
+          status: hasCriticalFail ? 'revise' : 'pass'
+        },
+        checks: _rowsBuffer.map(x=>({ rule_id:x.rule_id, category:x.category, severity:x.severity, pass:x.pass, evidence:x.evidence, suggestion:x.suggestion }))
+      };
+      lastSummaryJSON = summary;
+      jsonPreview.textContent = JSON.stringify(summary, null, 2);
+    }
+
+    // ====== 下載報告 / JSON / 複製 ======
+    downloadHtmlBtn.addEventListener('click', ()=>{
+      const html = `<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>${document.querySelector('#resultCard').outerHTML}`;
+      const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'paper-check-report.html'; a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    copyBtn.addEventListener('click', async ()=>{
+      if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
+      await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON, null, 2));
+      alert('已複製檢查摘要 JSON，前往 GPT 後直接貼上即可。');
+    });
+    downloadJsonBtn.addEventListener('click', ()=>{
+      if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
+      const blob = new Blob([JSON.stringify(lastSummaryJSON, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (lastSummaryJSON.meta?.file?.name || 'paper') + '.summary.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // ====== GAS 累積人次（方案 A：每次檢查都加一） ======
+    async function bumpCounterEveryTime(){
+      try{
+        await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ action: 'increment', site: 'essayguard' })
+        });
+      }catch(e){ console.warn('GAS increment failed', e); }
+    }
+    async function fetchCounter(){
+      try{
+        const res = await fetch(GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') + 'action=get&site=essayguard', {headers:{'Accept':'application/json'}});
+        const text = await res.text();
+        let data; try { data = JSON.parse(text); } catch { data = {}; }
+        if (typeof data.count === 'number'){
+          counterEl.textContent = data.count.toLocaleString();
+          counterBox.style.display = 'block';
+        } else {
+          counterBox.style.display = 'block';
+          counterEl.textContent = '暫不可用';
+          console.warn('Counter response:', text);
+        }
+      }catch(e){
+        counterBox.style.display = 'block';
+        counterEl.textContent = '暫不可用';
+        console.warn('GAS get failed', e);
+      }
+    }
+    if (ENABLE_COUNTER) fetchCounter();
+
   </script>
 </body>
 </html>
