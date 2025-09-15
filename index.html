@@ -50,7 +50,7 @@
   <div class="wrap">
     <header>
       <h1>高中職小論文格式自檢系統</h1>
-      <p>純前端、本機解析、不上傳。支援 PDF（含頁首/頁碼/邊界 2cm）與 DOCX（文字規則）。</p>
+      <p>小論文格式自檢系統。支援 PDF（含頁首/頁碼/邊界 2cm）與 DOCX（文字規則）。檔案上傳產出檢查報告後，網站會立即刪除檔案，不存檔，保護隱私。</p>
       <div class="stat" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
       <div class="muted" style="margin-top:12px">
         網站建置：<b>國立佳冬高農 圖書館</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
@@ -104,19 +104,19 @@
       </table>
 
       <div class="row" style="margin-top:8px">
-        <button id="downloadHtml">下載報告（HTML）</button>
-        <button id="copyJson">複製檢查摘要 JSON</button>
-        <button id="downloadJson">下載 JSON</button>
-        <a id="openGpts" class="primary" href="https://chat.openai.com/g/" target="_blank" rel="noopener">
-          打開你的 GPT（貼上 JSON）
+        <button id="downloadHtml">下載檢查結果（網頁格式）</button>
+        <button id="copyJson">複製檢查結果 (給AI助手)</button>
+        <button id="downloadJson">儲存檢查結果檔案</button>
+        <a id="openGpts" class="primary" href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong" target="_blank" rel="noopener">
+          打開AI助手（貼上檢查結果）
         </a>
       </div>
       <pre id="jsonPreview" class="mono" style="margin-top:8px"></pre>
     </section>
 
-    <!-- ====== 學校／老師導覽區 ====== -->
+    <!-- ====== 老師／學生導覽區 ====== -->
     <section class="card" id="teacher-guide">
-      <h2>學校／老師導覽</h2>
+      <h2>老師／學生導覽</h2>
       <p class="hint">快速理解系統用途、操作流程、課堂導入方式與規則版本。</p>
 
       <nav style="margin:8px 0 14px">
