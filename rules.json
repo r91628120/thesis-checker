@@ -1,5 +1,5 @@
 {
-  "rules_version": "v2.1",
+  "rules_version": "v2.2",
   "defaults": {
     "quoteMaxChars": 50,
     "marginsCM": 2.0,
@@ -30,13 +30,27 @@
       "severity": "critical",
       "scope": ["pdf"],
       "type": "header_contains_filename",
-      "params": {
-        "reportBodyHits": true
-      },
+      "params": { "reportBodyHits": true },
       "messages": {
         "pass": "所有頁面的頁首帶皆偵測到檔名",
         "fail": "缺少頁首檔名頁次：{{missing_pages}}{{body_hint}}",
         "suggest": "請將檔名（篇名）放在每頁頁首帶（建議 10pt 置中）。"
+      }
+    },
+    {
+      "id": "filename.title_consistency",
+      "title": "檔案名稱 與 頁首篇名一致性（不符判定淘汰）",
+      "severity": "critical",
+      "scope": ["pdf"],
+      "type": "filename_vs_header_title",
+      "params": {
+        "minTitleLen": 4,
+        "allowSubstring": true
+      },
+      "messages": {
+        "pass": "檔案名稱：「{{fileBase}}」；偵測頁首篇名：「{{title}}」",
+        "fail": "檔案名稱：「{{fileBase}}」；偵測頁首篇名：「{{title}}」",
+        "suggest": "請將「檔案名稱」與「頁首篇名」保持一致（常見作法：兩者皆用小論文篇名）。若不一致，視為淘汰。"
       }
     },
     {

@@ -1,419 +1,156 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>高中職小論文格式自檢系統</title>
-<style>
-  :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
-  .wrap{max-width:960px;margin:auto;padding:24px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px}
-  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-  .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
-  input[type=file]{display:none}
-  label.file{display:inline-flex;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
-  button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
-  button.primary{background:var(--accent);color:#fff;border-color:transparent}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  .ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
-  .bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
-  table{border-collapse:collapse;width:100%}
-  th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
-  th{background:#f9fafb}
-  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>高中職小論文格式自檢系統</title>
+  <style>
+    :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
+    .wrap{max-width:960px;margin:auto;padding:24px}
+    header h1{margin:0 0 4px;font-size:clamp(22px,4vw,28px)}
+    header p{margin:0;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px}
+    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .pill{background:#eef2ff;border:1px solid #e5e7eb;border-radius:999px;padding:.3rem .6rem;font-size:12px}
+    .hint{color:var(--muted);font-size:13px}
+    .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
+    input[type=file]{display:none}
+    label.file{display:inline-flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
+    button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+    button.primary{background:var(--accent);color:#fff;border-color:transparent}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
+    .bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
+    th{background:#f9fafb}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+    pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
+    .filetag{font-size:13px;color:#374151;margin:6px 0 0}
+  </style>
 
-<!-- pdf.js -->
-<script type="module">
-  window.loadPdfjs = async () => {
-    const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
-    const { GlobalWorkerOptions, getDocument } = await import(base + "pdf.min.mjs");
-    GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
-    return { getDocument };
-  };
-</script>
-<!-- mammoth.js -->
-<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <!-- pdf.js -->
+  <script type="module">
+    window.loadPdfjs = async () => {
+      const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
+      const { GlobalWorkerOptions, getDocument } = await import(base + "pdf.min.mjs");
+      GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
+      return { getDocument };
+    };
+  </script>
+  <!-- mammoth.js (docx 轉 html) -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <h1>高中職小論文格式自檢系統</h1>
+  <div class="wrap">
+    <header>
+      <h1>高中職小論文格式自檢系統</h1>
+      <p>支援 PDF 與 DOCX 檔案，會檢查頁首、頁碼、邊界、段落與引用格式。</p>
+    </header>
 
-  <section class="card">
-    <div class="row" style="margin-top:8px">
-      <input id="consent" type="checkbox">
-      <label for="consent">我已閱讀並同意上傳政策，並確認檔案不含校名/姓名。</label>
-    </div>
+    <section class="card">
+      <div class="row" aria-hidden="true">
+        <div class="pill">PDF / DOCX</div>
+        <div class="pill">頁數 4–10</div>
+        <div class="pill">大小 ≤ 5MB</div>
+        <div class="pill">不得含校名／姓名</div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input id="consent" type="checkbox" />
+        <label for="consent">我已閱讀並同意政策，並確認檔案不含 <span class="mono">校名/姓名</span>。</label>
+      </div>
+      <div id="drop" class="drop" aria-disabled="true">
+        <p><strong>拖拉 PDF 或 DOCX 至此</strong></p>
+        <label for="file" class="file">選擇檔案</label>
+        <input id="file" type="file" accept=".pdf,.docx" disabled />
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="start" class="primary" disabled>開始檢查</button>
+        <button id="clear" disabled>清除</button>
+        <span id="status" class="hint"></span>
+      </div>
+    </section>
 
-    <div id="drop" class="drop" aria-disabled="true">
-      <p><strong>拖拉 PDF 或 DOCX 至此</strong></p>
-      <label for="file" class="file">選擇檔案</label>
-      <input id="file" type="file" accept=".pdf,.docx" disabled />
-      <p id="status" class="mono"></p>
-    </div>
+    <section id="resultCard" class="card" style="display:none">
+      <h3>檢查結果</h3>
+      <div id="fileTag" class="filetag"></div>
+      <table>
+        <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <pre id="jsonPreview" class="mono"></pre>
+    </section>
+  </div>
 
-    <div class="row" style="margin-top:8px">
-      <button id="start" class="primary" disabled>開始檢查</button>
-      <button id="clear" disabled>清除</button>
-    </div>
-  </section>
+  <script>
+    const consent=document.getElementById('consent');
+    const fileInput=document.getElementById('file');
+    const startBtn=document.getElementById('start');
+    const clearBtn=document.getElementById('clear');
+    const statusEl=document.getElementById('status');
+    const resultCard=document.getElementById('resultCard');
+    const tbody=document.getElementById('tbody');
+    const fileTagEl=document.getElementById('fileTag');
+    const jsonPreview=document.getElementById('jsonPreview');
 
-  <section id="resultCard" class="card" style="display:none">
-    <h3>檢查結果</h3>
-    <div id="fileTag" class="mono" style="margin:6px 0"></div>
-    <table>
-      <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="row" style="margin-top:8px">
-      <button id="downloadHtml">下載檢查結果（網頁格式）</button>
-      <button id="copyJson">複製檢查結果 (給AI助手)</button>
-      <button id="downloadJson">儲存檢查結果檔案</button>
-    </div>
-    <pre id="jsonPreview" class="mono" style="margin-top:8px;max-height:260px;overflow:auto"></pre>
-  </section>
-</div>
+    let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,_ruleCounter=0,_lastPageCount=0,rowsBuffer=[];
 
-<script>
-(async function(){
-  // =============== 共同狀態 ===============
-  const consent = document.getElementById('consent');
-  const fileInput = document.getElementById('file');
-  const startBtn = document.getElementById('start');
-  const clearBtn = document.getElementById('clear');
-  const statusEl = document.getElementById('status');
-  const resultCard = document.getElementById('resultCard');
-  const tbody = document.getElementById('tbody');
-  const fileTagEl = document.getElementById('fileTag');
-  const copyBtn = document.getElementById('copyJson');
-  const downloadHtmlBtn = document.getElementById('downloadHtml');
-  const downloadJsonBtn = document.getElementById('downloadJson');
-  const jsonPreview = document.getElementById('jsonPreview');
-
-  let arrayBuffer=null, fileName=null, fileBase=null, fileExt=null;
-  let lastSummaryJSON=null, _ruleCounter=0, _lastPageCount=0;
-  const rowsBuffer = [];
-
-  // 讀取 rules.json
-  const rulesDoc = await fetch('rules.json', {cache:'no-store'}).then(r=>r.json());
-  const DFLT = rulesDoc.defaults || {};
-
-  // 開關上傳
-  function setUploadEnabled(ok){
-    fileInput.disabled = !ok;
-    startBtn.disabled = !ok || !arrayBuffer;
-    clearBtn.disabled = !ok || !arrayBuffer;
-  }
-  consent.addEventListener('change', ()=>setUploadEnabled(consent.checked));
-  fileInput.addEventListener('change', e=>{
-    const f = e.target.files?.[0];
-    if (!f) return;
-    handleFile(f);
-  });
-
-  function baseName(name){ return (name||'').replace(/\.[^.]+$/,'').trim(); }
-  async function handleFile(f){
-    const ext = (f.name.split('.').pop()||'').toLowerCase();
-    if (!['pdf','docx'].includes(ext)){ statusEl.textContent='僅支援 PDF 或 DOCX'; return; }
-    fileName=f.name; fileBase=baseName(f.name); fileExt=ext;
-    arrayBuffer=await f.arrayBuffer();
-    statusEl.textContent=`已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;
-    setUploadEnabled(consent.checked);
-  }
-
-  clearBtn.addEventListener('click', ()=>{
-    fileInput.value=''; arrayBuffer=null; fileName=null; fileBase=null; fileExt=null;
-    setUploadEnabled(false); resultCard.style.display='none'; tbody.innerHTML='';
-    fileTagEl.textContent=''; jsonPreview.textContent=''; rowsBuffer.length=0; _ruleCounter=0;
-  });
-
-  document.getElementById('drop').addEventListener('drop', e=>{
-    e.preventDefault(); e.stopPropagation();
-    if (fileInput.disabled) return;
-    const f = e.dataTransfer.files?.[0]; if (f) handleFile(f);
-  });
-  ['dragenter','dragover'].forEach(ev=>{
-    document.getElementById('drop').addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation();});
-  });
-
-  startBtn.addEventListener('click', async ()=>{
-    if (!arrayBuffer) return;
-    tbody.innerHTML=''; rowsBuffer.length=0; _ruleCounter=0; resultCard.style.display='none';
-    _lastPageCount=0;
-    statusEl.textContent='解析中…';
-
-    try{
-      if (fileExt==='pdf'){ await runPdfChecks(arrayBuffer); }
-      else { await runDocxChecks(arrayBuffer); }
-
-      resultCard.style.display='block';
-      fileTagEl.textContent = `此次檢查檔案：${fileName}`;
-
-      // 產出摘要
-      buildAndShowSummaryJSON();
-
-      // 釋放檔案
-      arrayBuffer=null; fileInput.value=''; setUploadEnabled(false);
-      statusEl.textContent='完成檢查。';
-    }catch(err){
-      console.error(err);
-      statusEl.textContent='解析失敗：請確認檔案是否有效。';
-    }
-  });
-
-  // =============== 執行器（Executors） ===============
-  const CM_TO_PT = cm => cm * 72 / 2.54;
-  const MARGIN_PT = CM_TO_PT(DFLT.marginsCM || 2.0);
-  const PUNC_RE = /[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
-  const SCHOOL_RE = new RegExp(DFLT.schoolPatterns[0], 'g');
-
-  function addRow(meta, pass, evidenceVars={}, suggest){
-    _ruleCounter++;
-    const badge = pass ? '<span class="ok">通過</span>' : '<span class="bad">未通過</span>';
-    const evText = renderMsg(pass ? (meta.messages?.pass||'') : (meta.messages?.fail||''), evidenceVars);
-    const sgText = suggest || meta.messages?.suggest || '';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${_ruleCounter}. ${meta.title}</td><td>${badge}</td><td>${evText}</td><td>${sgText}</td>`;
-    tbody.appendChild(tr);
-
-    rowsBuffer.push({
-      rule_id: meta.id, category: meta.category || 'general', severity: meta.severity || 'minor',
-      pass, evidence: evText? {note: evText} : null, suggestion: sgText || null
+    function setUploadEnabled(ok){fileInput.disabled=!ok;startBtn.disabled=!ok||!arrayBuffer;clearBtn.disabled=!ok||!arrayBuffer;}
+    consent.addEventListener('change',()=>setUploadEnabled(consent.checked));
+    fileInput.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)handleFile(f);});
+    async function handleFile(f){
+      fileName=f.name;fileBase=f.name.replace(/\.[^.]+$/,'');fileExt=f.name.split('.').pop().toLowerCase();
+      arrayBuffer=await f.arrayBuffer();statusEl.textContent=`已選擇：${f.name}`;setUploadEnabled(consent.checked);}
+    clearBtn.addEventListener('click',()=>{fileInput.value='';arrayBuffer=null;fileName=null;fileBase=null;fileExt=null;setUploadEnabled(false);resultCard.style.display='none';tbody.innerHTML='';jsonPreview.textContent='';});
+    startBtn.addEventListener('click',async()=>{
+      tbody.innerHTML='';rowsBuffer=[];_ruleCounter=0;resultCard.style.display='none';
+      if(fileExt==='pdf')await runPdfChecks(arrayBuffer);else await runDocxChecks(arrayBuffer);
+      fileTagEl.textContent=`此次檢查檔案：${fileName}`;resultCard.style.display='block';buildSummaryJSON();
     });
-  }
-  function renderMsg(tpl, vars){
-    return (tpl||'').replace(/\{\{(\w+)\}\}/g, (_,k)=> (vars?.[k]??''));
-  }
-  function weight(sv){ return sv==='critical'?2:(sv==='major'?1:0.5); }
 
-  const executors = {
-    async pages_range(ctx, params, meta){
-      const ok = ctx.numPages>=params.min && ctx.numPages<=params.max;
-      addRow(meta, ok, {pages: ctx.numPages});
-    },
-    async header_contains_filename(ctx, params, meta){
-      // 缺少頁首檔名的頁次
-      const missing = [];
-      for (let p=1; p<=ctx.numPages; p++){
-        if (!ctx.headerHasFilename.has(p)) missing.push(p);
-      }
-
-      // 顯示正文命中的疑似位置（不影響通過與否）
-      let body_hint = '';
-      if (params?.reportBodyHits && ctx.bodyFilenameHits?.length){
-        const list = ctx.bodyFilenameHits.map(h => `p${h.p}(${h.x},${h.y})`).join('、');
-        if (list) body_hint = `；疑似放在正文的位置：${list}`;
-      }
-
-      const ok = missing.length === 0;
-      addRow(meta, ok, {
-        missing_pages: missing.length ? missing.join(', ') : '—',
-        body_hint
-      });
-    },
-    async footer_center_pagenum(ctx, params, meta){
-      const miss = missingPages(ctx.pageNumOkPages, ctx.numPages);
-      const ok = ctx.pageNumOkPages.length===ctx.numPages;
-      addRow(meta, ok, {missing_pages: miss});
-    },
-    async margins_min_cm(ctx, params, meta){
-      const v = ctx.margins;
-      const ok = v.left>=MARGIN_PT && v.right>=MARGIN_PT && v.top>=MARGIN_PT && v.bottom>=MARGIN_PT;
-      addRow(meta, ok, {
-        left:v.left.toFixed(1), right:v.right.toFixed(1),
-        top:v.top.toFixed(1), bottom:v.bottom.toFixed(1),
-        threshold: MARGIN_PT.toFixed(1)
-      });
-    },
-    async privacy_schoolname_regex(ctx, params, meta){
-      const hits = (ctx.fullText.match(SCHOOL_RE)||[]);
-      addRow(meta, hits.length===0, {hits: [...new Set(hits)].join('、')});
-    },
-    async sections_order(ctx, params, meta){
-      const sec = params.sections||[];
-      const idx = sec.map(s=>ctx.fullText.indexOf(s));
-      const hasAll = idx.every(i=>i>=0);
-      const inOrder = hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
-      const reason = hasAll? (inOrder?'順序正確':'找到各段落但順序錯誤') : '有段落缺失';
-      addRow(meta, hasAll&&inOrder, {reason});
-    },
-    async citation_style(ctx, params, meta){
-      const c1 = (ctx.fullText.match(/（[^，\n]{1,8}，\s*\d{4}）/g)||[]).length;
-      const c2 = (ctx.fullText.match(/[^\s，。、]{1,8}（\s*\d{4}）/g)||[]).length;
-      const n = c1+c2;
-      addRow(meta, n>0, {count:n});
-    },
-    async quote_len_limit(ctx, params, meta){
-      const max = params.max ?? DFLT.quoteMaxChars ?? 50;
-      const quotes = [];
-      (ctx.fullText.match(/「([^」]+)」/g)||[]).forEach(m=>quotes.push(m.replace(/[「」]/g,'')));
-      (ctx.fullText.match(/“([^”]+)”/g)||[]).forEach(m=>quotes.push(m.replace(/[“”]/g,'')));
-      const clean = s=>s.replace(PUNC_RE,'');
-      const over = quotes.filter(q=>clean(q).length>max);
-      addRow(meta, over.length===0, {over_count: over.length});
-    },
-    async refs_min_count(ctx, params, meta){
-      const min = params.min ?? 3;
-      const i = ctx.fullText.indexOf('參考文獻');
-      let count = 0;
-      if (i>=0){
-        const tail = ctx.fullText.slice(i);
-        const cands = tail.split(/\n|；|;|\r/g).filter(x=>x.trim());
-        count = cands.filter(x=>/(\d{4})|(^\d+\.)|（\d{4}）/.test(x)).length;
-      }
-      addRow(meta, count>=min, {count});
+    function addRow(rule,pass,evidence,suggestion){
+      _ruleCounter++;const badge=pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>';
+      const tr=document.createElement('tr');tr.innerHTML=`<td>${_ruleCounter}. ${rule}</td><td>${badge}</td><td>${evidence||''}</td><td>${suggestion||''}</td>`;
+      tbody.appendChild(tr);
+      rowsBuffer.push({rule_id:rule,pass,evidence:{note:evidence},suggestion});
     }
-  };
-
-  function missingPages(okPages, total){
-    const ok = new Set(okPages); const miss=[];
-    for (let i=1;i<=total;i++){ if(!ok.has(i)) miss.push(i); }
-    return miss.length?miss.join(', '):'—';
-  }
-
-  // =============== PDF 檢查主程式 ===============
-  async function runPdfChecks(buf){
-    const { getDocument } = await window.loadPdfjs();
-    const pdf = await getDocument({ data: buf }).promise;
-    const numPages = pdf.numPages; _lastPageCount = numPages;
-
-    // 蒐集座標/文字資訊
-    let fullText=''; const headerHasFilename=new Set();
-    const bodyFilenameHits=[];         // p, x, y
-    const pageNumOkPages=[]; let sequentialOk=true;
-    let minLeft=Infinity, minRight=Infinity, minTop=Infinity, minBottom=Infinity;
-
-    const headerBand = factor => factor*(DFLT.marginsCM?CM_TO_PT(DFLT.marginsCM):MARGIN_PT);
-    const norm = s=>(s||'').replace(/\s/g,'').toLowerCase();
-    const baseNorm = norm(baseName(fileName)); // 用檔名（不含副檔名）進行比對
-
-    for (let p=1;p<=numPages;p++){
-      const page = await pdf.getPage(p);
-      const viewport = page.getViewport({scale:1});
-      const W=viewport.width, H=viewport.height;
-      const tc = await page.getTextContent();
-
-      const headerBandY = H - headerBand(DFLT.headerBandFactor||0.6);
-      const footerBandY = (DFLT.footerBandFactor||0.6)*(DFLT.marginsCM?CM_TO_PT(DFLT.marginsCM):MARGIN_PT);
-      const centerLeft = W/2 - (DFLT.centerWidthPT||100);
-      const centerRight= W/2 + (DFLT.centerWidthPT||100);
-
-      const txt = tc.items.map(it=>it.str).join('');
-      fullText += `\n\n[[PAGE_${p}]]\n` + txt;
-
-      let hasCenter=false;
-      for (const it of tc.items){
-        const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
-        const pure=(it.str||'').trim(); if(!pure) continue;
-
-        // 頁碼置中（供原有規則 footer.center_pagenum 使用）
-        if (y<=footerBandY && x>=centerLeft && (x+w)<=centerRight){
-          if (/^\d+$/.test(pure)){ hasCenter=true; if (parseInt(pure,10)!==p) sequentialOk=false; }
-        }
-
-        // 檔名命中 → 判斷在頁首帶或正文；記錄頁次 / 座標
-        const pureNorm = norm(pure);
-        if (baseNorm && pureNorm.includes(baseNorm)){
-          if (y >= headerBandY){
-            headerHasFilename.add(p);
-          } else if (y > MARGIN_PT && y < (H - MARGIN_PT)) {
-            bodyFilenameHits.push({ p, x: +x.toFixed(1), y: +y.toFixed(1) });
-          }
-        }
-
-        // 估計邊界（正文框）
-        const inBody = (y>MARGIN_PT) && (y<(H-MARGIN_PT));
-        if (inBody){
-          const L=x, R=W-(x+w), B=y, T=H-y;
-          if (L<minLeft) minLeft=L; if (R<minRight) minRight=R;
-          if (B<minBottom) minBottom=B; if (T<minTop) minTop=T;
-        }
-      }
-      if (hasCenter) pageNumOkPages.push(p);
+    function buildSummaryJSON(){
+      const summary={meta:{file:fileName,pages:_lastPageCount,type:fileExt},checks:rowsBuffer};
+      jsonPreview.textContent=JSON.stringify(summary,null,2);
     }
 
-    // 準備上下文
-    const ctx = {
-      fileBase: baseName(fileName),
-      numPages,
-      fullText,
-      headerHasFilename,
-      bodyFilenameHits,
-      pageNumOkPages,
-      margins: {left:minLeft, right:minRight, top:minTop, bottom:minBottom}
-    };
-
-    await runRules(ctx, 'pdf');
-  }
-
-  // =============== DOCX 檢查主程式 ===============
-  async function runDocxChecks(buf){
-    const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
-    const text = stripHtml(html);
-    const ctx = { fileBase, numPages:0, fullText: text };
-    await runRules(ctx, 'docx');
-  }
-  function stripHtml(html){ const d=document.createElement('div'); d.innerHTML=html; return d.textContent||d.innerText||''; }
-
-  // 依 scope 執行 rules.json 規則
-  async function runRules(ctx, scope){
-    const list = rulesDoc.rules.filter(r => r.scope.includes(scope) || r.scope.includes('both'));
-    for (const meta of list){
-      const fn = executors[meta.type];
-      if (!fn) { console.warn('未知規則型別:', meta.type); continue; }
-      await fn(ctx, meta.params||{}, meta);
+    async function runPdfChecks(buf){
+      const { getDocument }=await window.loadPdfjs();const pdf=await getDocument({data:buf}).promise;_lastPageCount=pdf.numPages;
+      // 偵測頁首篇名
+      let headerTitleTexts=[];let headerHasFile=new Set();
+      const norm=s=>(s||'').replace(/\s/g,'').toLowerCase();
+      const fileNorm=norm(fileBase);
+      for(let p=1;p<=pdf.numPages;p++){
+        const page=await pdf.getPage(p);const v=page.getViewport({scale:1});const H=v.height;
+        const tc=await page.getTextContent();const headerBandY=H-50;
+        for(const it of tc.items){
+          const y=it.transform[5];const txt=(it.str||'').trim();if(!txt)continue;
+          if(y>=headerBandY)headerTitleTexts.push(txt);
+          if(norm(txt).includes(fileNorm)&&y>=headerBandY)headerHasFile.add(p);
+        }
+      }
+      const missing=[];for(let i=1;i<=pdf.numPages;i++){if(!headerHasFile.has(i))missing.push(i);}
+      addRow("每頁需在頁首帶包含檔名",missing.length===0,missing.length?`缺少頁首頁次：${missing.join(',')}`:'OK',"請將檔名放頁首");
+      // 檔案名稱 vs 頁首篇名
+      const norm=s=>(s||'').replace(/\s/g,'').toLowerCase();
+      const counts={};headerTitleTexts.forEach(t=>{const n=norm(t);if(n.length>=4)counts[n]=(counts[n]||0)+1;});
+      const guess=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]||['','0'];
+      const titleNorm=guess[0],titleRaw=headerTitleTexts.find(t=>norm(t)===titleNorm)||'';
+      const consistent=titleNorm&&(titleNorm.includes(fileNorm)||fileNorm.includes(titleNorm));
+      addRow("檔案名稱 與 頁首篇名一致性（不符判定淘汰）",consistent,titleRaw?`檔名:${fileBase}；篇名:${titleRaw}`:'未偵測到篇名',"請保持一致，否則淘汰");
     }
-    resultCard.style.display='block';
-  }
-
-  // 報告與下載
-  function buildAndShowSummaryJSON(){
-    const scoreMax = rowsBuffer.reduce((a,x)=>a+weight(x.severity),0) || 1;
-    const score = Math.round(rowsBuffer.reduce((a,x)=>a+(x.pass?weight(x.severity):0),0)/scoreMax*100);
-    const hasCriticalFail = rowsBuffer.some(x=>!x.pass && x.severity==='critical');
-    const summary = {
-      meta: {
-        report_id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
-        generated_at: new Date().toISOString(),
-        file: { name: fileName, pages: _lastPageCount, type: fileExt },
-        rules_version: rulesDoc.rules_version || 'v2.1'
-      },
-      summary: {
-        score,
-        totals: { checks: rowsBuffer.length, pass: rowsBuffer.filter(x=>x.pass).length, fail: rowsBuffer.filter(x=>!x.pass).length },
-        status: hasCriticalFail ? 'revise' : 'pass'
-      },
-      checks: rowsBuffer.map(x=>({ rule_id:x.rule_id, category:x.category, severity:x.severity, pass:x.pass, evidence:x.evidence, suggestion:x.suggestion }))
-    };
-    lastSummaryJSON = summary;
-    jsonPreview.textContent = JSON.stringify(summary, null, 2);
-  }
-
-  downloadHtmlBtn.addEventListener('click', ()=>{
-    const html = `<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>${document.querySelector('#resultCard').outerHTML}`;
-    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='paper-check-report.html'; a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  copyBtn.addEventListener('click', async ()=>{
-    if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
-    await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON, null, 2));
-    alert('已複製檢查摘要 JSON，前往 AI 助手後直接貼上即可。');
-  });
-  downloadJsonBtn.addEventListener('click', ()=>{
-    if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
-    const blob = new Blob([JSON.stringify(lastSummaryJSON, null, 2)], {type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=(lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json'; a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  // 小工具
-  function baseName(name){ return (name || '').replace(/\.[^.]+$/,'').trim(); }
-
-})();
-</script>
+    async function runDocxChecks(buf){
+      const { value: html }=await window.mammoth.convertToHtml({arrayBuffer:buf});
+      const text=stripHtml(html);addRow("DOCX 文字檢查",true,"OK","匯出 PDF 再檢查頁首/篇名");
+    }
+    function stripHtml(html){const d=document.createElement('div');d.innerHTML=html;return d.textContent||d.innerText||'';}
+  </script>
 </body>
 </html>
