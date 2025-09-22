@@ -1,5 +1,5 @@
 {
-  "rules_version": "v2.2",
+  "rules_version": "v2.4",
   "defaults": {
     "quoteMaxChars": 50,
     "marginsCM": 2.0,
@@ -17,80 +17,44 @@
       "severity": "critical",
       "scope": ["pdf"],
       "type": "pages_range",
-      "params": { "min": 4, "max": 10 },
-      "messages": {
-        "pass": "共 {{pages}} 頁",
-        "fail": "共 {{pages}} 頁",
-        "suggest": "若少於4或多於10頁，請修訂篇幅。"
-      }
+      "params": { "min": 4, "max": 10 }
     },
     {
       "id": "header.filename_in_header",
-      "title": "每頁頁首需包含檔名（僅檢查是否存在）",
+      "title": "每頁頁首需包含檔名",
       "severity": "critical",
       "scope": ["pdf"],
       "type": "header_contains_filename",
-      "params": { "reportBodyHits": true },
-      "messages": {
-        "pass": "所有頁面的頁首帶皆偵測到檔名",
-        "fail": "缺少頁首檔名頁次：{{missing_pages}}{{body_hint}}",
-        "suggest": "請將檔名（篇名）放在每頁頁首帶（建議 10pt 置中）。"
-      }
+      "params": { "reportBodyHits": true }
     },
     {
       "id": "filename.title_consistency",
-      "title": "檔案名稱 與 頁首篇名一致性（不符判定淘汰）",
+      "title": "檔案名稱 與 頁首篇名一致性",
       "severity": "critical",
       "scope": ["pdf"],
       "type": "filename_vs_header_title",
-      "params": {
-        "minTitleLen": 4,
-        "allowSubstring": true
-      },
-      "messages": {
-        "pass": "檔案名稱：「{{fileBase}}」；偵測頁首篇名：「{{title}}」",
-        "fail": "檔案名稱：「{{fileBase}}」；偵測頁首篇名：「{{title}}」",
-        "suggest": "請將「檔案名稱」與「頁首篇名」保持一致（常見作法：兩者皆用小論文篇名）。若不一致，視為淘汰。"
-      }
+      "params": { "minTitleLen": 4 }
     },
     {
       "id": "footer.center_pagenum",
       "title": "每頁需有置中頁碼（底端帶）",
       "severity": "critical",
       "scope": ["pdf"],
-      "type": "footer_center_pagenum",
-      "params": {},
-      "messages": {
-        "pass": "所有頁底中央皆有頁碼",
-        "fail": "缺少頁碼頁次：{{missing_pages}}",
-        "suggest": "請在頁尾置中放置阿拉伯數字頁碼；建議10pt。"
-      }
+      "type": "footer_center_pagenum"
     },
     {
       "id": "layout.margins",
       "title": "四周邊界 ≥ 2 公分（正文區推估）",
       "severity": "major",
       "scope": ["pdf"],
-      "type": "margins_min_cm",
-      "params": {},
-      "messages": {
-        "pass": "估計最小邊界（pt）：左 {{left}}、右 {{right}}、上 {{top}}、下 {{bottom}}（門檻 ≈ {{threshold}}）",
-        "fail": "估計最小邊界（pt）：左 {{left}}、右 {{right}}、上 {{top}}、下 {{bottom}}（門檻 ≈ {{threshold}}）",
-        "suggest": "請確認版面設定至少 2 公分。"
-      }
+      "type": "margins_min_cm"
     },
     {
       "id": "privacy.no_school_or_name",
       "title": "不得含校名/姓名",
       "severity": "critical",
       "scope": ["both"],
-      "type": "privacy_schoolname_regex",
-      "params": {},
-      "messages": {
-        "pass": "未發現",
-        "fail": "偵測到疑似校名：{{hits}}",
-        "suggest": "請去識別化（以 XXX 取代完整校名）。"
-      }
+      "type": "privacy_schoolname_regex"
     },
     {
       "id": "structure.sections_order",
@@ -98,11 +62,8 @@
       "severity": "critical",
       "scope": ["both"],
       "type": "sections_order",
-      "params": { "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"] },
-      "messages": {
-        "pass": "順序正確",
-        "fail": "{{reason}}",
-        "suggest": "請補齊並按規定順序排列：前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻"
+      "params": {
+        "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"]
       }
     },
     {
@@ -110,13 +71,7 @@
       "title": "內文引註採 作者-年份",
       "severity": "major",
       "scope": ["both"],
-      "type": "citation_style",
-      "params": {},
-      "messages": {
-        "pass": "檢出 {{count}} 處",
-        "fail": "未檢出引註樣式",
-        "suggest": "請使用（姓名，年份）或 姓名（年份）。"
-      }
+      "type": "citation_style"
     },
     {
       "id": "quotes.limit",
@@ -124,12 +79,7 @@
       "severity": "major",
       "scope": ["both"],
       "type": "quote_len_limit",
-      "params": { "max": 50 },
-      "messages": {
-        "pass": "OK",
-        "fail": "超標處：{{over_count}} 處",
-        "suggest": "請改為摘要轉述，或刪減直接引文。"
-      }
+      "params": { "max": 50 }
     },
     {
       "id": "references.count",
@@ -137,12 +87,74 @@
       "severity": "critical",
       "scope": ["both"],
       "type": "refs_min_count",
-      "params": { "min": 3 },
-      "messages": {
-        "pass": "估計 {{count}} 筆",
-        "fail": "估計 {{count}} 筆",
-        "suggest": "請補足至少三筆參考文獻。"
+      "params": { "min": 3 }
+    },
+    {
+      "id": "style.font",
+      "title": "字體/字型規範",
+      "severity": "major",
+      "scope": ["both"],
+      "type": "style_font_check",
+      "params": {
+        "zhFont": "新細明體",
+        "enFont": "Times New Roman",
+        "fontSizePT": 12,
+        "color": "#000000"
       }
+    },
+    {
+      "id": "layout.spacing",
+      "title": "版面編排（單行間距 / 段首縮排）",
+      "severity": "major",
+      "scope": ["pdf"],
+      "type": "layout_spacing_check",
+      "params": { "marginCM": 2.0 }
+    },
+    {
+      "id": "structure.headings",
+      "title": "標題與次標題層次",
+      "severity": "major",
+      "scope": ["both"],
+      "type": "headings_hierarchy_check"
+    },
+    {
+      "id": "references.citation_required",
+      "title": "引用原文需註明出處（≤50字）",
+      "severity": "critical",
+      "scope": ["both"],
+      "type": "citation_required",
+      "params": { "quoteMax": 50 }
+    },
+    {
+      "id": "file.coverpage",
+      "title": "不得有封面頁（4–10頁）",
+      "severity": "critical",
+      "scope": ["pdf"],
+      "type": "coverpage_absent",
+      "params": {
+        "keywords": ["學校","高中","高級中學","大學","指導老師","班級","學生","學號","封面"]
+      }
+    },
+    {
+      "id": "figures.tables",
+      "title": "圖表需有標號/標題與來源",
+      "severity": "major",
+      "scope": ["both"],
+      "type": "figures_tables_check"
+    },
+    {
+      "id": "references.consistency",
+      "title": "參考文獻與內文引註一致性",
+      "severity": "critical",
+      "scope": ["both"],
+      "type": "refs_consistency_check"
+    },
+    {
+      "id": "external.duplicate_check",
+      "title": "作品名稱是否已於校外發表/得獎（人工/GPT）",
+      "severity": "minor",
+      "scope": ["both"],
+      "type": "manual_check"
     }
   ]
 }
