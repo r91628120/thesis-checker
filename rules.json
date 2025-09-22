@@ -224,7 +224,8 @@
       "description": "需以外部檢索（人工或 GPT 小助手）查核作品是否已公開發表或得獎。",
       "pass_criteria": "未檢索到相同題名之公開發表／得獎紀錄。",
       "fail_examples": ["檢出相同題名之公開發表或獲獎頁面"],
-      "suggestion": "以『檔名／篇名＋比賽或學校關鍵字』搜尋並截圖存證。"
+      "suggestion": "以『檔名／篇名＋比賽或學校關鍵字』搜尋並截圖存證。",
+      "require_web": true
     },
     {
       "rule_id": "file.pages.docx",
