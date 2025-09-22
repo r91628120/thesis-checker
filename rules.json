@@ -1,160 +1,241 @@
 {
-  "rules_version": "v2.4",
-  "defaults": {
-    "quoteMaxChars": 50,
-    "marginsCM": 2.0,
+  "meta": {
+    "rules_version": "v1.3",
+    "updated_at": "2025-09-15T00:00:00+08:00",
+    "language": "zh-Hant",
+    "notes": "此版本與 index.html 之 addRow()/rule_id 對齊，可用於自動產生【系統檢查規則（合格標準）】說明區。"
+  },
+  "params": {
+    "minPages": 4,
+    "maxPages": 10,
+    "maxSizeMB": 5,
+    "marginCM": 2.0,
     "headerBandFactor": 0.6,
     "footerBandFactor": 0.6,
     "centerWidthPT": 100,
-    "schoolPatterns": [
-      "(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部|學校)"
-    ]
+    "quoteMaxChars": 50,
+    "sixSections": ["前言", "文獻探討", "研究方法", "研究分析與結果", "研究結論與建議", "參考文獻"]
   },
   "rules": [
     {
-      "id": "file.pages",
+      "rule_id": "file.pages",
       "title": "頁數 4–10",
+      "applies_to": ["pdf"],
       "severity": "critical",
-      "scope": ["pdf"],
-      "type": "pages_range",
-      "params": { "min": 4, "max": 10 }
+      "check_kind": "auto",
+      "description": "整份小論文 PDF 頁數需介於 4–10 頁之間（含 4 與 10）。",
+      "pass_criteria": "總頁數在 4–10 之間。",
+      "fail_examples": ["3 頁或以下", "11 頁或以上"],
+      "suggestion": "若少於 4 或多於 10 頁，請調整篇幅。"
     },
     {
-      "id": "header.filename_in_header",
-      "title": "每頁頁首需包含檔名",
+      "rule_id": "header.filename_in_header",
+      "title": "每頁需在頁首帶包含檔名（非正文區）",
+      "applies_to": ["pdf"],
       "severity": "critical",
-      "scope": ["pdf"],
-      "type": "header_contains_filename",
-      "params": { "reportBodyHits": true }
+      "check_kind": "auto",
+      "description": "檔名（或篇名）應出現在各頁的『頁首帶』區域，正文區內不算合格。",
+      "pass_criteria": "所有頁面之頁首帶皆偵測到檔名（或篇名）。",
+      "fail_examples": ["部分頁面未偵測到頁首檔名", "僅在正文區出現檔名"],
+      "suggestion": "請將檔名／篇名設定於頁首頁首帶（建議 10pt 置中）。"
     },
     {
-      "id": "filename.title_consistency",
-      "title": "檔案名稱 與 頁首篇名一致性",
+      "rule_id": "filename.title_consistency",
+      "title": "檔案名稱 與 頁首篇名一致性（不符判定淘汰）",
+      "applies_to": ["pdf"],
       "severity": "critical",
-      "scope": ["pdf"],
-      "type": "filename_vs_header_title",
-      "params": { "minTitleLen": 4 }
+      "check_kind": "auto",
+      "description": "上傳的『檔案名稱』需與頁首帶中的『篇名』相符或高度包含關係。",
+      "pass_criteria": "檔名與頁首篇名彼此包含或完全相同。",
+      "fail_examples": ["檔名與頁首篇名為不同主題／關鍵詞"],
+      "suggestion": "將檔案名稱與頁首篇名統一為小論文題名。"
     },
     {
-      "id": "footer.center_pagenum",
+      "rule_id": "footer.pagenum",
       "title": "每頁需有置中頁碼（底端帶）",
+      "applies_to": ["pdf"],
       "severity": "critical",
-      "scope": ["pdf"],
-      "type": "footer_center_pagenum"
+      "check_kind": "auto",
+      "description": "各頁底端中央需有阿拉伯數字頁碼，並建議連號。",
+      "pass_criteria": "所有頁底中央皆偵測到數字頁碼。",
+      "fail_examples": ["缺少頁碼的頁次", "頁碼未置中"],
+      "suggestion": "在頁尾置中放置頁碼（建議 10pt）。"
     },
     {
-      "id": "layout.margins",
+      "rule_id": "layout.margins",
       "title": "四周邊界 ≥ 2 公分（正文區推估）",
+      "applies_to": ["pdf"],
       "severity": "major",
-      "scope": ["pdf"],
-      "type": "margins_min_cm"
+      "check_kind": "auto",
+      "description": "以文字框座標推估版面，四側留白至少約 2 公分。",
+      "pass_criteria": "推估的左/右/上/下最小邊界皆 ≥ 2 公分。",
+      "fail_examples": ["任一側估算邊界低於 2 公分"],
+      "suggestion": "請確認版面設定至少 2 公分。"
     },
     {
-      "id": "privacy.no_school_or_name",
-      "title": "不得含校名/姓名",
-      "severity": "critical",
-      "scope": ["both"],
-      "type": "privacy_schoolname_regex"
-    },
-    {
-      "id": "structure.sections_order",
-      "title": "六大段落依序",
-      "severity": "critical",
-      "scope": ["both"],
-      "type": "sections_order",
-      "params": {
-        "sections": ["前言","文獻探討","研究方法","研究分析與結果","研究結論與建議","參考文獻"]
-      }
-    },
-    {
-      "id": "references.citation_style",
-      "title": "內文引註採 作者-年份",
+      "rule_id": "layout.spacing",
+      "title": "版面編排（單行間距／段首縮排一致性）",
+      "applies_to": ["pdf"],
       "severity": "major",
-      "scope": ["both"],
-      "type": "citation_style"
+      "check_kind": "auto",
+      "description": "以行距分布與行首 X 座標分散度，啟發式檢查單行間距與段首縮排的一致性。",
+      "pass_criteria": "行距近似單行且段首縮排風格全篇一致。",
+      "fail_examples": ["行距過大／過小", "同篇中段首縮排方式不一致"],
+      "suggestion": "設定單行間距；段首（是否縮排）需全篇一致。"
     },
     {
-      "id": "quotes.limit",
-      "title": "直接引文 ≤ 50 字（不含標點與空白）",
-      "severity": "major",
-      "scope": ["both"],
-      "type": "quote_len_limit",
-      "params": { "max": 50 }
-    },
-    {
-      "id": "references.count",
-      "title": "參考文獻 ≥ 3",
-      "severity": "critical",
-      "scope": ["both"],
-      "type": "refs_min_count",
-      "params": { "min": 3 }
-    },
-    {
-      "id": "style.font",
-      "title": "字體/字型規範",
-      "severity": "major",
-      "scope": ["both"],
-      "type": "style_font_check",
-      "params": {
-        "zhFont": "新細明體",
-        "enFont": "Times New Roman",
-        "fontSizePT": 12,
-        "color": "#000000"
-      }
-    },
-    {
-      "id": "layout.spacing",
-      "title": "版面編排（單行間距 / 段首縮排）",
-      "severity": "major",
-      "scope": ["pdf"],
-      "type": "layout_spacing_check",
-      "params": { "marginCM": 2.0 }
-    },
-    {
-      "id": "structure.headings",
-      "title": "標題與次標題層次",
-      "severity": "major",
-      "scope": ["both"],
-      "type": "headings_hierarchy_check"
-    },
-    {
-      "id": "references.citation_required",
-      "title": "引用原文需註明出處（≤50字）",
-      "severity": "critical",
-      "scope": ["both"],
-      "type": "citation_required",
-      "params": { "quoteMax": 50 }
-    },
-    {
-      "id": "file.coverpage",
+      "rule_id": "file.coverpage",
       "title": "不得有封面頁（4–10頁）",
+      "applies_to": ["pdf"],
       "severity": "critical",
-      "scope": ["pdf"],
-      "type": "coverpage_absent",
-      "params": {
-        "keywords": ["學校","高中","高級中學","大學","指導老師","班級","學生","學號","封面"]
-      }
+      "check_kind": "auto",
+      "description": "四到十頁的短篇小論文不應包含封面。以首頁關鍵詞（如學校、指導老師、班級、學號等）進行啟發式檢測。",
+      "pass_criteria": "第 1 頁未出現明顯封面關鍵詞。",
+      "fail_examples": ["第 1 頁出現『學校／指導老師／班級／學號／封面』等字樣"],
+      "suggestion": "移除封面資訊或改為一頁內含題名與正文開頭。"
     },
     {
-      "id": "figures.tables",
-      "title": "圖表需有標號/標題與來源",
+      "rule_id": "privacy.no_school_or_name",
+      "title": "不得含校名／姓名",
+      "applies_to": ["pdf", "docx"],
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "以完整學校稱謂樣式偵測，若文件含校名或學生姓名即視為不通過。",
+      "pass_criteria": "全文未偵測到校名或姓名樣式。",
+      "fail_examples": ["國立○○高中、○○科技大學…"],
+      "suggestion": "請去識別化（以 XXX 取代完整校名／姓名）。"
+    },
+    {
+      "rule_id": "structure.sections_order",
+      "title": "六大段落依序",
+      "applies_to": ["pdf", "docx"],
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "需依序出現『前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻』。",
+      "pass_criteria": "六段落皆被找到且順序正確。",
+      "fail_examples": ["遺漏任何一段", "出現但順序錯誤"],
+      "suggestion": "補齊並按規定順序排列。"
+    },
+    {
+      "rule_id": "references.citation_style",
+      "title": "內文引註採 作者-年份",
+      "applies_to": ["pdf", "docx"],
       "severity": "major",
-      "scope": ["both"],
-      "type": "figures_tables_check"
+      "check_kind": "auto",
+      "description": "檢查是否出現（姓名，年份）或 姓名（年份）之作者—年份體例。",
+      "pass_criteria": "全文能檢出至少 1 處作者—年份體例。",
+      "fail_examples": ["完全未檢出此體例"],
+      "suggestion": "請改用作者—年份體例：例（王小明，2020）或 王小明（2020）。"
     },
     {
-      "id": "references.consistency",
-      "title": "參考文獻與內文引註一致性",
+      "rule_id": "quotes.limit",
+      "title": "直接引文 ≤ 50 字（不含標點與空白）",
+      "applies_to": ["pdf", "docx"],
+      "severity": "major",
+      "check_kind": "auto",
+      "description": "抽取中英引號內文字，去除標點與空白後逐段檢查是否超過 50 字。",
+      "pass_criteria": "所有直接引文長度皆 ≤ 50 字。",
+      "fail_examples": ["任一直接引文超過 50 字"],
+      "suggestion": "過長引文請改述或刪減。"
+    },
+    {
+      "rule_id": "references.count",
+      "title": "參考文獻 ≥ 3",
+      "applies_to": ["pdf", "docx"],
       "severity": "critical",
-      "scope": ["both"],
-      "type": "refs_consistency_check"
+      "check_kind": "auto",
+      "description": "以『參考文獻』後段落行為粗略估算，至少需 3 筆。",
+      "pass_criteria": "估計筆數 ≥ 3。",
+      "fail_examples": ["估計筆數 0–2"],
+      "suggestion": "補足至少三筆參考文獻。"
     },
     {
-      "id": "external.duplicate_check",
-      "title": "作品名稱是否已於校外發表/得獎（人工/GPT）",
+      "rule_id": "structure.headings",
+      "title": "標題與次標題層次",
+      "applies_to": ["pdf", "docx"],
+      "severity": "major",
+      "check_kind": "auto",
+      "description": "偵測常見層級樣式（壹/一/（一）/1/(1) 或 I/A/(A)），確認是否具層次結構。",
+      "pass_criteria": "能檢出兩種以上層級樣式。",
+      "fail_examples": ["完全無明顯層級樣式"],
+      "suggestion": "建議使用『壹→一→（一）→1→（1）』或『I→A→(A)』等層次。"
+    },
+    {
+      "rule_id": "references.citation_required",
+      "title": "引用原文需註明出處（≤50字）",
+      "applies_to": ["pdf", "docx"],
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "在引號區段附近檢查是否同時存在作者—年份樣式，缺少則視為未註明出處。",
+      "pass_criteria": "所有引號段落附近皆能檢出年份樣式。",
+      "fail_examples": ["引號段落附近未見年份樣式"],
+      "suggestion": "直接引文（加引號）需附出處；間接引述亦應標示來源。"
+    },
+    {
+      "rule_id": "figures.tables",
+      "title": "圖表需有標號／標題與來源",
+      "applies_to": ["pdf", "docx"],
+      "severity": "major",
+      "check_kind": "auto",
+      "description": "偵測『圖N／表N』與『資料來源：』，若有圖表但缺來源則不通過。",
+      "pass_criteria": "每項圖表皆能在下方找到『資料來源：…』。",
+      "fail_examples": ["檢出圖表但缺少『資料來源：』"],
+      "suggestion": "圖表上方置左標號＋標題；下方標示『資料來源：…』或『研究者自行製作』。"
+    },
+    {
+      "rule_id": "references.consistency",
+      "title": "參考文獻與內文引註一致性",
+      "applies_to": ["pdf", "docx"],
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "將內文作者—年份片段與『參考文獻』區段比對，估算未對應的引註數。",
+      "pass_criteria": "所有引註皆能在參考文獻找到對應。",
+      "fail_examples": ["存在未對應之引註"],
+      "suggestion": "內文引用皆需在參考文獻出現；未引用者不得列入參考文獻。"
+    },
+    {
+      "rule_id": "references.non_all_web",
+      "title": "參考文獻來源不可全為網路",
+      "applies_to": ["pdf", "docx"],
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "檢查參考文獻列中是否全部為純網路來源（URL/DOI/取自）。至少需有 1 筆非純網路文獻。",
+      "pass_criteria": "文獻來源並非全部為網路；至少一筆非純網路來源。",
+      "fail_examples": ["全部為網站、DOI 或『取自』等網路來源"],
+      "suggestion": "加入書籍、期刊或其他非純網路來源。"
+    },
+    {
+      "rule_id": "style.font",
+      "title": "字體／字型規範（需人工確認）",
+      "applies_to": ["pdf", "docx"],
+      "severity": "major",
+      "check_kind": "manual",
+      "description": "建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體；中文全形／英文半形標點。",
+      "pass_criteria": "人工抽查多處段落均符合建議樣式。",
+      "fail_examples": ["大小不一、顏色混用、字體不一致等"],
+      "suggestion": "統一字型與大小；避免彩色內文字。"
+    },
+    {
+      "rule_id": "external.duplicate_check",
+      "title": "作品名稱是否已於校外發表／得獎（人工或 GPT）",
+      "applies_to": ["pdf", "docx"],
       "severity": "minor",
-      "scope": ["both"],
-      "type": "manual_check"
+      "check_kind": "gpt_or_manual",
+      "description": "需以外部檢索（人工或 GPT 小助手）查核作品是否已公開發表或得獎。",
+      "pass_criteria": "未檢索到相同題名之公開發表／得獎紀錄。",
+      "fail_examples": ["檢出相同題名之公開發表或獲獎頁面"],
+      "suggestion": "以『檔名／篇名＋比賽或學校關鍵字』搜尋並截圖存證。"
+    },
+    {
+      "rule_id": "file.pages.docx",
+      "title": "頁數 4–10（DOCX 限提醒）",
+      "applies_to": ["docx"],
+      "severity": "minor",
+      "check_kind": "note",
+      "description": "DOCX 無法精確估算頁數，僅提醒需於匯出 PDF 後再檢查頁數與空間規則。",
+      "pass_criteria": "—",
+      "fail_examples": [],
+      "suggestion": "匯出 PDF 再做頁首／頁碼／邊界檢查。"
     }
   ]
 }
