@@ -32,6 +32,13 @@
     nav a{color:#2563eb;text-decoration:none}
     nav a:hover{text-decoration:underline}
     .filetag{font-size:13px;color:#374151;margin:6px 0 0}
+    /* ★ 規則編號徽章 */
+    .num{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:22px;height:22px;margin-right:6px;
+      border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;
+      font-size:12px;color:#374151;font-weight:600;
+    }
   </style>
 
   <!-- pdf.js（ESM） -->
@@ -53,7 +60,7 @@
       <p>小論文格式自檢系統。支援 PDF（含頁首/頁碼/邊界 2cm）與 DOCX（文字規則）。檔案上傳產出檢查報告後，網站會立即刪除檔案，不存檔，保護隱私。</p>
       <div class="badge" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
       <div class="muted" style="margin-top:12px">
-        網站建置：<b>國立佳冬高農 圖書館</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
+        網站建置：<b>國立佳冬高農 </b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
         © 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw
       </div>
     </header>
@@ -209,7 +216,7 @@
 
   <script>
     // ====== 可調參數 ======
-    const GAS_WEB_APP_URL = "https://script.googleusercontent.com/AKfycbx8npGiI4DupgWSm_s5bpwttPlr65KzFtdO1y0zhjY8yYuK_lRmamqxEnnuaNJ805E/echo?YOUR_DEPLOYED_URL";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcnN21Ix19tZ8Lu9bT6WgL-DMnsFBQV8IWm4UIlVUhhtLlSudWywDo1eJXr2aNoqHl/exec";
     const ENABLE_COUNTER = true;
 
     // ====== UI元素 ======
@@ -237,6 +244,9 @@
     let lastSummaryJSON = null;
     const _rowsBuffer = [];
     let _lastPageCount = 0;
+
+    // ★ 檢查結果編號計數器
+    let _ruleCounter = 0;
 
     // ====== 規則 ======
     const RULES = {
@@ -320,6 +330,9 @@
       if (!arrayBuffer) return;
       tbody.innerHTML=''; resultCard.style.display='none'; statusEl.textContent='解析中…';
       _rowsBuffer.length = 0;
+
+      // ★ 每次檢查重新從 1 開始編號
+      _ruleCounter = 0;
 
       try{
         if (fileExt === 'pdf'){
@@ -582,7 +595,7 @@
       addRow('標題與次標題層次', hLevels.length>1, hLevels.length?`檢出層級樣式：${hLevels.join('、')}`:'未檢出層級樣式（僅提醒）',
              '建議使用：壹→一→（一）→1→（1）或 I→A→(A) 等層次。');
 
-      // 引用原文需註明出處（≤50字） → 在引號附近檢查是否出現年份樣式
+      // 引用原文需註明出處（≤50字）
       const aroundHasYear = (all, idx, len) => {
         const start = Math.max(0, idx-80), end = Math.min(all.length, idx+len+80);
         const win = all.slice(start,end);
@@ -598,7 +611,7 @@
              missingCite===0 ? '抽樣檢查：引文附近含年份樣式' : `有 ${missingCite} 處引文附近未見年份樣式`,
              '直接引文需加引號且 ≤50 字並附出處；間接引述也應附出處。');
 
-      // 圖表：有編號/標題，上方；下方需「資料來源：」
+      // 圖表：有編號/標題與來源
       const figCount = (fullText.match(/(^|[^\u4e00-\u9fa5])圖\s*\d+[\s．.、]/g)||[]).length;
       const tabCount = (fullText.match(/(^|[^\u4e00-\u9fa5])表\s*\d+[\s．.、]/g)||[]).length;
       const srcCount = (fullText.match(/資料來源[:：]/g)||[]).length;
@@ -658,7 +671,13 @@
     function addRow(rule, pass, evidence, suggestion){
       const tr = document.createElement('tr');
       const badge = pass ? '<span class="ok">通過</span>' : '<span class="bad">未通過</span>';
-      tr.innerHTML = `<td>${rule}</td><td>${badge}</td><td>${evidence||''}</td><td>${suggestion||''}</td>`;
+      // ★ 在規則前加入編號徽章
+      tr.innerHTML = `
+        <td><span class="num">${++_ruleCounter}</span>${rule}</td>
+        <td>${badge}</td>
+        <td>${evidence||''}</td>
+        <td>${suggestion||''}</td>
+      `;
       tbody.appendChild(tr);
 
       const map = {
