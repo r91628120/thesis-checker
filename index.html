@@ -28,7 +28,6 @@
     th{background:#f9fafb}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
     pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
-    .stat{font-size:13px;color:#374151}
     nav a{color:#2563eb;text-decoration:none}
     nav a:hover{text-decoration:underline}
     .filetag{font-size:13px;color:#374151;margin:6px 0 0}
@@ -73,8 +72,6 @@
         <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
         <ul>
           <li><b>自我檢查工具：</b>僅提供格式檢查與建議，不做存證或投稿。</li>
-        </ul>
-        <ul>
           <li><b>立即刪除：</b>檔案僅在本機記憶體解析，完成後即釋放；本站不保存。</li>
           <li><b>使用者自行保存：</b>請下載檢查報告或複製檢查檔案摘要。</li>
           <li><b>隱私保護：</b>請勿含個資（校名、姓名、班級）。若偵測到將拒絕檢查。</li>
@@ -96,6 +93,8 @@
       <div class="row" style="margin-top:8px">
         <button id="start" class="primary" disabled>開始檢查</button>
         <button id="clear" disabled>清除</button>
+        <!-- ★ 新增：字體字型進階檢查（獨立呼叫 Cloud Run） -->
+        <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
         <span id="status" class="hint" role="status" aria-live="polite"></span>
       </div>
     </section>
@@ -161,14 +160,9 @@
           <li>請勾選上傳政策。</li>
           <li>上傳 PDF 或 DOCX。</li>
           <li>按「開始檢查」，查看檢查報告。</li>
+          <li>如需更細的字體字型檢查：按「字體字型進階檢查（Cloud Run）」。</li>
           <li>如需建議：複製 檢查報告 → 打開 AI助手 → 貼上。</li>
-          <li>或可下載 檢查報告(網頁格式)、檔案報告保存。</li>
         </ol>
-        <ul>
-          <li><b>PDF 專屬檢查：</b>頁首檔名是否出現在頁首帶、頁碼是否置中且連號、邊界是否 ≥ 2 公分。</li>
-          <li><b>PDF/DOCX 共同檢查：</b>六大段落順序、作者—年份引註、直接引文 ≤ 50（不含標點與空白）、參考文獻 ≥ 3、去個資。</li>
-          <li><b>建議教學流程：</b>先由學生自檢 → 以 AI助手 建議修正 → 再交付老師。</li>
-        </ul>
       </details>
 
       <details id="teacher-examples">
@@ -210,7 +204,8 @@
     // ====== 可調參數 ======
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxUi3g3Yzeu7UQkvHx7Eg6YhQlF6i1zNgH0TwfNKbbHc3ggbkY8oOfKAAGQn76kALpJ/exec";
     const ENABLE_COUNTER = true;
-    const CLOUD_RUN_URL = "https://font-check-api-1009467346209.asia-east1.run.app";
+    const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
+    const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
     // ====== UI元素 ======
     const consent = document.getElementById('consent');
@@ -218,6 +213,7 @@
     const drop = document.getElementById('drop');
     const startBtn = document.getElementById('start');
     const clearBtn = document.getElementById('clear');
+    const fontCheckBtn = document.getElementById('fontCheckBtn');
     const statusEl = document.getElementById('status');
     const resultCard = document.getElementById('resultCard');
     const tbody = document.getElementById('tbody');
@@ -238,7 +234,7 @@
     const _rowsBuffer = [];
     let _lastPageCount = 0;
 
-    // ★ 檢查結果編號計數器
+    // 檢查結果編號
     let _ruleCounter = 0;
 
     // ====== 規則 ======
@@ -262,16 +258,21 @@
       /(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部|學校)/g
     ];
 
+    // ====== 上傳可用性 ======
     function setUploadEnabled(enabled){
       fileInput.disabled = !enabled;
-      startBtn.disabled = !enabled || !arrayBuffer;
-      clearBtn.disabled = !enabled || !arrayBuffer;
+      const hasFile = !!arrayBuffer;
+      startBtn.disabled = !enabled || !hasFile;
+      clearBtn.disabled = !enabled || !hasFile;
+      // 進階檢查僅接受 PDF
+      fontCheckBtn.disabled = !enabled || !hasFile || fileExt!=='pdf';
     }
     consent.addEventListener('change', ()=>{
       setUploadEnabled(consent.checked);
       statusEl.textContent = consent.checked ? '已同意政策，可上傳檔案。' : '請先同意政策。';
     });
 
+    // ====== DnD / 檔案載入 ======
     ['dragenter','dragover'].forEach(ev=>{
       drop.addEventListener(ev, e=>{
         e.preventDefault(); e.stopPropagation();
@@ -302,13 +303,13 @@
       if (f.size > RULES.maxSizeMB * 1024 * 1024){ statusEl.textContent = `檔案超過 ${RULES.maxSizeMB}MB 上限。`; return; }
       fileName = f.name; fileBase = baseName(f.name); fileExt = ext;
       arrayBuffer = await f.arrayBuffer();
-      startBtn.disabled = !consent.checked; clearBtn.disabled = !consent.checked;
       statusEl.textContent = `已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;
+      setUploadEnabled(consent.checked);
     }
 
     clearBtn.addEventListener('click', ()=>{
       fileInput.value=''; arrayBuffer=null; fileName=null; fileBase=null; fileExt=null;
-      startBtn.disabled=true; clearBtn.disabled=true;
+      startBtn.disabled=true; clearBtn.disabled=true; fontCheckBtn.disabled=true;
       resultCard.style.display='none'; tbody.innerHTML='';
       fileTagEl.textContent='';
       statusEl.textContent='已清除選擇。';
@@ -316,7 +317,7 @@
       _rowsBuffer.length=0;
     });
 
-    // ====== 主流程 ======
+    // ====== 主流程（一般檢查） ======
     startBtn.addEventListener('click', async ()=>{
       if (!arrayBuffer) return;
       tbody.innerHTML=''; resultCard.style.display='none'; statusEl.textContent='解析中…';
@@ -325,20 +326,7 @@
 
       try{
         if (fileExt === 'pdf'){
-          // 本地 PDF 規則
           await runPdfChecks(arrayBuffer);
-
-          // === Cloud Run 字體字型進階檢查 ===
-          statusEl.textContent = '解析中…（Cloud Run 字體檢查）';
-          const pdfBlob = new Blob([arrayBuffer], { type: "application/pdf" });
-          const apiResult = await callFontCheckAPI(pdfBlob);
-
-          if (apiResult) {
-            const { pass, suggestion } = normalizeApiResult(apiResult);
-            const ev = buildEvidenceString(apiResult);
-            addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體（中文字體、英文字體、大小、顏色）。');
-          }
-
         } else {
           await runDocxChecks(arrayBuffer);
         }
@@ -347,10 +335,7 @@
         fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
         statusEl.textContent = '完成檢查。';
 
-        // 釋放原始檔（已送出 Cloud Run）
-        arrayBuffer = null; fileInput.value=''; startBtn.disabled=true; clearBtn.disabled=true;
-
-        // 產生摘要 JSON
+        // 保留檔案於記憶體（方便之後按進階檢查）
         buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
 
         // 計數
@@ -364,30 +349,58 @@
       }
     });
 
-    // ====== Cloud Run 呼叫 ======
-    async function callFontCheckAPI(fileBlob){
-      const formData = new FormData();
-      formData.append("file", fileBlob, fileName || "upload.pdf");
+    // ====== 字體字型進階檢查（獨立按鈕） ======
+    fontCheckBtn.addEventListener('click', async ()=>{
+      if (!arrayBuffer || fileExt!=='pdf'){
+        alert('請先選擇 PDF 檔並勾選同意政策。');
+        return;
+      }
+      try{
+        statusEl.textContent = '上傳至 Cloud Run 進行字體檢查…';
+        const pdfBlob = new Blob([arrayBuffer], { type: "application/pdf" });
+        const data = await fetchCloudRun(pdfBlob, fileName || 'upload.pdf');
 
+        if (data){
+          const { pass, suggestion } = normalizeApiResult(data);
+          const ev = buildEvidenceString(data);
+          addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體（中文字體、英文字體、大小、顏色）。');
+          resultCard.style.display='block';
+          fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
+
+          // 重新生成摘要（把這一列也算進去）
+          buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
+          statusEl.textContent = 'Cloud Run 檢查完成。';
+        }
+      }catch(e){
+        console.error(e);
+        statusEl.textContent = 'Cloud Run 檢查失敗。';
+      }
+    });
+
+    // ====== Cloud Run 呼叫（你要的 fetchCloudRun） ======
+    async function fetchCloudRun(fileBlob, nameForServer){
+      const formData = new FormData();
+      formData.append("file", fileBlob, nameForServer || "upload.pdf");
       try {
-        const res = await fetch(CLOUD_RUN_URL, {
+        const res = await fetch(CLOUD_RUN_ENDPOINT, {
           method: "POST",
           body: formData,
         });
-
-        if (!res.ok) {
-          const text = await res.text().catch(()=> "");
-          throw new Error(`API ${res.status} ${res.statusText} ${text}`);
+        if (!res.ok){
+          const t = await res.text().catch(()=> "");
+          throw new Error(`API ${res.status} ${res.statusText} ${t}`);
         }
         return await res.json();
       } catch (err) {
         console.error("呼叫 Cloud Run 失敗：", err);
-        addRow('Cloud Run 字體字型檢查', false, '無法連線或 CORS 被擋，請確認 Cloud Run 已允許跨網域（OPTIONS 與 Access-Control-Allow-Origin）。', '請檢查 Cloud Run CORS 設定與 service URL 是否可公開存取。');
+        addRow('Cloud Run 字體字型檢查', false,
+          '無法連線或 CORS 被擋，請確認 Cloud Run 已允許跨網域（OPTIONS 與 Access-Control-Allow-Origin）。',
+          '請檢查 Cloud Run CORS 設定與 service URL 是否可公開存取。');
         return null;
       }
     }
 
-    // 盡量把 API JSON 轉成一致欄位
+    // 將 API JSON 標準化
     function normalizeApiResult(data){
       const pass = typeof data.pass === 'boolean'
         ? data.pass
@@ -400,6 +413,7 @@
         const parts = [];
         if (data.summary?.pages) parts.push(`頁數：${data.summary.pages}`);
         if (data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
+        if (Array.isArray(data.top_fonts)) parts.push('常見字體：' + data.top_fonts.slice(0,6).join('、'));
         if (Array.isArray(data.fonts) && data.fonts.length){
           parts.push('字體列表（前幾項）：' + data.fonts.slice(0,6).map(f => {
             const n = [f.family, f.name].filter(Boolean)[0] || '(未知字體)';
@@ -573,7 +587,7 @@
       runTextRules(fullText);
     }
 
-    // ====== DOCX 檢查（文字規則；不含空間） ======
+    // ====== DOCX 檢查（文字規則） ======
     async function runDocxChecks(buf){
       const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
       const fullText = stripHtml(html);
@@ -587,7 +601,7 @@
       return tmp.textContent || tmp.innerText || '';
     }
 
-    // ====== 通用文字規則（PDF/DOCX 共用） ======
+    // ====== 通用文字規則 ======
     function runTextRules(fullText){
       const schoolHits = [];
       for (const re of SCHOOL_PATTERNS){
@@ -776,7 +790,7 @@
       jsonPreview.textContent = JSON.stringify(summary, null, 2);
     }
 
-    // ====== 下載報告 / JSON ======
+    // ====== 下載 / 複製 ======
     downloadHtmlBtn.addEventListener('click', ()=>{
       const html = `<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>${document.querySelector('#resultCard').outerHTML}`;
       const blob = new Blob([html], {type:'text/html;charset=utf-8'});
