@@ -55,7 +55,7 @@
       <p>小論文格式自檢系統。支援 PDF 與 DOCX。檔案上傳產出檢查報告後，網站會立即刪除檔案，不存檔，保護隱私。</p>
       <div class="badge" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
       <div class="muted" style="margin-top:12px">
-        網站建置：<b>  </b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
+        網站建置：<b>CTVS Library 凡事皆正面</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
         © 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw
       </div>
     </header>
@@ -160,7 +160,7 @@
           <li>請勾選上傳政策。</li>
           <li>上傳 PDF 或 DOCX。</li>
           <li>按「開始檢查」，查看檢查報告。</li>
-          <li>如需更細的字體字型檢查：按「字體字型進階檢查（Cloud Run）」。</li>
+          <li>如需更細的字體字型檢查：按「字體字型進階檢查」。</li>
           <li>如需建議：複製 檢查報告 → 打開 AI助手 → 貼上。</li>
         </ol>
       </details>
@@ -688,7 +688,7 @@
              `估計總數 ${refCount}；網路來源 ${webCount}`,
              '若僅有 3 筆，至少 1 筆需為非純網路（如書籍、期刊、教科書等）。');
 
-      addRow('字體/字型規範（需人工確認）', true,
+      addRow('字體/字型規範（需人工確認或按上方檢查鈕）', true,
              '建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體；中文全形／英文半形標點。',
              '請抽查多處段落是否符合。');
 
@@ -747,7 +747,7 @@
         '圖表需有標號/標題與來源': {rule_id:'figures.tables', category:'圖表', severity:'major'},
         '參考文獻與內文引註一致性': {rule_id:'references.consistency', category:'參考文獻', severity:'critical'},
         '參考文獻來源不可全為網路': {rule_id:'references.non_all_web', category:'參考文獻', severity:'critical'},
-        '字體/字型規範（需人工確認）': {rule_id:'style.font', category:'版面', severity:'major'},
+        '字體/字型規範（需人工確認或按上方檢查鈕）': {rule_id:'style.font', category:'版面', severity:'major'},
         '作品名稱是否已於校外發表/得獎（需人工/GPT）': {rule_id:'external.duplicate_check', category:'人工檢查', severity:'minor'},
 
         '頁數 4–10（DOCX）': {rule_id:'file.pages.docx', category:'檔案規格', severity:'minor'},
