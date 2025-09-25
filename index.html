@@ -55,7 +55,7 @@
       <p>小論文格式自檢系統。支援 PDF 與 DOCX。檔案上傳產出檢查報告後，網站會立即刪除檔案，不存檔，保護隱私。</p>
       <div class="badge" id="counterBox" style="display:none">目前累積小論文格式自檢人次：<span id="counter">—</span></div>
       <div class="muted" style="margin-top:12px">
-        網站建置：<b>  </b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
+        網站建置：<b>CTVS Library 凡事皆正面</b>。本網站系統僅供教育與非營利用途，著作權歸原權利人所有，嚴禁未經授權之商業使用。<br>
         © 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw
       </div>
     </header>
@@ -94,7 +94,7 @@
         <button id="start" class="primary" disabled>開始檢查</button>
         <button id="clear" disabled>清除</button>
         <!-- ★ 新增：字體字型進階檢查（獨立呼叫 Cloud Run） -->
-        <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+        <button id="fontCheckBtn" disabled>字體字型進階檢查</button>
         <span id="status" class="hint" role="status" aria-live="polite"></span>
       </div>
     </section>
@@ -160,7 +160,7 @@
           <li>請勾選上傳政策。</li>
           <li>上傳 PDF 或 DOCX。</li>
           <li>按「開始檢查」，查看檢查報告。</li>
-          <li>如需更細的字體字型檢查：按「字體字型進階檢查（Cloud Run）」。</li>
+          <li>如需更細的字體字型檢查：按「字體字型進階檢查」。</li>
           <li>如需建議：複製 檢查報告 → 打開 AI助手 → 貼上。</li>
         </ol>
       </details>
@@ -702,7 +702,7 @@
 
       addRow('作品名稱是否已於校外發表/得獎（需人工/GPT）', true,
              `請以關鍵字「${fileBase||'小論文篇名'}」搭配比賽名稱/學校名稱搜尋確認。`,
-             '點右上「打開AI助手」→ 貼上檢查摘要 JSON，請 GPT 協助檢索。');
+             '點右上「打開AI助手」→ 貼上檢查摘要 JSON，請 GPT AI小助手 協助檢索。');
     }
 
     // ====== 工具 ======
