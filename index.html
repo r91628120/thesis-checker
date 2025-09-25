@@ -702,7 +702,7 @@
 
       addRow('作品名稱是否已於校外發表/得獎（需人工/GPT）', true,
              `請以關鍵字「${fileBase||'小論文篇名'}」搭配比賽名稱/學校名稱搜尋確認。`,
-             '點右上「打開AI助手」→ 貼上檢查摘要 JSON，請 GPT AI小助手 協助檢索。');
+             '點右上「打開AI助手」→ 貼上檢查摘要 JSON，請 AI小助手 協助檢索。');
     }
 
     // ====== 工具 ======
@@ -755,8 +755,8 @@
         '圖表需有標號/標題與來源': {rule_id:'figures.tables', category:'圖表', severity:'major'},
         '參考文獻與內文引註一致性': {rule_id:'references.consistency', category:'參考文獻', severity:'critical'},
         '參考文獻來源不可全為網路': {rule_id:'references.non_all_web', category:'參考文獻', severity:'critical'},
-        '字體/字型規範（需人工確認）': {rule_id:'style.font', category:'版面', severity:'major'},
-        '作品名稱是否已於校外發表/得獎（需人工/GPT）': {rule_id:'external.duplicate_check', category:'人工檢查', severity:'minor'},
+        '字體/字型規範（需人工確認或按上方檢查鈕）': {rule_id:'style.font', category:'版面', severity:'major'},
+        '作品名稱是否已於校外發表/得獎（需人工/AI助手）': {rule_id:'external.duplicate_check', category:'人工檢查', severity:'minor'},
 
         '頁數 4–10（DOCX）': {rule_id:'file.pages.docx', category:'檔案規格', severity:'minor'},
         'Cloud Run 字體字型檢查': {rule_id:'fontcheck.cloudrun', category:'字體字型', severity:'major'}
@@ -808,7 +808,7 @@
     copyBtn.addEventListener('click', async ()=>{
       if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
       await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON, null, 2));
-      alert('已複製檢查摘要 JSON，前往 GPT 後直接貼上即可。');
+      alert('已複製檢查摘要 JSON，前往 AI助手 後直接貼上即可。');
     });
     downloadJsonBtn.addEventListener('click', ()=>{
       if (!lastSummaryJSON){ alert('尚未產生檢查摘要。'); return; }
