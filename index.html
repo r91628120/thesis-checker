@@ -109,10 +109,11 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-/* 2) 改為以 Google 試算表 + GAS 累計：把下列 URL 換成你發佈的 Web App 端點 */
+/* Google 試算表 + GAS 累計 */
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxUi3g3Yzeu7UQkvHx7Eg6YhQlF6i1zNgH0TwfNKbbHc3ggbkY8oOfKAAGQn76kALpJ/exec";
 const ENABLE_COUNTER = true;
 
+/* Cloud Run 進階字體檢查 */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
@@ -320,6 +321,83 @@ async function runDocxChecks(buf){
 }
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
+/* ===== 參考文獻解析＋分類（新版） ===== */
+function _isContinuationLine(line) {
+  // 縮排、純網址/DOI/取自、符號項目開頭 → 併入上一條
+  return (
+    /^\s{2,}/.test(line) ||                 // 英文縮排
+    /^[\u3000]{1,}/.test(line) ||           // 全形空白縮排
+    /^(https?:\/\/|doi:|DOI:|取自|Available at|網址)/i.test(line) ||
+    /^[-–•．·●]/.test(line)
+  );
+}
+function _parseReferenceEntries(refText) {
+  const lines = refText.split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const entries = [];
+  let cur = '';
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/,'');
+    if (!cur) { cur = line; continue; }
+
+    if (_isContinuationLine(line)) {
+      cur += ' ' + line;               // 併入上一筆
+    } else if (/^\d+\./.test(line)) {  // 1. 2. 3. 編號開頭 → 開新筆
+      entries.push(cur);
+      cur = line.replace(/^\d+\.\s*/, '');
+    } else {
+      // 常見分隔：全形分號；空行已處理；否則視為同一條延伸
+      if (/；$/.test(cur)) { entries.push(cur); cur = line; }
+      else { cur += ' ' + line; }
+    }
+  }
+  if (cur) entries.push(cur);
+
+  // 粗過濾：明顯不是文獻的短行剔除
+  return entries.filter(s => s.replace(/\s/g,'').length >= 6);
+}
+function _classifyReference(item) {
+  const s = item;
+
+  // A. 書籍／出版社
+  const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
+
+  // B. 期刊／卷期頁碼
+  const hasJournalMeta =
+    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
+    /(Journal|期刊|學報|通訊|評論).{0,40}\d{4}/.test(s);
+
+  // C. 學位／會議論文
+  const hasThesisOrConf =
+    /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
+
+  // D. 法規／政府公告
+  const hasLawOrGov =
+    /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
+
+  // E. 報紙／電子報（視為非網路資料來源的「報紙類」）
+  const hasNewspaper =
+    /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
+
+  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper) {
+    return 'nonweb';
+  }
+
+  // 純網路類（社群／影音／部落格／一般網站文章等）
+  const isPureWeb =
+    /(YouTube|Facebook|Instagram|IG|X\.com|Twitter|PTT|Dcard|blogspot|wordpress|medium\.com|wiki|維基|論壇|部落格)/i.test(s) ||
+    /(網站|網頁|線上文章|粉專)/.test(s);
+
+  // 含網址但沒有任何出版/卷期/頁碼等出版證據 → 視為純網路
+  const hasLink = /(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(s);
+
+  if (isPureWeb) return 'web';
+  if (hasLink)    return 'web';
+
+  // 兜底：未知 → 視為 nonweb，避免把「電子書/期刊」錯誤歸為網路
+  return 'nonweb';
+}
+
 /* ===== 文字規則 ===== */
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
@@ -354,52 +432,51 @@ function runTextRules(pageTexts){
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 13) 疑似缺少引號之直接引文（格式錯誤） — 修正建議文字（刪除「或“”」）
+  // 13) 疑似缺少引號之直接引文（格式錯誤）— 修正建議文字：僅「請加上『』」
   const noQuoteButCite = (fullText.match(/[^\n。！？]{8,80}(（[^，\n]{1,12}，\s*\d{4}）)/g)||[]).filter(seg=>clean(seg).length>=RULES.minQuoteCharsForDirect && !/[「“].+?[」”]/.test(seg));
   if(noQuoteButCite.length){
     addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」。');
   }
 
-  // 14) 引用原文需註明出處
-  let missingCite=0; for(const q of directQuotes){const i=fullText.indexOf(q);if(i>=0){const win=fullText.slice(Math.max(0,i-80),Math.min(fullText.length,i+q.length+80)); if(!citeA.test(win) && !citeB.test(win)) missingCite++;}}
-  addRow('引用原文需附出處（≤50字）',missingCite===0, missingCite===0? (directQuotes.length?`抽樣檢查：引文附近含年份樣式`:'抽樣檢查：未偵測引號片段'): `有 ${missingCite} 處引文附近未見年份樣式`,'原文引用需附出處（作者-年/年份）。');
+  // 14/16) 參考文獻（新版切條＋分類）
+  const refAnchorIdx = fullText.indexOf('參考文獻');
+  const refTextFull  = refAnchorIdx >= 0 ? fullText.slice(refAnchorIdx) : '';
+  const refEntries   = refAnchorIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
 
-  // 15) 圖表規範（含表內已引注例外）— 說明訊息更清楚
+  // A/B/C 統計（A=總數；B=含年份推估；C=含網址/DOI/取自的數量）
+  const A_total = refEntries.length;
+  const B_hasYear = refEntries.filter(s => /(（\d{4}）|\(\d{4}\)|\b\d{4}\b年)/.test(s)).length;
+  const C_hasLink = refEntries.filter(s => /(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(s)).length;
+
+  // 分類：nonweb / web
+  const classified = refEntries.map(s => ({ text: s, kind: _classifyReference(s) }));
+  const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
+  const webCount    = classified.filter(x => x.kind === 'web').length;
+
+  // 14) 參考文獻 ≥ 3
+  addRow('參考文獻 ≥ 3', A_total >= 3,
+    `A. 總數：${A_total}｜B. 含年份推估：${B_hasYear}｜C. 含網址/DOI：${C_hasLink}`,
+    '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條），至少 3 筆。');
+
+  // 15) 圖表規範（含表內已引注例外）— 保留既有邏輯
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
   const totalFT=figMatches.length+tabMatches.length;
-  // 只計「資料來源：」字樣
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
-  // 表內已引注（近距離偵測（作者，年份））
   let tableInlineOK=0; if(tabMatches.length){
     let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，。、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
   }
   const lackSource = (totalFT>0 && (srcAll+tableInlineOK)<totalFT);
   const lackLabel = (totalFT===0 && srcAll>0);
   const figPass = totalFT===0 ? true : (!lackSource && !lackLabel);
-  const explain = (totalFT===0 && srcAll>0)
-    ? '（文件出現多筆「資料來源：」但未偵測到任何「圖x/表x」標號，因此判定「缺標號＝是」。）'
-    : '';
+  const explain = (totalFT===0 && srcAll>0) ? '（文件出現多筆「資料來源：」但未偵測到任何「圖x/表x」標號，因此判定「缺標號＝是」。）' : '';
   addRow('圖表需有標號/標題與來源',figPass,
     `檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'} ${explain}`,
     '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
 
-  // 16) 參考文獻 ≥ 3 — 以「逐行條目」計數，A/B/C 皆以同一批條目統計
-  const refText = refIdx>=0 ? fullText.slice(refIdx) : '';
-  const refLines = refText
-    .split(/\n+/)
-    .map(s=>s.trim())
-    .filter(s=>s.length>0)                                      // 去空白
-    .filter((s,_,arr)=>!(s.startsWith('http')||s.startsWith('https'))) // 把結尾裸連結段落排除
-    .filter(s=>!/^（資料來源[:：]/.test(s));                  // 避免把「資料來源」也算進來
-  const refTotal = refLines.length;
-  const apaLike = refLines.filter(s=>/（\d{4}(年|）|\))|\(\d{4}\)/.test(s)).length;
-  const electronic = refLines.filter(s=>/(https?:\/\/|doi\.org|取自|Available at|網址)/i.test(s)).length;
-  addRow('參考文獻 ≥ 3',refTotal>=3,`A. 總數：${refTotal}｜B. APA7 估計含年份：${apaLike}｜C. 電子/論文/新聞等：${electronic}`,'若僅 3 筆，至少確保皆為合格型式（含電子書/期刊/論文/電子報亦視同合格）。');
-
-  // 17) 參考文獻與內文引註一致（雙向）
+  // 16) 參考文獻與內文引註一致性（沿用原邏輯，但改用 refEntries）
+  const refJoined = refEntries.join('\n');
   const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
-  let linked=0; const refJoined = refLines.join('\n');
-  for(const c of citations){ if(refJoined.includes(c)) linked++; }
+  let linked=0; for(const c of citations){ if(refJoined.includes(c)) linked++; }
   const unlinkedInText = Math.max(0,citations.length-linked);
   const refAuthors=(refJoined.match(/[\u4e00-\u9fa5A-Za-z]{1,12}（\d{4}/g)||[]).map(s=>s.replace(/（\d{4}.*/,'')); 
   const reverseUnlinked = refAuthors.filter(a=>!citations.some(c=>c.startsWith(a))).length;
@@ -407,15 +484,15 @@ function runTextRules(pageTexts){
     `引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
     '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
 
-  // 18) 參考文獻來源不可全為網路 — 以同一批 refLines 計算
-  const webCount = electronic; // 與上面 C 相同算法
-  const nonAllWebPass = (refTotal===0) ? false : (webCount < refTotal);
-  addRow('參考文獻來源不可全為網路',nonAllWebPass,`總數 ${refTotal}；網路來源 ${webCount}`,'至少保留一筆非純網路來源（如書籍、期刊等）。');
+  // 17) 參考文獻來源不可全為網路（新版：只要不是全部 web 即通過）
+  const nonAllWebPass = (A_total > 0) && (webCount < A_total);
+  const explain16 = `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}（純網路≡社群/影音/一般網站文章；具出版/卷期/頁碼證據之電子書/期刊/論文/報紙皆為非網路）`;
+  addRow('參考文獻來源不可全為網路', nonAllWebPass, explain16, '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。');
 
-  // 19) 字體/字型規範（同步進階結果）
+  // 18) 字體/字型規範（同步進階結果或給建議）
   syncBasicFontRuleMirror();
 
-  // 20) 外部檢索助手
+  // 19) 外部檢索助手
   const extEvidence=buildExternalSearchEvidence(fileBase||'小論文篇名');
   addRow('作品是否已於校外發表/得獎（需人工/GPT）',true,extEvidence,'使用下方「外部檢索助手」或「複製查核提示」至 AI 小助手進行確認。');
   setTimeout(()=>initExternalSearchAssist(fileBase||'小論文篇名'),0);
@@ -483,9 +560,11 @@ function addRow(rule,pass,evidence,suggestion){
     '疑似缺少引號之直接引文（格式錯誤）':{rule_id:'quotes.missing_quotes',category:'引文',severity:'major'},
     '引用原文需附出處（≤50字）':{rule_id:'references.citation_required',category:'參考文獻',severity:'critical'},
     '圖表需有標號/標題與來源':{rule_id:'figures.tables',category:'圖表',severity:'major'},
+
     '參考文獻 ≥ 3':{rule_id:'references.count',category:'參考文獻',severity:'critical'},
     '參考文獻與內文引註一致性':{rule_id:'references.consistency',category:'參考文獻',severity:'critical'},
     '參考文獻來源不可全為網路':{rule_id:'references.non_all_web',category:'參考文獻',severity:'critical'},
+
     '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
     '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
     '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
@@ -522,7 +601,6 @@ copyBtn.addEventListener('click',async()=>{if(!lastSummaryJSON){alert('尚未產
 downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}const blob=new Blob([JSON.stringify(lastSummaryJSON,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download((lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json');a.click();URL.revokeObjectURL(a.href);});
 
 /* ===== GAS 計數（Google 試算表累計） ===== */
-/* 你的 GAS 需實作：action=increment 時把試算表 +1；action=get 回傳 {count:number} */
 async function bumpCounterEveryTime(){
   try{
     await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({action:'increment',site:'essayguard'})});
