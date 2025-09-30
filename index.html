@@ -77,19 +77,19 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <li>頁首需含檔名（篇名），且置中於距上緣 ≥ 2 公分的頁首區塊。</li>
       <li>檔名與頁首篇名一致（不符淘汰）。</li>
       <li>頁碼需置中於距下緣 ≥ 2 公分的頁尾區塊，且建議連號。</li>
-      <li>（快速判定）僅檢查第 1 頁的頁首/頁尾邊界是否達標，視為全篇合格/不合格。:contentReference[oaicite:1]{index=1}</li>
+      <li>（快速判定）僅檢查第 1 頁的頁首/頁尾邊界是否達標，視為全篇合格/不合格。</li>
       <li>四周邊界 ≥ 2 公分（正文區推估）。</li>
       <li>不得有封面頁（4–10 頁）。</li>
-      <li>不得含校名/姓名（跳過「陸、參考文獻」段落）。:contentReference[oaicite:2]{index=2}</li>
+      <li>不得含校名/姓名（跳過「陸、參考文獻」段落）。</li>
       <li>六大段落依序：前言→文獻探討→研究方法→研究分析與結果→研究結論與建議→參考文獻。</li>
-      <li>內文引註採 作者-年份；引文（≥10淨字）必須加引號並附出處，否則格式錯誤/疑似抄襲。:contentReference[oaicite:3]{index=3}</li>
+      <li>內文引註採 作者-年份；引文（≥10淨字）必須加引號並附出處，否則格式錯誤/疑似抄襲。</li>
       <li>直接引文 ≤ 50 字（不含標點空白）。</li>
-      <li>參考文獻 ≥ 3；另行顯示 A/B/C：總數、符合 APA7 估計數、符合「含紙本/電子書/電子期刊/電子論文/電子報」數。:contentReference[oaicite:4]{index=4}</li>
-      <li>圖表需「上方置左標號+標題」與「下方資料來源」，三種缺一/皆無皆錯；若在表內已以（作者，年代）標示，則可不於表下再標。:contentReference[oaicite:5]{index=5}</li>
-      <li>參考文獻與內文引註一致（雙向缺漏提示）。並提示粗體元素規範（僅提醒）。:contentReference[oaicite:6]{index=6}</li>
+      <li>參考文獻 ≥ 3；另行顯示 A/B/C：總數、符合 APA7 估計數、符合「含紙本/電子書/電子期刊/電子論文/電子報」數。</li>
+      <li>圖表需「上方置左標號+標題」與「下方資料來源」，三種缺一/皆無皆錯；若在表內已以（作者，年代）標示，則可不於表下再標。</li>
+      <li>參考文獻與內文引註一致（雙向缺漏提示）。並提示粗體元素規範（僅提醒）。</li>
       <li>來源不可全為網路。</li>
-      <li>字體/字型規範（與進階檢查結果同步呈現）。:contentReference[oaicite:7]{index=7}</li>
-      <li>校外發表/得獎：外部檢索助手 + GPT 提示。:contentReference[oaicite:8]{index=8}</li>
+      <li>字體/字型規範（與進階檢查結果同步呈現）。</li>
+      <li>校外發表/得獎：外部檢索助手 + GPT 提示。</li>
     </ol>
     <p class="hint">※ 系統檢查為輔助工具，仍需老師覆核。</p>
   </section>
@@ -167,7 +167,7 @@ startBtn.addEventListener('click',async()=>{
   }catch(e){console.error(e);statusEl.textContent='解析失敗：請確認檔案是否有效。'}
 });
 
-/* ===== 進階字體檢查（合併列、no-cache、CORS 指示） ===== */
+/* ===== 進階字體檢查（維持原邏輯） ===== */
 fontCheckBtn.addEventListener('click',async()=>{
   if(!arrayBuffer||fileExt!=='pdf'){alert('請先選擇 PDF 檔。');return;}
   try{
@@ -176,10 +176,8 @@ fontCheckBtn.addEventListener('click',async()=>{
     const data=await fetchCloudRun(pdfBlob,fileName||'upload.pdf');
     if(data){
       const {pass,suggestion}=normalizeApiResult(data); const ev=buildEvidenceString(data);
-      // 合併到現有 rows（不要覆蓋）  :contentReference[oaicite:9]{index=9}
       _fontCheckMirror={pass:Boolean(pass),evidence:ev,suggestion:suggestion||''};
       addRow('Cloud Run 字體字型檢查',!!pass,ev,suggestion||'請依規範修正字體。');
-      // 同步一般「字體/字型規範」提示列（讓兩者一致呈現）  :contentReference[oaicite:10]{index=10}
       syncBasicFontRuleMirror();
       buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
       resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='Cloud Run 檢查完成。';
@@ -189,7 +187,7 @@ fontCheckBtn.addEventListener('click',async()=>{
 async function fetchCloudRun(fileBlob,nameForServer){
   const formData=new FormData(); formData.append("file",fileBlob,nameForServer||"upload.pdf");
   try{
-    const res=await fetch(CLOUD_RUN_ENDPOINT,{method:"POST",body:formData,headers:{"Cache-Control":"no-cache"}}); // 強制 no-cache  :contentReference[oaicite:11]{index=11}
+    const res=await fetch(CLOUD_RUN_ENDPOINT,{method:"POST",body:formData,headers:{"Cache-Control":"no-cache"}});
     if(!res.ok){const t=await res.text().catch(()=> "");throw new Error(`API ${res.status} ${res.statusText} ${t}`)}
     return await res.json();
   }catch(err){
@@ -223,7 +221,7 @@ async function runPdfChecks(buf){
   const headerTitleTexts=[];
   let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
 
-  // 首頁頁首/頁尾合規檢查（≥2 公分 & 置中）  :contentReference[oaicite:12]{index=12}
+  // 首頁頁首/頁尾合規檢查（≥2 公分 & 置中）
   let firstHeaderCentered=false,firstHeaderDistTopOK=false,firstFooterCentered=false,firstFooterDistBottomOK=false;
 
   const norm=s=>(s||'').replace(/\s/g,'').toLowerCase(); const baseNorm=norm(fileBase||'');
@@ -247,10 +245,9 @@ async function runPdfChecks(buf){
         if(/^\d+$/.test(txt)){ hasCenterPageNum=true; if(parseInt(txt,10)!==p) sequentialOk=false; if(p===1){firstFooterCentered=true; firstFooterDistBottomOK = (y>=MARGIN_PT);} }
       }
 
-      // 首頁：頁首置中 + 距上緣 ≥ 2 公分（抓最接近中心的一段文字視為篇名）
+      // 首頁：頁首置中 + 距上緣 ≥ 2 公分
       if(p===1 && (H - y) >= MARGIN_PT && y>=headerBandY){
         const mid=x + w/2; if(mid>=centerLeft && mid<=centerRight){ firstHeaderCentered=true; firstHeaderDistTopOK=true; }
-
       }
 
       // 蒐集頁首篇名候選
@@ -271,17 +268,17 @@ async function runPdfChecks(buf){
     pageTexts[p]=pageBuf.join('');
   }
 
-  // 2) 首頁頁首/頁尾合規（≥2cm + 置中）
+  // 2) 首頁頁首/頁尾合規
   const firstHeaderOK = firstHeaderCentered && firstHeaderDistTopOK;
   const firstFooterOK = firstFooterCentered && firstFooterDistBottomOK;
   addRow('首頁頁首置中且距上緣 ≥ 2 公分', firstHeaderOK,
     firstHeaderOK?'已偵測到首頁頁首置中且距頂 ≥2cm':'未偵測到置中或距頂不足 2cm',
-    '請將篇名置中於頁首，並設定頁首距上緣 ≥ 2 公分。');  // :contentReference[oaicite:13]{index=13}
+    '請將篇名置中於頁首，並設定頁首距上緣 ≥ 2 公分。');
   addRow('首頁頁碼置中且距下緣 ≥ 2 公分', firstFooterOK,
     firstFooterOK?'已偵測到首頁頁尾置中頁碼且距底 ≥2cm':'未偵測到置中或距底不足 2cm',
-    '請將頁碼置中於頁尾，並設定頁尾距下緣 ≥ 2 公分。');      // :contentReference[oaicite:14]{index=14}
+    '請將頁碼置中於頁尾，並設定頁尾距下緣 ≥ 2 公分。');
 
-  // 3) 頁首檔名存在（避免放正文）
+  // 3) 每頁頁首需含檔名
   const missHeaderPages=[]; for(let p=1;p<=numPages;p++){ if(!headerHasTitle.has(p))missHeaderPages.push(p); }
   const wrongPlacement=[]; for(const p of bodyHasTitle){ if(!headerHasTitle.has(p))wrongPlacement.push(p); }
   addRow('每頁需在頁首帶包含檔名（非正文區）',
@@ -297,23 +294,23 @@ async function runPdfChecks(buf){
     titleDetected?`檔名「${fileBase}」；頁首篇名「${headerTitleGuess.raw}」`:'未偵測到可辨識的頁首篇名',
     '請使檔名與頁首篇名一致（常用小論文篇名）。');
 
-  // 5) 頁碼置中（列出缺少頁次；若非連號一併提醒）
+  // 5) 頁碼置中
   const pageNumPass=(pageNumOkPages.length===numPages);
   addRow('每頁需有置中頁碼（底端帶）',pageNumPass,
     pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,numPages)}` + (sequentialOk?'':'；疑似非連號'),
     '請在頁尾置中放置阿拉伯數字頁碼（建議連號）。');
 
-  // 6) 四周邊界（正文區推估）
+  // 6) 邊界 2 公分（正文區推估）
   const marginPass=(minLeft>=MARGIN_PT)&&(minRight>=MARGIN_PT)&&(minBottom>=MARGIN_PT)&&(minTop>=MARGIN_PT);
   addRow('四周邊界 ≥ 2 公分（正文區推估）',marginPass,
     `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MARGIN_PT.toFixed(1)}）`,
     '請確認版面設定至少 2 公分。');
 
-  // 7) 不得有封面頁（僅檢第1頁；不掃描參考文獻）
+  // 7) 不得有封面頁（僅檢第1頁）
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
   addRow('不得有封面頁（4–10頁）',coverHits.length===0, coverHits.length?`第1頁疑似封面關鍵字：${coverHits.join('、')}`:'未發現','4–10頁之小論文不應包含封面資訊。');
 
-  // 文字規則（跨頁；提供錯誤頁碼）
+  // 文字規則
   runTextRules(pageTexts);
 }
 
@@ -322,27 +319,23 @@ async function runDocxChecks(buf){
   const {value:html}=await window.mammoth.convertToHtml({arrayBuffer:buf});
   const text=stripHtml(html); _lastPageCount=0;
   addRow('頁數 4–10（DOCX）',true,'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。','請匯出 PDF。');
-  // 將整體當作單頁 text（頁碼標示僅顯示「—」）
   runTextRules([text]);
 }
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
-/* ===== 文字規則（依 PDF 新增修訂） ===== */
+/* ===== 文字規則 ===== */
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const sec=RULES.sixSections;
   const refIdx=fullText.indexOf('參考文獻');
-  // 用於「避開參考文獻」的檢查區間  :contentReference[oaicite:15]{index=15}
-  const mainTextNoRefs = refIdx>=0 ? fullText.slice(0,refIdx) : fullText;
 
-  // A) 隱私（不得含校名/姓名）—避開參考文獻
+  // A) 隱私（不得含校名/姓名）—避開參考文獻段落
   const schoolHits=[]; const schoolPages=new Set();
   for(let p=1;p<=pages;p++){
     const t=pageTexts[p]||'';
-    // 若頁面內容完全位於參考文獻之後，則跳過
     const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    if(refIdx>=0 && pageStartOffset>=refIdx) continue;
+    if(refIdx>=0 && pageStartOffset>=refIdx) continue; // 跳過參考文獻之後
     for(const re of SCHOOL_PATTERNS){ const m=t.match(re); if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);} }
   }
   addRow('不得含校名/姓名',schoolHits.length===0,
@@ -353,7 +346,7 @@ function runTextRules(pageTexts){
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // C) 引註 作者-年份 + 直接引文 ≤ 50 字（加強：無引號但有引註→格式錯誤；有引號但無引註→疑似抄襲）  :contentReference[oaicite:16]{index=16}
+  // C) 引註 作者-年份 + 直接引文 ≤ 50 字
   const citeA=/（[^，\n]{1,12}，\s*\d{4}）/g, citeB=/[^\s，。、]{1,12}（\s*\d{4}）/g;
   const hasCite=(fullText.match(citeA)?.length||0)+(fullText.match(citeB)?.length||0);
   addRow('內文引註採 作者-年份',hasCite>0,hasCite?`檢出 ${hasCite} 處`:'未檢出引註樣式','請使用（姓名，年份）或 姓名（年份）。');
@@ -363,58 +356,45 @@ function runTextRules(pageTexts){
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 無引號但有（作者，年份）且該句似為直接引用 → 格式錯誤（提醒）
+  // 無引號但有（作者，年份）且似直接引用 → 格式提醒
   const noQuoteButCite = (fullText.match(/[^\n。！？]{8,80}(（[^，\n]{1,12}，\s*\d{4}）)/g)||[]).filter(seg=>clean(seg).length>=RULES.minQuoteCharsForDirect && !/[「“].+?[」”]/.test(seg));
   if(noQuoteButCite.length){
-    addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」或“”。'); // :contentReference[oaicite:17]{index=17}
+    addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」或“”。');
   }
 
-  // 有引號但附近 80 字未找到年份樣式 → 疑似抄襲
+  // 有引號但附近未見年份樣式 → 需註明出處
   let missingCite=0; for(const q of directQuotes){const i=fullText.indexOf(q);if(i>=0){const win=fullText.slice(Math.max(0,i-80),Math.min(fullText.length,i+q.length+80)); if(!citeA.test(win) && !citeB.test(win)) missingCite++;}}
-  addRow('引用原文需註明出處（≤50字）',missingCite===0, missingCite===0? (directQuotes.length?`抽樣檢查：引文附近含年份樣式`:'抽樣檢查：未偵測引號片段'): `有 ${missingCite} 處引文附近未見年份樣式`,'原文引用需附出處（作者-年/年份）。'); // :contentReference[oaicite:18]{index=18}
+  addRow('引用原文需註明出處（≤50字）',missingCite===0, missingCite===0? (directQuotes.length?`抽樣檢查：引文附近含年份樣式`:'抽樣檢查：未偵測引號片段'): `有 ${missingCite} 處引文附近未見年份樣式`,'原文引用需附出處（作者-年/年份）。');
 
-  // （註 1）等註解型 → 格式錯誤提醒  :contentReference[oaicite:19]{index=19}
-  const badNote=(fullText.match(/（註\s*\d+）/g)||[]).length;
-  if(badNote){ addRow('註解格式（（註 n））不符合規範',false,`檢出 ${badNote} 處`,'請改用標準作者-年份體例或腳註規格。'); }
-
-  // D) 圖表規範（強化三種錯誤 + 表內已引注例外）  :contentReference[oaicite:20]{index=20}
+  // D) 圖表規範（含表內已引注例外）
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
   const totalFT=figMatches.length+tabMatches.length;
-  // 判斷是否有「資料來源：」或表內（作者，年份）
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
-  // 粗略切片檢查：若出現「表 n」所在 200 字區間含（作者，年份）則視為表內已引注
   let tableInlineOK=0; if(tabMatches.length){
     let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，。、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
   }
-  // 三種錯誤：只有標號+標題無來源、只有來源無標號、兩者皆無。用啟發式估計
   const lackSource = (totalFT>0 && (srcAll+tableInlineOK)<totalFT);
-  const lackLabel = (totalFT===0 && srcAll>0); // 有來源卻未檢出任何圖表標號
-  const bothNone = (totalFT===0 && srcAll===0)?false:false; // 若兩者皆沒有，通常不會進入規則（因為未使用圖表）
+  const lackLabel = (totalFT===0 && srcAll>0);
   const figPass = totalFT===0 ? true : (!lackSource && !lackLabel);
   addRow('圖表需有標號/標題與來源',figPass,
     `檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'}`,
     '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
 
-  // E) 參考文獻區段抽出
+  // E) 參考文獻
   const refText = refIdx>=0 ? fullText.slice(refIdx) : '';
-  // A. 總數
-  let refTotal=0;
-  if(refText){refTotal=refText.split(/\n|；|;|\r/g).filter(x=>x.trim().length>0).length;}
-  // B. APA7 估計合格數（啟發式）
-  const apaLike = (refText.match(/（\d{4}(年|\)|）)|\(\d{4}\)/g)||[]).length; // 含年份
-  // C. 可計入合格來源（紙本/電子書/期刊/論文/電子報）
+  let refTotal=0; if(refText){refTotal=refText.split(/\n|；|;|\r/g).filter(x=>x.trim().length>0).length;}
+  const apaLike = (refText.match(/（\d{4}(年|\)|）)|\(\d{4}\)/g)||[]).length;
   const electronicBonus = (refText.match(/(doi\.org|http|https|hdl\.handle|電子書|電子期刊|博士論文|碩士論文|聯合新聞網|新聞)/gi)||[]).length;
-  addRow('參考文獻 ≥ 3',refTotal>=3,`A. 總數：${refTotal}｜B. APA7 估計含年份：${apaLike}｜C. 電子/論文/新聞等：${electronicBonus}`,'若僅 3 筆，至少確保皆為合格型式（含電子書/期刊/論文/電子報亦視同合格）。'); // :contentReference[oaicite:21]{index=21}
+  addRow('參考文獻 ≥ 3',refTotal>=3,`A. 總數：${refTotal}｜B. APA7 估計含年份：${apaLike}｜C. 電子/論文/新聞等：${electronicBonus}`,'若僅 3 筆，至少確保皆為合格型式（含電子書/期刊/論文/電子報亦視同合格）。');
 
   // F) 參考文獻與內文引註一致（雙向）
   const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
   let linked=0; if(refText){for(const c of citations){ if(refText.includes(c)) linked++;}}
   const unlinkedInText = Math.max(0,citations.length-linked);
-  // 反向：粗估 ref 中未被引文觸及的筆數（很粗略）
   let reverseUnlinked = 0; if(refText){const refAuthors=(refText.match(/[\u4e00-\u9fa5A-Za-z]{1,12}（\d{4}/g)||[]).map(s=>s.replace(/（\d{4}.*/,'')); reverseUnlinked = refAuthors.filter(a=>!citations.some(c=>c.startsWith(a))).length;}
   addRow('參考文獻與內文引註一致性',unlinkedInText===0 && reverseUnlinked<=1,
     `引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
-    '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。'); // :contentReference[oaicite:22]{index=22}
+    '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
 
   // G) 來源不可全為網路
   let webCount=0; if(refText){const lines=refText.split(/\n+/).map(s=>s.trim()).filter(Boolean); webCount = lines.filter(s=>/(https?:\/\/|doi\.org|取自|Available at|網址)/i.test(s)).length;}
@@ -424,13 +404,13 @@ function runTextRules(pageTexts){
   // H) 字體/字型規範（與進階結果同步呈現）
   syncBasicFontRuleMirror();
 
-  // I) 外部檢索助手（校外發表/得獎）
+  // I) 外部檢索助手（第19項）
   const extEvidence=buildExternalSearchEvidence(fileBase||'小論文篇名');
   addRow('作品是否已於校外發表/得獎（需人工/GPT）',true,extEvidence,'使用下方「外部檢索助手」或「複製查核提示」至 AI 小助手進行確認。');
   setTimeout(()=>initExternalSearchAssist(fileBase||'小論文篇名'),0);
 }
 
-/* ===== 外部檢索助手（沿用前版功能） ===== */
+/* ===== 外部檢索助手（第19項用） ===== */
 function buildExternalSearchEvidence(baseTitle){
   const t=(baseTitle||'小論文篇名').trim(), mk=s=>encodeURIComponent(s);
   const items=[
@@ -484,22 +464,24 @@ function addRow(rule,pass,evidence,suggestion){
     '每頁需有置中頁碼（底端帶）':{rule_id:'footer.pagenum',category:'頁碼',severity:'critical'},
     '四周邊界 ≥ 2 公分（正文區推估）':{rule_id:'layout.margins',category:'版面',severity:'major'},
     '不得有封面頁（4–10頁）':{rule_id:'file.coverpage',category:'檔案規格',severity:'critical'},
+
     '六大段落依序':{rule_id:'structure.sections_order',category:'結構',severity:'critical'},
     '內文引註採 作者-年份':{rule_id:'references.citation_style',category:'參考文獻',severity:'major'},
     [`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`]:{rule_id:'quotes.limit',category:'引文',severity:'major'},
     '引用原文需註明出處（≤50字）':{rule_id:'references.citation_required',category:'參考文獻',severity:'critical'},
-    '註解格式（（註 n））不符合規範':{rule_id:'format.footnote_note',category:'格式',severity:'major'},
     '圖表需有標號/標題與來源':{rule_id:'figures.tables',category:'圖表',severity:'major'},
     '參考文獻 ≥ 3':{rule_id:'references.count',category:'參考文獻',severity:'critical'},
     '參考文獻與內文引註一致性':{rule_id:'references.consistency',category:'參考文獻',severity:'critical'},
     '參考文獻來源不可全為網路':{rule_id:'references.non_all_web',category:'參考文獻',severity:'critical'},
     '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
-    'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'},
+
     '首頁頁首置中且距上緣 ≥ 2 公分':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
     '首頁頁碼置中且距下緣 ≥ 2 公分':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
     '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
+
     '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
-    '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'}
+    '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
+    'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
   };
   const meta=map[rule]||{rule_id:'misc',category:'其他',severity:'minor'};
   _rowsBuffer.push({rule_id:meta.rule_id,category:meta.category,severity:meta.severity,pass,evidence:typeof evidence==='string'?{note:evidence}:(evidence||null),suggestion:suggestion||null});
@@ -516,7 +498,6 @@ function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
 
 /* ===== 字體規範 mirror ===== */
 function syncBasicFontRuleMirror(){
-  // 若已有進階字體檢查，則以其通過與否同步顯示（避免兩者矛盾）  :contentReference[oaicite:23]{index=23}
   if(_fontCheckMirror){
     addRow('字體/字型規範（需人工確認）',_fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
   }else{
@@ -532,7 +513,7 @@ downloadHtmlBtn.addEventListener('click',()=>{
 copyBtn.addEventListener('click',async()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON,null,2));alert('已複製檢查摘要 JSON，前往 AI助手 後直接貼上即可。')});
 downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}const blob=new Blob([JSON.stringify(lastSummaryJSON,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json';a.click();URL.revokeObjectURL(a.href);});
 
-/* ===== GAS 計數（前端增強；若回傳非數字則顯示暫不可用） ===== */
+/* ===== GAS 計數 ===== */
 async function bumpCounterEveryTime(){try{await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({action:'increment',site:'essayguard'})});}catch(e){console.warn('GAS increment failed',e);}}
 async function fetchCounter(){try{const res=await fetch(GAS_WEB_APP_URL+(GAS_WEB_APP_URL.includes('?')?'&':'?')+'action=get&site=essayguard',{headers:{'Accept':'application/json','Cache-Control':'no-cache'}});const text=await res.text();let data;try{data=JSON.parse(text);}catch{data={};}counterBox.style.display='block';if(typeof data.count==='number'){counterEl.textContent=data.count.toLocaleString();}else{counterEl.textContent='暫不可用';}}catch(e){counterBox.style.display='block';counterEl.textContent='暫不可用';}}
 if(ENABLE_COUNTER)fetchCounter();
