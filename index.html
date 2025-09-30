@@ -74,21 +74,20 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <h2>系統檢查規則（合格標準）</h2>
     <ol>
       <li>頁數：4–10 頁。</li>
-      <li>頁首需含檔名（篇名），且置中於距上緣 ≥ 2 公分的頁首區塊。</li>
-      <li>檔名與頁首篇名一致（不符淘汰）。</li>
-      <li>頁碼需置中於距下緣 ≥ 2 公分的頁尾區塊，且建議連號。</li>
-      <li>（快速判定）僅檢查第 1 頁的頁首/頁尾邊界是否達標，視為全篇合格/不合格。</li>
+      <li>首頁頁首置中且距上緣 ≥ 2 公分（於這 2 公分內偵測到含檔名/篇名之置中文字即為通過）。</li>
+      <li>首頁頁碼置中且距下緣 ≥ 2 公分（於這 2 公分內偵測到置中阿拉伯數字頁碼即為通過）。</li>
+      <li>每頁需在頁首帶包含檔名（非正文區）。</li>
+      <li>檔案名稱 與 頁首篇名一致（不符判定淘汰）。</li>
+      <li>每頁需有置中頁碼（底端帶）。</li>
       <li>四周邊界 ≥ 2 公分（正文區推估）。</li>
-      <li>不得有封面頁（4–10 頁）。</li>
-      <li>不得含校名/姓名（跳過「陸、參考文獻」段落）。</li>
-      <li>六大段落依序：前言→文獻探討→研究方法→研究分析與結果→研究結論與建議→參考文獻。</li>
-      <li>內文引註採 作者-年份；引文（≥10淨字）必須加引號並附出處，否則格式錯誤/疑似抄襲。</li>
-      <li>直接引文 ≤ 50 字（不含標點空白）。</li>
-      <li>參考文獻 ≥ 3；另行顯示 A/B/C：總數、符合 APA7 估計數、符合「含紙本/電子書/電子期刊/電子論文/電子報」數。</li>
-      <li>圖表需「上方置左標號+標題」與「下方資料來源」，三種缺一/皆無皆錯；若在表內已以（作者，年代）標示，則可不於表下再標。</li>
-      <li>參考文獻與內文引註一致（雙向缺漏提示）。並提示粗體元素規範（僅提醒）。</li>
-      <li>來源不可全為網路。</li>
-      <li>字體/字型規範（與進階檢查結果同步呈現）。</li>
+      <li>不得有封面頁（4–10頁）。</li>
+      <li>不得含校名/姓名（跳過「參考文獻」段落）。</li>
+      <li>六大段落依序。</li>
+      <li>內文引註採 作者-年份；直接引文 ≤ 50 字（不含標點）。</li>
+      <li>參考文獻 ≥ 3；並顯示 A/B/C 統計。</li>
+      <li>圖表需有標號/標題與來源（表內已引注可不於表下再標）。</li>
+      <li>參考文獻與內文引註一致；來源不可全為網路。</li>
+      <li>字體/字型規範（可用進階檢查）。</li>
       <li>校外發表/得獎：外部檢索助手 + GPT 提示。</li>
     </ol>
     <p class="hint">※ 系統檢查為輔助工具，仍需老師覆核。</p>
@@ -125,7 +124,7 @@ const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.get
 /* ===== 狀態 ===== */
 let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
 let _ruleCounter=0; const _rowsBuffer=[];
-let _fontCheckMirror=null; // 供「字體/字型規範」與進階結果一致顯示
+let _fontCheckMirror=null;
 
 /* ===== 規則常數 ===== */
 const RULES={
@@ -167,7 +166,7 @@ startBtn.addEventListener('click',async()=>{
   }catch(e){console.error(e);statusEl.textContent='解析失敗：請確認檔案是否有效。'}
 });
 
-/* ===== 進階字體檢查（維持原邏輯） ===== */
+/* ===== 進階字體檢查 ===== */
 fontCheckBtn.addEventListener('click',async()=>{
   if(!arrayBuffer||fileExt!=='pdf'){alert('請先選擇 PDF 檔。');return;}
   try{
@@ -210,7 +209,6 @@ async function runPdfChecks(buf){
   const {getDocument}=await window.loadPdfjs(); const pdf=await getDocument({data:buf}).promise;
   const numPages=pdf.numPages; _lastPageCount=numPages;
 
-  // 每頁文字供頁碼標示用
   const pageTexts=[];
 
   // 1) 頁數
@@ -221,40 +219,54 @@ async function runPdfChecks(buf){
   const headerTitleTexts=[];
   let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
 
-  // 首頁頁首/頁尾合規檢查（≥2 公分 & 置中）
-  let firstHeaderCentered=false,firstHeaderDistTopOK=false,firstFooterCentered=false,firstFooterDistBottomOK=false;
+  // 首頁判定（修正：必須「在 2 公分內」且置中；頁首需含檔名/篇名）
+  let firstHeaderOK=false, firstFooterOK=false;
 
   const norm=s=>(s||'').replace(/\s/g,'').toLowerCase(); const baseNorm=norm(fileBase||'');
 
   for(let p=1;p<=numPages;p++){
     const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
     const tc=await page.getTextContent();
-    const headerBandY=H - (MARGIN_PT * RULES.headerBandFactor); const footerBandY=(MARGIN_PT * RULES.footerBandFactor);
+
+    const topBandMinY = H - MARGIN_PT;           // 距上緣 2cm 以內 ⇒ y ∈ [topBandMinY, H]
+    const bottomBandMaxY = MARGIN_PT;            // 距下緣 2cm 以內 ⇒ y ∈ [0, bottomBandMaxY]
     const centerLeft=W/2 - RULES.centerWidthPT, centerRight=W/2 + RULES.centerWidthPT;
 
-    let hasCenterPageNum=false, pageBuf=[];
-
+    let hasCenterPageNum=false;
     const lineMap=new Map(), lineYs=[];
+    const pageBuf=[];
 
     for(const it of tc.items){
-      const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0; const txt=(it.str||'').trim(); const pureNorm=norm(txt);
+      const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
+      const txt=(it.str||'').trim(); const pureNorm=norm(txt);
       pageBuf.push(txt);
 
-      // 頁尾置中頁碼 + 首頁頁尾距底 ≥ 2 公分
-      if(y<=footerBandY && x>=centerLeft && (x+w)<=centerRight){
-        if(/^\d+$/.test(txt)){ hasCenterPageNum=true; if(parseInt(txt,10)!==p) sequentialOk=false; if(p===1){firstFooterCentered=true; firstFooterDistBottomOK = (y>=MARGIN_PT);} }
+      // 首頁：頁首篇名 在「距上緣 ≤ 2cm」且置中，且文串需包含檔名/篇名
+      if(p===1){
+        const centered = (x>=centerLeft && (x+w)<=centerRight);
+        const inTop2cm = (y>=topBandMinY);         // 修正：在 2 公分「以內」(以前寫反了)
+        if(centered && inTop2cm && baseNorm && pureNorm.includes(baseNorm)){
+          firstHeaderOK = true;
+        }
       }
 
-      // 首頁：頁首置中 + 距上緣 ≥ 2 公分
-      if(p===1 && (H - y) >= MARGIN_PT && y>=headerBandY){
-        const mid=x + w/2; if(mid>=centerLeft && mid<=centerRight){ firstHeaderCentered=true; firstHeaderDistTopOK=true; }
+      // 頁尾：置中頁碼 在「距下緣 ≤ 2cm」
+      const centeredBottom = (x>=centerLeft && (x+w)<=centerRight);
+      const inBottom2cm = (y<=bottomBandMaxY);
+      if(centeredBottom && inBottom2cm && /^\d+$/.test(txt)){
+        hasCenterPageNum=true;
+        if(parseInt(txt,10)!==p) sequentialOk=false;
+        if(p===1) firstFooterOK = true;           // 修正：<= 2cm 即視為通過
       }
 
-      // 蒐集頁首篇名候選
-      if(y>=headerBandY && txt){ headerTitleTexts.push(txt); }
+      // 蒐集頁首篇名候選（供「檔名 vs 頁首篇名一致」）
+      if(y>=topBandMinY && txt){ headerTitleTexts.push(txt); }
 
       // 檔名偵測（頁首／正文）
-      if(baseNorm && pureNorm.includes(baseNorm)){ if(y>=headerBandY){headerHasTitle.add(p);} else if(y>MARGIN_PT && y<(H-MARGIN_PT)){ bodyHasTitle.add(p); } }
+      if(baseNorm && pureNorm.includes(baseNorm)){ 
+        if(y>=topBandMinY){ headerHasTitle.add(p); } 
+        else if(y>MARGIN_PT && y<(H-MARGIN_PT)){ bodyHasTitle.add(p); } 
+      }
 
       // 正文區：邊界估計 + 行距/縮排
       const inBody=(y>MARGIN_PT)&&(y<(H-MARGIN_PT));
@@ -268,17 +280,17 @@ async function runPdfChecks(buf){
     pageTexts[p]=pageBuf.join('');
   }
 
-  // 2) 首頁頁首/頁尾合規
-  const firstHeaderOK = firstHeaderCentered && firstHeaderDistTopOK;
-  const firstFooterOK = firstFooterCentered && firstFooterDistBottomOK;
+  // 2) 首頁頁首置中且距上緣 ≥ 2 公分（修正後）
   addRow('首頁頁首置中且距上緣 ≥ 2 公分', firstHeaderOK,
-    firstHeaderOK?'已偵測到首頁頁首置中且距頂 ≥2cm':'未偵測到置中或距頂不足 2cm',
-    '請將篇名置中於頁首，並設定頁首距上緣 ≥ 2 公分。');
-  addRow('首頁頁碼置中且距下緣 ≥ 2 公分', firstFooterOK,
-    firstFooterOK?'已偵測到首頁頁尾置中頁碼且距底 ≥2cm':'未偵測到置中或距底不足 2cm',
-    '請將頁碼置中於頁尾，並設定頁尾距下緣 ≥ 2 公分。');
+    firstHeaderOK?'已在首頁 2 公分內偵測到含檔名之置中篇名':'未偵測到置中篇名或未落在距上緣 2 公分內',
+    '請將篇名置中於頁首，且位置落在距上緣 2 公分以內的區塊。');
 
-  // 3) 每頁頁首需含檔名
+  // 3) 首頁頁碼置中且距下緣 ≥ 2 公分（修正後）
+  addRow('首頁頁碼置中且距下緣 ≥ 2 公分', firstFooterOK,
+    firstFooterOK?'已在首頁 2 公分內偵測到置中頁碼':'未偵測到置中頁碼或未落在距下緣 2 公分內',
+    '請將頁碼置中於頁尾，且位置落在距下緣 2 公分以內的區塊。');
+
+  // 4) 每頁頁首需含檔名（逐頁列出缺漏）
   const missHeaderPages=[]; for(let p=1;p<=numPages;p++){ if(!headerHasTitle.has(p))missHeaderPages.push(p); }
   const wrongPlacement=[]; for(const p of bodyHasTitle){ if(!headerHasTitle.has(p))wrongPlacement.push(p); }
   addRow('每頁需在頁首帶包含檔名（非正文區）',
@@ -286,7 +298,7 @@ async function runPdfChecks(buf){
     (missHeaderPages.length?`缺少頁首檔名頁次：${missHeaderPages.join(', ')}`:'') + (wrongPlacement.length?`；檔名疑似在正文頁次：${wrongPlacement.join(', ')}`:'') || '所有頁面之頁首帶均偵測到檔名',
     '請將檔名／篇名設定於頁首帶（非正文）。');
 
-  // 4) 檔名 vs 頁首篇名一致
+  // 5) 檔名 vs 頁首篇名一致
   const headerTitleGuess=(()=>{const n=s=>(s||'').replace(/\s/g,'').toLowerCase();const filtered=headerTitleTexts.filter(s=>n(s).length>=4);const freq=new Map();for(const s of filtered){const k=n(s);freq.set(k,(freq.get(k)||0)+1)}let bestKey='',bestCount=0;for(const [k,c] of freq){if(c>bestCount){bestKey=k;bestCount=c}}const raw=filtered.find(s=>n(s)===bestKey)||'';return{norm:bestKey,raw}})();
   const fileNorm=(fileBase||'').replace(/\s/g,'').toLowerCase(), titleNorm=headerTitleGuess.norm;
   const titleDetected=!!titleNorm, nameTitleConsistent = titleDetected && (titleNorm.includes(fileNorm)||fileNorm.includes(titleNorm));
@@ -294,23 +306,23 @@ async function runPdfChecks(buf){
     titleDetected?`檔名「${fileBase}」；頁首篇名「${headerTitleGuess.raw}」`:'未偵測到可辨識的頁首篇名',
     '請使檔名與頁首篇名一致（常用小論文篇名）。');
 
-  // 5) 頁碼置中
+  // 6) 每頁需有置中頁碼（逐頁列出缺漏；非連號也提示）
   const pageNumPass=(pageNumOkPages.length===numPages);
   addRow('每頁需有置中頁碼（底端帶）',pageNumPass,
     pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,numPages)}` + (sequentialOk?'':'；疑似非連號'),
     '請在頁尾置中放置阿拉伯數字頁碼（建議連號）。');
 
-  // 6) 邊界 2 公分（正文區推估）
+  // 7) 邊界 2 公分（正文區推估）
   const marginPass=(minLeft>=MARGIN_PT)&&(minRight>=MARGIN_PT)&&(minBottom>=MARGIN_PT)&&(minTop>=MARGIN_PT);
   addRow('四周邊界 ≥ 2 公分（正文區推估）',marginPass,
     `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MARGIN_PT.toFixed(1)}）`,
     '請確認版面設定至少 2 公分。');
 
-  // 7) 不得有封面頁（僅檢第1頁）
+  // 8) 不得有封面頁（僅檢第1頁）
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
   addRow('不得有封面頁（4–10頁）',coverHits.length===0, coverHits.length?`第1頁疑似封面關鍵字：${coverHits.join('、')}`:'未發現','4–10頁之小論文不應包含封面資訊。');
 
-  // 文字規則
+  // 9) 文字規則
   runTextRules(pageTexts);
 }
 
@@ -330,23 +342,23 @@ function runTextRules(pageTexts){
   const sec=RULES.sixSections;
   const refIdx=fullText.indexOf('參考文獻');
 
-  // A) 隱私（不得含校名/姓名）—避開參考文獻段落
+  // 隱私（不得含校名/姓名）—避開參考文獻段落；列出頁碼
   const schoolHits=[]; const schoolPages=new Set();
   for(let p=1;p<=pages;p++){
     const t=pageTexts[p]||'';
     const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    if(refIdx>=0 && pageStartOffset>=refIdx) continue; // 跳過參考文獻之後
+    if(refIdx>=0 && pageStartOffset>=refIdx) continue;
     for(const re of SCHOOL_PATTERNS){ const m=t.match(re); if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);} }
   }
   addRow('不得含校名/姓名',schoolHits.length===0,
     schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
     '請去識別化（以 XXX 取代完整校名）。');
 
-  // B) 六大段落順序
+  // 六大段落順序
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // C) 引註 作者-年份 + 直接引文 ≤ 50 字
+  // 引註 與 直接引文長度
   const citeA=/（[^，\n]{1,12}，\s*\d{4}）/g, citeB=/[^\s，。、]{1,12}（\s*\d{4}）/g;
   const hasCite=(fullText.match(citeA)?.length||0)+(fullText.match(citeB)?.length||0);
   addRow('內文引註採 作者-年份',hasCite>0,hasCite?`檢出 ${hasCite} 處`:'未檢出引註樣式','請使用（姓名，年份）或 姓名（年份）。');
@@ -356,17 +368,17 @@ function runTextRules(pageTexts){
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 無引號但有（作者，年份）且似直接引用 → 格式提醒
+  // 無引號但有引註 → 格式提醒
   const noQuoteButCite = (fullText.match(/[^\n。！？]{8,80}(（[^，\n]{1,12}，\s*\d{4}）)/g)||[]).filter(seg=>clean(seg).length>=RULES.minQuoteCharsForDirect && !/[「“].+?[」”]/.test(seg));
   if(noQuoteButCite.length){
     addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」或“”。');
   }
 
-  // 有引號但附近未見年份樣式 → 需註明出處
+  // 有引號但附近未見年份樣式
   let missingCite=0; for(const q of directQuotes){const i=fullText.indexOf(q);if(i>=0){const win=fullText.slice(Math.max(0,i-80),Math.min(fullText.length,i+q.length+80)); if(!citeA.test(win) && !citeB.test(win)) missingCite++;}}
   addRow('引用原文需註明出處（≤50字）',missingCite===0, missingCite===0? (directQuotes.length?`抽樣檢查：引文附近含年份樣式`:'抽樣檢查：未偵測引號片段'): `有 ${missingCite} 處引文附近未見年份樣式`,'原文引用需附出處（作者-年/年份）。');
 
-  // D) 圖表規範（含表內已引注例外）
+  // 圖表規範（含表內已引注例外）
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
   const totalFT=figMatches.length+tabMatches.length;
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
@@ -380,14 +392,14 @@ function runTextRules(pageTexts){
     `檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'}`,
     '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
 
-  // E) 參考文獻
+  // 參考文獻
   const refText = refIdx>=0 ? fullText.slice(refIdx) : '';
   let refTotal=0; if(refText){refTotal=refText.split(/\n|；|;|\r/g).filter(x=>x.trim().length>0).length;}
   const apaLike = (refText.match(/（\d{4}(年|\)|）)|\(\d{4}\)/g)||[]).length;
   const electronicBonus = (refText.match(/(doi\.org|http|https|hdl\.handle|電子書|電子期刊|博士論文|碩士論文|聯合新聞網|新聞)/gi)||[]).length;
   addRow('參考文獻 ≥ 3',refTotal>=3,`A. 總數：${refTotal}｜B. APA7 估計含年份：${apaLike}｜C. 電子/論文/新聞等：${electronicBonus}`,'若僅 3 筆，至少確保皆為合格型式（含電子書/期刊/論文/電子報亦視同合格）。');
 
-  // F) 參考文獻與內文引註一致（雙向）
+  // 參考文獻與內文引註一致（雙向）
   const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
   let linked=0; if(refText){for(const c of citations){ if(refText.includes(c)) linked++;}}
   const unlinkedInText = Math.max(0,citations.length-linked);
@@ -396,21 +408,21 @@ function runTextRules(pageTexts){
     `引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
     '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
 
-  // G) 來源不可全為網路
+  // 來源不可全為網路
   let webCount=0; if(refText){const lines=refText.split(/\n+/).map(s=>s.trim()).filter(Boolean); webCount = lines.filter(s=>/(https?:\/\/|doi\.org|取自|Available at|網址)/i.test(s)).length;}
   const nonAllWebPass = (refTotal===0) ? false : (webCount < refTotal);
   addRow('參考文獻來源不可全為網路',nonAllWebPass,`總數 ${refTotal}；網路來源 ${webCount}`,'至少保留一筆非純網路來源（如書籍、期刊等）。');
 
-  // H) 字體/字型規範（與進階結果同步呈現）
+  // 字體/字型規範（同步進階結果）
   syncBasicFontRuleMirror();
 
-  // I) 外部檢索助手（第19項）
+  // 外部檢索助手（校外發表／得獎）
   const extEvidence=buildExternalSearchEvidence(fileBase||'小論文篇名');
   addRow('作品是否已於校外發表/得獎（需人工/GPT）',true,extEvidence,'使用下方「外部檢索助手」或「複製查核提示」至 AI 小助手進行確認。');
   setTimeout(()=>initExternalSearchAssist(fileBase||'小論文篇名'),0);
 }
 
-/* ===== 外部檢索助手（第19項用） ===== */
+/* ===== 外部檢索助手 ===== */
 function buildExternalSearchEvidence(baseTitle){
   const t=(baseTitle||'小論文篇名').trim(), mk=s=>encodeURIComponent(s);
   const items=[
@@ -465,6 +477,10 @@ function addRow(rule,pass,evidence,suggestion){
     '四周邊界 ≥ 2 公分（正文區推估）':{rule_id:'layout.margins',category:'版面',severity:'major'},
     '不得有封面頁（4–10頁）':{rule_id:'file.coverpage',category:'檔案規格',severity:'critical'},
 
+    '首頁頁首置中且距上緣 ≥ 2 公分':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
+    '首頁頁碼置中且距下緣 ≥ 2 公分':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
+
+    '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
     '六大段落依序':{rule_id:'structure.sections_order',category:'結構',severity:'critical'},
     '內文引註採 作者-年份':{rule_id:'references.citation_style',category:'參考文獻',severity:'major'},
     [`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`]:{rule_id:'quotes.limit',category:'引文',severity:'major'},
@@ -474,11 +490,6 @@ function addRow(rule,pass,evidence,suggestion){
     '參考文獻與內文引註一致性':{rule_id:'references.consistency',category:'參考文獻',severity:'critical'},
     '參考文獻來源不可全為網路':{rule_id:'references.non_all_web',category:'參考文獻',severity:'critical'},
     '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
-
-    '首頁頁首置中且距上緣 ≥ 2 公分':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
-    '首頁頁碼置中且距下緣 ≥ 2 公分':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
-    '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
-
     '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
     '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
     'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
