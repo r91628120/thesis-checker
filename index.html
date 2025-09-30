@@ -74,8 +74,8 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <h2>系統檢查規則（合格標準）</h2>
     <ol>
       <li>頁數：4–10 頁。</li>
-      <li>首頁頁首置中且距上緣 ≥ 2 公分（於這 2 公分內偵測到含檔名/篇名之置中文字即為通過）。</li>
-      <li>首頁頁碼置中且距下緣 ≥ 2 公分（於這 2 公分內偵測到置中阿拉伯數字頁碼即為通過）。</li>
+      <li>首頁頁首置中且距上緣 ≥ 2 公分（於這 2 公分內偵測到置中之篇名/標題即通過）。</li>
+      <li>首頁頁碼置中且距下緣 ≥ 2 公分（於這 2 公分內偵測到置中的頁碼即通過）。</li>
       <li>每頁需在頁首帶包含檔名（非正文區）。</li>
       <li>檔案名稱 與 頁首篇名一致（不符判定淘汰）。</li>
       <li>每頁需有置中頁碼（底端帶）。</li>
@@ -131,6 +131,7 @@ const RULES={
   minPages:4,maxPages:10,maxSizeMB:5,
   sixSections:['前言','文獻探討','研究方法','研究分析與結果','研究結論與建議','參考文獻'],
   quoteMaxChars:50,minQuoteCharsForDirect:10,marginCM:2.0,
+  // ↓ UI 不變，但底層改用「中心點 ± 寬容」判置中（較耐用）
   headerBandFactor:1.0,footerBandFactor:1.0,centerWidthPT:100
 };
 const CM_TO_PT=cm=>cm*72/2.54, MARGIN_PT=CM_TO_PT(RULES.marginCM);
@@ -219,7 +220,7 @@ async function runPdfChecks(buf){
   const headerTitleTexts=[];
   let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
 
-  // 首頁判定（修正：必須「在 2 公分內」且置中；頁首需含檔名/篇名）
+  // 首頁判定旗標
   let firstHeaderOK=false, firstFooterOK=false;
 
   const norm=s=>(s||'').replace(/\s/g,'').toLowerCase(); const baseNorm=norm(fileBase||'');
@@ -228,9 +229,10 @@ async function runPdfChecks(buf){
     const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
     const tc=await page.getTextContent();
 
-    const topBandMinY = H - MARGIN_PT;           // 距上緣 2cm 以內 ⇒ y ∈ [topBandMinY, H]
-    const bottomBandMaxY = MARGIN_PT;            // 距下緣 2cm 以內 ⇒ y ∈ [0, bottomBandMaxY]
-    const centerLeft=W/2 - RULES.centerWidthPT, centerRight=W/2 + RULES.centerWidthPT;
+    const topBandMinY = H - MARGIN_PT;      // 距上緣 ≤ 2cm
+    const bottomBandMaxY = MARGIN_PT;       // 距下緣 ≤ 2cm
+    const centerWindowTol = Math.max(W*0.15,72); // 置中容忍（中心點 ± max(15%頁寬, 72pt)）
+    const centerLeft=W/2 - RULES.centerWidthPT, centerRight=W/2 + RULES.centerWidthPT; // 舊判斷仍用於其他規則
 
     let hasCenterPageNum=false;
     const lineMap=new Map(), lineYs=[];
@@ -241,34 +243,36 @@ async function runPdfChecks(buf){
       const txt=(it.str||'').trim(); const pureNorm=norm(txt);
       pageBuf.push(txt);
 
-      // 首頁：頁首篇名 在「距上緣 ≤ 2cm」且置中，且文串需包含檔名/篇名
-      if(p===1){
-        const centered = (x>=centerLeft && (x+w)<=centerRight);
-        const inTop2cm = (y>=topBandMinY);         // 修正：在 2 公分「以內」(以前寫反了)
-        if(centered && inTop2cm && baseNorm && pureNorm.includes(baseNorm)){
-          firstHeaderOK = true;
-        }
+      // (A) 首頁：頁首 2cm 帶 + 置中（用「中心點」判定），只要有像標題的文字即可通過
+      if(p===1 && txt){
+        const mid = x + w/2;
+        const centeredByMid = (mid >= (W/2 - centerWindowTol) && mid <= (W/2 + centerWindowTol));
+        const inTop2cm = (y >= topBandMinY);
+        const looksLikeTitle = !/^\d+$/.test(txt) && txt.replace(/\s/g,'').length >= 2;
+        if(inTop2cm && centeredByMid && looksLikeTitle){ firstHeaderOK = true; }
       }
 
-      // 頁尾：置中頁碼 在「距下緣 ≤ 2cm」
-      const centeredBottom = (x>=centerLeft && (x+w)<=centerRight);
-      const inBottom2cm = (y<=bottomBandMaxY);
-      if(centeredBottom && inBottom2cm && /^\d+$/.test(txt)){
+      // (B) 頁尾頁碼：2cm 帶 + 置中（接受常見樣式）
+      const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerWindowTol) && mid <= (W/2 + centerWindowTol));})();
+      const inBottom2cm = (y <= bottomBandMaxY);
+      const m = txt.match(/^\s*(?:第)?\s*[-—]*\s*(\d{1,4})\s*[-—]*(?:\s*頁)?\s*$/); // 允許 —1—、第1頁、- 1 - 等
+      if(inBottom2cm && centeredBottomByMid && m){
+        const num=parseInt(m[1],10);
         hasCenterPageNum=true;
-        if(parseInt(txt,10)!==p) sequentialOk=false;
-        if(p===1) firstFooterOK = true;           // 修正：<= 2cm 即視為通過
+        if(num!==p) sequentialOk=false;
+        if(p===1) firstFooterOK = true;
       }
 
       // 蒐集頁首篇名候選（供「檔名 vs 頁首篇名一致」）
       if(y>=topBandMinY && txt){ headerTitleTexts.push(txt); }
 
-      // 檔名偵測（頁首／正文）
-      if(baseNorm && pureNorm.includes(baseNorm)){ 
-        if(y>=topBandMinY){ headerHasTitle.add(p); } 
-        else if(y>MARGIN_PT && y<(H-MARGIN_PT)){ bodyHasTitle.add(p); } 
+      // 檔名偵測（頁首／正文）— 此規則仍需檔名出現在頁首帶
+      if(baseNorm && pureNorm.includes(baseNorm)){
+        if(y>=topBandMinY){ headerHasTitle.add(p); }
+        else if(y>MARGIN_PT && y<(H-MARGIN_PT)){ bodyHasTitle.add(p); }
       }
 
-      // 正文區：邊界估計 + 行距/縮排
+      // 正文區：邊界估計
       const inBody=(y>MARGIN_PT)&&(y<(H-MARGIN_PT));
       if(inBody){
         const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
@@ -280,12 +284,12 @@ async function runPdfChecks(buf){
     pageTexts[p]=pageBuf.join('');
   }
 
-  // 2) 首頁頁首置中且距上緣 ≥ 2 公分（修正後）
+  // 2) 首頁頁首置中且距上緣 ≥ 2 公分（放寬後）
   addRow('首頁頁首置中且距上緣 ≥ 2 公分', firstHeaderOK,
-    firstHeaderOK?'已在首頁 2 公分內偵測到含檔名之置中篇名':'未偵測到置中篇名或未落在距上緣 2 公分內',
+    firstHeaderOK?'已在首頁 2 公分內偵測到置中之篇名/標題':'未偵測到置中篇名或未落在距上緣 2 公分內',
     '請將篇名置中於頁首，且位置落在距上緣 2 公分以內的區塊。');
 
-  // 3) 首頁頁碼置中且距下緣 ≥ 2 公分（修正後）
+  // 3) 首頁頁碼置中且距下緣 ≥ 2 公分（放寬後）
   addRow('首頁頁碼置中且距下緣 ≥ 2 公分', firstFooterOK,
     firstFooterOK?'已在首頁 2 公分內偵測到置中頁碼':'未偵測到置中頁碼或未落在距下緣 2 公分內',
     '請將頁碼置中於頁尾，且位置落在距下緣 2 公分以內的區塊。');
@@ -489,12 +493,12 @@ function addRow(rule,pass,evidence,suggestion){
     '參考文獻 ≥ 3':{rule_id:'references.count',category:'參考文獻',severity:'critical'},
     '參考文獻與內文引註一致性':{rule_id:'references.consistency',category:'參考文獻',severity:'critical'},
     '參考文獻來源不可全為網路':{rule_id:'references.non_all_web',category:'參考文獻',severity:'critical'},
-    '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
-    '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
-    '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
-    'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
+    '字體/字型規範（需人工確認）':[ 'style.font','版面','major' ],
+    '作品是否已於校外發表/得獎（需人工/GPT）':[ 'external.duplicate_check','人工檢查','minor' ],
+    '頁數 4–10（DOCX）':[ 'file.pages.docx','檔案規格','minor' ],
+    'Cloud Run 字體字型檢查':[ 'fontcheck.cloudrun','字體字型','major' ]
   };
-  const meta=map[rule]||{rule_id:'misc',category:'其他',severity:'minor'};
+  const meta = Array.isArray(map[rule]) ? {rule_id:map[rule][0],category:map[rule][1],severity:map[rule][2]} : (map[rule]||{rule_id:'misc',category:'其他',severity:'minor'});
   _rowsBuffer.push({rule_id:meta.rule_id,category:meta.category,severity:meta.severity,pass,evidence:typeof evidence==='string'?{note:evidence}:(evidence||null),suggestion:suggestion||null});
 }
 function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
