@@ -432,7 +432,7 @@ function runTextRules(pageTexts){
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 13) 疑似缺少引號之直接引文（格式錯誤）— 修正建議文字：僅「請加上『』」
+  // 13) 疑似缺少引號之直接引文（格式錯誤）
   const noQuoteButCite = (fullText.match(/[^\n。！？]{8,80}(（[^，\n]{1,12}，\s*\d{4}）)/g)||[]).filter(seg=>clean(seg).length>=RULES.minQuoteCharsForDirect && !/[「“].+?[」”]/.test(seg));
   if(noQuoteButCite.length){
     addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」。');
@@ -458,7 +458,7 @@ function runTextRules(pageTexts){
     `A. 總數：${A_total}｜B. 含年份推估：${B_hasYear}｜C. 含網址/DOI：${C_hasLink}`,
     '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條），至少 3 筆。');
 
-  // 15) 圖表規範（含表內已引注例外）— 保留既有邏輯
+  // 15) 圖表規範（含表內已引注例外）
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
   const totalFT=figMatches.length+tabMatches.length;
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
