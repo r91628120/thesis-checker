@@ -17,103 +17,25 @@
     "quoteMinChars": 10
   },
   "rules": [
-    {
-      "rule_id": "file.pages",
-      "title": "頁數 4–10",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "小論文需介於 4–10 頁。"
-    },
-    {
-      "rule_id": "header.filename_in_header",
-      "title": "每頁需在頁首帶包含檔名（非正文區）",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "首頁頁首置中顯示篇名，且位於頁首帶內。"
-    },
-    {
-      "rule_id": "footer.pagenum",
-      "title": "每頁需有置中頁碼（底端帶）",
-      "severity": "critical",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "layout.margins",
-      "title": "四周邊界 ≥ 2 公分（正文區推估）",
-      "severity": "major",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "file.coverpage",
-      "title": "不得有封面頁（4–10頁）",
-      "severity": "critical",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "privacy.no_school_or_name",
-      "title": "不得含校名/姓名",
-      "severity": "critical",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "structure.sections_order",
-      "title": "六大段落依序",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "壹 前言 → 貳 文獻探討 → 參 研究方法 → 肆 研究分析與結果 → 伍 研究結論與建議 → 陸 參考文獻"
-    },
-    {
-      "rule_id": "references.citation_style",
-      "title": "內文引註採 作者-年份",
-      "severity": "major",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "quotes.limit",
-      "title": "直接引文 ≤50 字（不含標點與空白；中文引號需 ≥10 字才算）",
-      "severity": "major",
-      "check_kind": "auto",
-      "description": "中文「…」少於 10 字（不含標點與空白）不列為直接引文，以避免商品名等被誤判。"
-    },
-    {
-      "rule_id": "references.citation_required",
-      "title": "引用原文需附出處（≤50字）",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "僅針對計入之直接引文（見 quotes.limit）檢查周邊是否出現作者-年份樣式。"
-    },
-    {
-      "rule_id": "references.count",
-      "title": "參考文獻 ≥ 3",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "從「參考文獻」起切出完整條目（標題+出版資訊+換行網址會併入上一條），以完整條目數量計算。"
-    },
-    {
-      "rule_id": "references.consistency",
-      "title": "參考文獻與內文引註一致性",
-      "severity": "critical",
-      "check_kind": "auto"
-    },
-    {
-      "rule_id": "references.non_all_web",
-      "title": "參考文獻來源不可全為網路",
-      "severity": "critical",
-      "check_kind": "auto",
-      "description": "期刊/書籍/學位論文/報紙（含電子報）/文集/法規 → 非網路；YouTube/Facebook/部落格/一般網頁等 → 網路。只要不是「全部」為網路，即通過。"
-    },
-    {
-      "rule_id": "style.font",
-      "title": "字體/字型規範（需人工/或進階檢查）",
-      "severity": "major",
-      "check_kind": "manual"
-    },
+    { "rule_id": "file.pages", "title": "頁數 4–10", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "header.filename_in_header", "title": "每頁需在頁首帶包含檔名（非正文區）", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "footer.pagenum", "title": "每頁需有置中頁碼（底端帶）", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "layout.margins", "title": "四周邊界 ≥ 2 公分（正文區推估）", "severity": "major", "check_kind": "auto" },
+    { "rule_id": "privacy.no_school_or_name", "title": "不得含校名/姓名", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "structure.sections_order", "title": "六大段落依序", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "references.citation_style", "title": "內文引註採 作者-年份", "severity": "major", "check_kind": "auto" },
+    { "rule_id": "quotes.limit", "title": "直接引文 ≤50 字（不含標點與空白；中文引號需 ≥10 字才算）", "severity": "major", "check_kind": "auto" },
+    { "rule_id": "references.citation_required", "title": "引用原文需附出處（≤50字）", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "references.count", "title": "參考文獻 ≥ 3", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "references.consistency", "title": "參考文獻與內文引註一致性", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "references.non_all_web", "title": "參考文獻來源不可全為網路", "severity": "critical", "check_kind": "auto" },
+    { "rule_id": "style.font", "title": "字體/字型規範（需人工/或進階檢查）", "severity": "major", "check_kind": "manual" },
     {
       "rule_id": "external.duplicate_check",
       "title": "校外發表/得獎檢索確認（人工/GPT 協助）",
       "severity": "minor",
       "check_kind": "manual",
-      "description": "請以篇名到 Google Scholar（https://scholar.google.com/?hl=zh-TW）、高中職全國專題製作暨創意競賽歷屆作品、臺灣中學生網站做檢索，並顯示檢索結果，比對是否與校外發表/得獎重複或相似。"
+      "description": "請以篇名到 Google Scholar、高中職全國專題製作暨創意競賽歷屆作品、臺灣中學生網站做檢索，並顯示檢索結果，比對是否與校外發表/得獎重複或相似。"
     }
   ]
 }
