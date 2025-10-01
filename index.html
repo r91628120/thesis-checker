@@ -4,6 +4,27 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
+
+<!-- ===== 快取迴避（A+B）建議固定保留，發版時只需修改 APP_VER ===== -->
+<!-- A) 自動帶上版本參數，避免舊版快取 -->
+<script>
+  // << 每次發版改這個字串即可 >>
+  const APP_VER = '2025-10-02a';
+  (function () {
+    try {
+      const url = new URL(location.href);
+      if (url.searchParams.get('v') !== APP_VER) {
+        url.searchParams.set('v', APP_VER);
+        location.replace(url.toString()); // 用 replace 避免回上一頁回到舊版
+      }
+    } catch (e) { /* 忽略 */ }
+  })();
+</script>
+<!-- B) 對瀏覽器的 no-cache 提示（CDN 不一定理會，但對終端有效） -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+
 <style>
 :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
@@ -39,7 +60,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
   <header>
     <h1>高中職小論文格式自檢系統</h1>
     <p>支援 PDF 與 DOCX，完成檢查後即釋放記憶體，不保存檔案。</p>
-    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b></div>
+    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono" title="版本參數">v=<script>document.write(new URL(location.href).searchParams.get('v')||'-')</script></span></div>
     <div class="hint" style="margin-top:8px">© 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw</div>
   </header>
 
@@ -661,6 +682,22 @@ async function fetchCounter(){
   }catch(e){counterEl.textContent='0';}
 }
 if(ENABLE_COUNTER)fetchCounter();
+</script>
+
+<!-- ===== 快取迴避（C）清理舊版 SW/Cache：安全保守，執行一次即可，保留也無害 ===== -->
+<script>
+  (async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { await r.unregister(); }
+      }
+      if (window.caches?.keys) {
+        const keys = await caches.keys();
+        for (const k of keys) { await caches.delete(k); }
+      }
+    } catch (e) { /* 忽略 */ }
+  })();
 </script>
 </body>
 </html>
