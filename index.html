@@ -7,7 +7,7 @@
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03c'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03d'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -102,7 +102,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <li>不得含校名/姓名（跳過「參考文獻」段落）。</li>
       <li>六大段落依序。</li>
       <li>內文引註採 作者-年份；直接引文 ≤ 50 字（不含標點）。</li>
-      <li>參考文獻 ≥ 3；並顯示 A/B/C 統計與四層數字。</li>
+      <li>參考文獻 ≥ 3；並顯示 A/B/C 舊統計與四層數字。</li>
       <li>圖表需有標號/標題與來源（表內已引注可不於表下再標）。</li>
       <li>參考文獻與內文引註一致；來源不可全為網路（同步顯示四層數字）。</li>
       <li>字體/字型規範（可用進階檢查）。</li>
@@ -127,11 +127,9 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-/* Google 試算表 + GAS 累計 */
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxUi3g3Yzeu7UQkvHx7Eg6YhQlF6i1zNgH0TwfNKbbHc3ggbkY8oOfKAAGQn76kALpJ/exec";
 const ENABLE_COUNTER = true;
 
-/* Cloud Run 進階字體檢查 */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
@@ -252,25 +250,25 @@ async function runPdfChecks(buf){
 
     let hasCenterPageNum=false;
     const pageBuf=[];
-    let _lastXY=null; // 追蹤座標以推估換行
+    let _lastXY=null;
 
     for(const it of tc.items){
       const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
       const txt=(it.str||'').trim();
 
-      // A) 依座標推估換行：避免整段黏成一行
+      // 依座標推估換行
       if(txt){
         if(_lastXY){
           const newLine =
-            (Math.abs(y - _lastXY.y) > 6 && x < _lastXY.x + 20) || // y差距大且回靠左
-            (y < _lastXY.y - 2 && x <= _lastXY.x);                 // 明顯換行
+            (Math.abs(y - _lastXY.y) > 6 && x < _lastXY.x + 20) ||
+            (y < _lastXY.y - 2 && x <= _lastXY.x);
           if(newLine) pageBuf.push('\n');
         }
         pageBuf.push(txt);
         _lastXY = {x,y};
       }
 
-      // 首頁頁首 2cm 帶 + 置中 → 判篇名
+      // 首頁篇名
       if(p===1 && txt){
         const mid = x + w/2;
         const centeredByMid = (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));
@@ -279,7 +277,7 @@ async function runPdfChecks(buf){
         if(inTop2cm && centeredByMid && looksLikeTitle){ firstHeaderOK = true; }
       }
 
-      // 頁尾頁碼：2cm 帶 + 置中
+      // 頁尾頁碼
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
       const inBottom2cm = (y <= bottomBandMaxY);
       const m = txt.match(/^\s*(?:第)?\s*[-—]*\s*(\d{1,4})\s*[-—]*(?:\s*頁)?\s*$/);
@@ -323,14 +321,14 @@ async function runPdfChecks(buf){
     '請使檔名與頁首篇名一致（常用小論文篇名）。');
 
   // 6) 每頁需有置中頁碼（底端帶）
-  const pageNumPass=(pageNumOkPages.length===numPages);
+  const pageNumPass=(pageNumOkPages.length===_lastPageCount);
   addRow('每頁需有置中頁碼（底端帶）',pageNumPass,
-    pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,numPages)}` + (sequentialOk?'':'；疑似非連號'),
+    pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,_lastPageCount)}` + (pageNumPass?'':'；疑似非連號'),
     '請在頁尾置中放置阿拉伯數字頁碼（建議連號）。');
 
   // 7) 邊界 2 公分
   const MPT=MARGIN_PT.toFixed(1);
-  const marginPass=(minLeft>=MARGIN_PT)&&(minRight>=MARGIN_PT)&&(minBottom>=MARGIN_PT)&&(minTop>=MARGIN_PT);
+  const marginPass=(isFinite(minLeft)&&minLeft>=MARGIN_PT)&&(isFinite(minRight)&&minRight>=MARGIN_PT)&&(isFinite(minBottom)&&minBottom>=MARGIN_PT)&&(isFinite(minTop)&&minTop>=MARGIN_PT);
   addRow('四周邊界 ≥ 2 公分（正文區推估）',marginPass,
     `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}）`,
     '請確認版面設定至少 2 公分。');
@@ -353,30 +351,29 @@ async function runDocxChecks(buf){
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
 /* ===== 參考文獻：前處理 / 切條 / 去重 / 分類（含四層統計） ===== */
-// 0) 去索引（1. / 1、/ 一、）工具
+// 0) 去索引（1. / 1、/ 1． / 一、）工具
 function _stripLeadingIndex(s) {
   return s
-    .replace(/^\s*\d+\s*[\.、]\s*/, '')
-    .replace(/^\s*[一二三四五六七八九十]+\s*[\.、]\s*/, '')
+    .replace(/^[\s\u3000]*\d+\s*[\.．、]\s*/, '')              // 1. / 1． / 1、
+    .replace(/^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s*/, '') // 一、二、…
     .trim();
 }
-// B) 參考文獻前處理：修補連字號斷行、跨行網址、收斂空白
+// B) 參考文獻前處理：修補連字號斷行、清理空白（不主動黏 URL 與下一行）
 function _preCleanRefText(s) {
   return s
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 單字/網址連字號斷行
-    .replace(/(https?:\/\/[^\s\n]+)\s*\n\s*([^\s\n]+)/g, '$1$2') // 網址跨行
-    .replace(/[ \t]+\n/g, '\n') // 行尾空白
-    .replace(/\n{2,}/g, '\n')   // 多重空行
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 單字連字號斷行修補
+    .replace(/[ \t]+\n/g, '\n')   // 行尾多餘空白
+    .replace(/\n{2,}/g, '\n')     // 多重空行
     .trim();
 }
-// C) 延續行判斷：縮排、網址、域名片段、以 / 開頭的續行
+// C) 延續行判斷：縮排、URL/DOI/取自/Available at/網址、項符號、純網域、/開頭網址
 function _isContinuationLine(line) {
   return (
-    /^\s{2,}/.test(line) ||                 // 英文縮排
-    /^[\u3000]{1,}/.test(line) ||           // 全形空白縮排
-    /^(https?:\/\/|doi:|DOI:|取自|Available at|網址)/i.test(line) ||
+    /^\s{2,}/.test(line) ||                 // 半形縮排
+    /^[\u3000]{1,}/.test(line) ||           // 全形縮排
+    /^(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(line) ||
     /^[-–•．·●]/.test(line) ||              // 項目符號
-    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(line) || // 域名片段
+    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(line) || // 純網域片段
     /^\/[^\s]/.test(line)                   // 以 / 開頭的網址續行
   );
 }
@@ -386,22 +383,40 @@ function _parseReferenceEntries(refText) {
   let cur = '';
 
   for (const raw of lines) {
-    const line0 = raw.replace(/\s+$/,'');
-    const line = _stripLeadingIndex(line0); // 忽略編號
+    const line0 = raw;                               // 原始（含全形空白）
+    const lineTrim = line0.replace(/^[\s\u3000]+/, ''); // 去前導空白（含全形）
+    const line = _stripLeadingIndex(lineTrim);       // 去掉「1.」「一、」等編號
+
     if (!cur) { cur = line; continue; }
 
-    if (_isContinuationLine(line)) {
-      cur += ' ' + line;               // 併入上一筆
-    } else if (/^\d+\./.test(line0) || /^[一二三四五六七八九十]+\s*[\.、]/.test(line0)) {  // 新筆（原始含編號）
+    // 1) URL/DOI/縮排行 → 續行
+    if (_isContinuationLine(lineTrim)) {
+      cur += ' ' + lineTrim;                         // 保留大小寫與 URL
+      continue;
+    }
+
+    // 2) 新條目（允許全形空白 + 1. / 1． / 1、 / 一、）
+    const isNewItem =
+      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]/.test(line0);
+
+    if (isNewItem) {
+      if (cur) entries.push(_stripLeadingIndex(cur));
+      cur = _stripLeadingIndex(lineTrim);
+      continue;
+    }
+
+    // 3) 其他情況：若上一行以分號完結，否則當續行
+    if (/[；;]$/.test(cur)) {
       entries.push(_stripLeadingIndex(cur));
-      cur = _stripLeadingIndex(line0.replace(/^\s+/, ''));
+      cur = line;
     } else {
-      if (/；$/.test(cur)) { entries.push(_stripLeadingIndex(cur)); cur = line; }
-      else { cur += ' ' + line; }
+      cur += ' ' + line;
     }
   }
   if (cur) entries.push(_stripLeadingIndex(cur));
 
+  // 過短殘句捨棄
   return entries.filter(s => s.replace(/\s/g,'').length >= 6);
 }
 // B) 去重：以規範化鍵值移除重複
@@ -425,29 +440,18 @@ function _dedupReferences(list) {
 function _classifyReference(item) {
   const s = item;
 
-  // 書籍／出版社
   const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
-
-  // 期刊／卷期頁碼（含常見英文逗點格式）
   const hasJournalMeta =
     /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
     /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s) ||
-    /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) || // e.g., 144, 433–439
-    /,\s*\d{1,4}\b(?!\s*頁)/.test(s);                        // e.g., 727
-
-  // 學位／會議論文
+    /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) ||
+    /,\s*\d{1,4}\b(?!\s*頁)/.test(s);
   const hasThesisOrConf =
     /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
-
-  // 法規／政府公告
   const hasLawOrGov =
     /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
-
-  // 報紙／電子報
   const hasNewspaper =
     /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
-
-  // DOI 與學術平台
   const hasDOI = /(doi\.org|doi:)/i.test(s);
   const hasAcademicPlatform =
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
@@ -456,31 +460,21 @@ function _classifyReference(item) {
     return 'nonweb';
   }
 
-  // 純網路（社群、影音、部落格、一般網站）
   const isPureWeb =
     /(YouTube|Facebook|Instagram|IG|X\.com|Twitter|PTT|Dcard|blogspot|wordpress|medium\.com|wiki|維基|論壇|部落格)/i.test(s) ||
     /(網站|網頁|線上文章|粉專)/.test(s);
-
   const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
 
   if (isPureWeb) return 'web';
   if (hasLink)    return 'web';
-
-  // 兜底：保守視為非網路，避免錯殺電子書/期刊
-  return 'nonweb';
+  return 'nonweb'; // 保守：避免錯殺電子書/期刊
 }
 
 /* ===== 合格判斷（四層統計用） ===== */
-function _hasYear(text) {
-  return /（\d{4}）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b/.test(text);
-}
-function _textWithoutUrls(s) {
-  return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
-}
+function _hasYear(text) { return /（\d{4}）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b/.test(text); }
+function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
 function _isQualifiedRef(item) {
   const s = item;
-
-  // 與 _classifyReference 相同的出版證據
   const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
   const hasJournalMeta =
     /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
@@ -494,16 +488,8 @@ function _isQualifiedRef(item) {
   const hasAcademicPlatform =
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
 
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) {
-    return true;
-  }
-
-  // 次佳條件：有年份且不是「只有網址」
-  if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) {
-    return true;
-  }
-
-  // 只有網址或殘句 → 不合格
+  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) return true;
+  if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) return true;
   return false;
 }
 
@@ -564,7 +550,7 @@ function runTextRules(pageTexts){
   const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
   const webCount    = classified.filter(x => x.kind === 'web').length;
 
-  // ===== 新增：合格 / 不合格 統計 =====
+  // 合格 / 不合格 統計
   const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
   const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
 
@@ -584,7 +570,7 @@ function runTextRules(pageTexts){
   const totalFT=figMatches.length+tabMatches.length;
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
   let tableInlineOK=0; if(tabMatches.length){
-    let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，。、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
+    let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
   }
   const lackSource = (totalFT>0 && (srcAll+tableInlineOK)<totalFT);
   const lackLabel = (totalFT===0 && srcAll>0);
@@ -594,7 +580,7 @@ function runTextRules(pageTexts){
     `檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'} ${explain}`,
     '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
 
-  // 16) 參考文獻與內文引註一致性（沿用但改用 refEntries）
+  // 16) 參考文獻與內文引註一致性
   const refJoined = refEntries.join('\n');
   const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
   let linked=0; for(const c of citations){ if(refJoined.includes(c)) linked++; }
