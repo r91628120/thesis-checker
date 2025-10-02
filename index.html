@@ -7,7 +7,7 @@
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03d'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03e'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -351,62 +351,77 @@ async function runDocxChecks(buf){
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
 /* ===== 參考文獻：前處理 / 切條 / 去重 / 分類（含四層統計） ===== */
-// 0) 去索引（1. / 1、/ 1． / 一、）工具
+// 0) 去索引（支援括號式與中文數字）
 function _stripLeadingIndex(s) {
   return s
-    .replace(/^[\s\u3000]*\d+\s*[\.．、]\s*/, '')              // 1. / 1． / 1、
-    .replace(/^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s*/, '') // 一、二、…
+    // 括號式（全形或半形）
+    .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s*/, '')
+    // 非括號式
+    .replace(/^[\s\u3000]*\d+\s*[\.．、]\s*/, '')
+    .replace(/^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s*/, '')
     .trim();
 }
-// B) 參考文獻前處理：修補連字號斷行、清理空白（不主動黏 URL 與下一行）
+// 小標：一、書籍類／二、期刊論文類／三、網路相關資源…（忽略）
+function _isCategoryHeader(line) {
+  const l = line.replace(/^[\s\u3000]+/, '');
+  if (/^[一二三四五六七八九十]+\s*、\s*[\u4e00-\u9fa5]{1,10}(類|資源)$/.test(l)) return true;
+  if (/^(（?[一二三四五六七八九十\d]+）?|[一二三四五六七八九十]+、)?\s*(書籍類|期刊論文類|網路相關資源)\s*$/.test(l)) return true;
+  if (/^(陸、)?\s*參考文獻\s*$/.test(l)) return true;
+  return false;
+}
+// 參考文獻前處理：跨頁安全、修補連字號、清理空白
 function _preCleanRefText(s) {
   return s
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 單字連字號斷行修補
-    .replace(/[ \t]+\n/g, '\n')   // 行尾多餘空白
-    .replace(/\n{2,}/g, '\n')     // 多重空行
+    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')   // 分頁標記 → 換行
+    .replace(/^\s*\d{1,4}\s*$/gm, '')       // 獨立頁碼行（8、9…）移除
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 英文連字號斷行修補
+    .replace(/[ \t]+\n/g, '\n')             // 行尾多餘空白
+    .replace(/\n{2,}/g, '\n')               // 多重空行
     .trim();
 }
-// C) 延續行判斷：縮排、URL/DOI/取自/Available at/網址、項符號、純網域、/開頭網址
+// 續行判斷：縮排行 / URL / DOI / 取自 / Available at / 網址 / 項符號 / 純網域 / 以 / 開頭網址
 function _isContinuationLine(line) {
   return (
     /^\s{2,}/.test(line) ||                 // 半形縮排
     /^[\u3000]{1,}/.test(line) ||           // 全形縮排
     /^(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(line) ||
     /^[-–•．·●]/.test(line) ||              // 項目符號
-    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(line) || // 純網域片段
+    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(line) || // 純網域
     /^\/[^\s]/.test(line)                   // 以 / 開頭的網址續行
   );
 }
+// 切條器：支援括號式編號；忽略小標；URL 另起一行併回上一筆
 function _parseReferenceEntries(refText) {
   const lines = refText.split(/\n+/).map(s => s.trim()).filter(Boolean);
   const entries = [];
   let cur = '';
 
   for (const raw of lines) {
-    const line0 = raw;                               // 原始（含全形空白）
-    const lineTrim = line0.replace(/^[\s\u3000]+/, ''); // 去前導空白（含全形）
-    const line = _stripLeadingIndex(lineTrim);       // 去掉「1.」「一、」等編號
+    const line0    = raw;                               // 原樣（含全形空白）
+    const lineTrim = line0.replace(/^[\s\u3000]+/, ''); // 去前導空白
+    if (_isCategoryHeader(lineTrim)) continue;          // 小標略過
+
+    // 是否為新條目（括號式/非括號式/中文數字）
+    const isNewItem =
+      /^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s+/.test(line0) ||
+      /^[\s\u3000]*\d+\s*[\.．、]\s+/.test(line0) ||
+      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s+/.test(line0);
+
+    const line = _stripLeadingIndex(lineTrim);
 
     if (!cur) { cur = line; continue; }
 
-    // 1) URL/DOI/縮排行 → 續行
-    if (_isContinuationLine(lineTrim)) {
-      cur += ' ' + lineTrim;                         // 保留大小寫與 URL
-      continue;
-    }
+    // URL/DOI/縮排行 → 續行
+    if (_isContinuationLine(lineTrim)) { cur += ' ' + lineTrim; continue; }
 
-    // 2) 新條目（允許全形空白 + 1. / 1． / 1、 / 一、）
-    const isNewItem =
-      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||
-      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]/.test(line0);
-
+    // 新條目 → 先收前一條
     if (isNewItem) {
       if (cur) entries.push(_stripLeadingIndex(cur));
       cur = _stripLeadingIndex(lineTrim);
       continue;
     }
 
-    // 3) 其他情況：若上一行以分號完結，否則當續行
+    // 其他：上一行以分號結尾→收斂，否則續行
     if (/[；;]$/.test(cur)) {
       entries.push(_stripLeadingIndex(cur));
       cur = line;
@@ -416,10 +431,10 @@ function _parseReferenceEntries(refText) {
   }
   if (cur) entries.push(_stripLeadingIndex(cur));
 
-  // 過短殘句捨棄
+  // 過短殘句剔除
   return entries.filter(s => s.replace(/\s/g,'').length >= 6);
 }
-// B) 去重：以規範化鍵值移除重複
+// 去重：以規範化鍵值移除重複
 function _normRefKey(s) {
   return s
     .replace(/\s+/g, ' ')
@@ -436,7 +451,7 @@ function _dedupReferences(list) {
   }
   return Array.from(map.values());
 }
-// D) 分類規則：學術出版/期刊/DOI/平台皆視為「非網路」
+// 分類：學術出版/期刊/論文/法規/報紙/DOI/學術平台 → 非網路；其餘含連結 → 網路
 function _classifyReference(item) {
   const s = item;
 
