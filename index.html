@@ -405,7 +405,9 @@ function _parseReferenceEntries(refText) {
     const isNewItem =
       /^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s+/.test(line0) ||
       /^[\s\u3000]*\d+\s*[\.．、]\s+/.test(line0) ||
-      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s+/.test(line0);
+      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s+/.test(line0) ||
+      /^[\s\u3000]*[\u4e00-\u9fa5]{1,6}.*（(\d{4}|無日期)）/.test(line0) ||   // ← 中文作者（無日期/年份）
+      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0); // ← 英文 (n.d.)
 
     const line = _stripLeadingIndex(lineTrim);
 
@@ -571,11 +573,11 @@ function runTextRules(pageTexts){
 
   // 14) 參考文獻 ≥ 3（四層統計）
   const evidence13 = [
-    `檢查總數量：${A_total}`,
-    `合格數量：${qualifiedCount}`,
-    `不合格數量：${unqualifiedCount}`,
-    `網路來源數量：${webCount}`,
-    `（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`
+     `檢查總數量：${A_total}`,
+     `合格數量：${qualifiedCount}`,
+     `不合格數量：${unqualifiedCount}`,
+     `網路來源數量：${webCount}`,
+     `（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`
   ].join('｜');
   addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
     '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
