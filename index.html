@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
 
-<!-- ===== 快取迴避（A+B）建議固定保留，發版時只需修改 APP_VER ===== -->
-<!-- A) 自動帶上版本參數，避免舊版快取 -->
+<!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  // << 每次發版改這個字串即可 >>
-  const APP_VER = '2025-10-02a';
+  const APP_VER = '2025-10-03c'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -17,10 +15,9 @@
         url.searchParams.set('v', APP_VER);
         location.replace(url.toString()); // 用 replace 避免回上一頁回到舊版
       }
-    } catch (e) { /* 忽略 */ }
+    } catch (e) { /* ignore */ }
   })();
 </script>
-<!-- B) 對瀏覽器的 no-cache 提示（CDN 不一定理會，但對終端有效） -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -60,7 +57,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
   <header>
     <h1>高中職小論文格式自檢系統</h1>
     <p>支援 PDF 與 DOCX，完成檢查後即釋放記憶體，不保存檔案。</p>
-    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono" title="版本參數">v=<script>document.write(new URL(location.href).searchParams.get('v')||'-')</script></span></div>
+    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono" title="版本參數">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
     <div class="hint" style="margin-top:8px">© 2025 CTVS Library 凡事皆正面 · Email: r91628120@ctvs.ptc.edu.tw</div>
   </header>
 
@@ -105,9 +102,9 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <li>不得含校名/姓名（跳過「參考文獻」段落）。</li>
       <li>六大段落依序。</li>
       <li>內文引註採 作者-年份；直接引文 ≤ 50 字（不含標點）。</li>
-      <li>參考文獻 ≥ 3；並顯示 A/B/C 統計。</li>
+      <li>參考文獻 ≥ 3；並顯示 A/B/C 統計與四層數字。</li>
       <li>圖表需有標號/標題與來源（表內已引注可不於表下再標）。</li>
-      <li>參考文獻與內文引註一致；來源不可全為網路。</li>
+      <li>參考文獻與內文引註一致；來源不可全為網路（同步顯示四層數字）。</li>
       <li>字體/字型規範（可用進階檢查）。</li>
       <li>校外發表/得獎：外部檢索助手 + GPT 提示。</li>
     </ol>
@@ -131,7 +128,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 <script>
 /* ===== 設定 ===== */
 /* Google 試算表 + GAS 累計 */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcnN21Ix19tZ8Lu9bT6WgL-DMnsFBQV8IWm4UIlVUhhtLlSudWywDo1eJXr2aNoqHl/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxUi3g3Yzeu7UQkvHx7Eg6YhQlF6i1zNgH0TwfNKbbHc3ggbkY8oOfKAAGQn76kALpJ/exec";
 const ENABLE_COUNTER = true;
 
 /* Cloud Run 進階字體檢查 */
@@ -255,13 +252,13 @@ async function runPdfChecks(buf){
 
     let hasCenterPageNum=false;
     const pageBuf=[];
-    let _lastXY=null; // === A) 追蹤座標以推估換行 ===
+    let _lastXY=null; // 追蹤座標以推估換行
 
     for(const it of tc.items){
       const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
       const txt=(it.str||'').trim();
 
-      // === A) 依座標推估換行：避免整段黏成一行 ===
+      // A) 依座標推估換行：避免整段黏成一行
       if(txt){
         if(_lastXY){
           const newLine =
@@ -273,7 +270,7 @@ async function runPdfChecks(buf){
         _lastXY = {x,y};
       }
 
-      // (A) 首頁頁首 2cm 帶 + 置中
+      // 首頁頁首 2cm 帶 + 置中 → 判篇名
       if(p===1 && txt){
         const mid = x + w/2;
         const centeredByMid = (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));
@@ -282,7 +279,7 @@ async function runPdfChecks(buf){
         if(inTop2cm && centeredByMid && looksLikeTitle){ firstHeaderOK = true; }
       }
 
-      // (B) 頁尾頁碼：2cm 帶 + 置中
+      // 頁尾頁碼：2cm 帶 + 置中
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
       const inBottom2cm = (y <= bottomBandMaxY);
       const m = txt.match(/^\s*(?:第)?\s*[-—]*\s*(\d{1,4})\s*[-—]*(?:\s*頁)?\s*$/);
@@ -332,9 +329,10 @@ async function runPdfChecks(buf){
     '請在頁尾置中放置阿拉伯數字頁碼（建議連號）。');
 
   // 7) 邊界 2 公分
+  const MPT=MARGIN_PT.toFixed(1);
   const marginPass=(minLeft>=MARGIN_PT)&&(minRight>=MARGIN_PT)&&(minBottom>=MARGIN_PT)&&(minTop>=MARGIN_PT);
   addRow('四周邊界 ≥ 2 公分（正文區推估）',marginPass,
-    `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MARGIN_PT.toFixed(1)}）`,
+    `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}）`,
     '請確認版面設定至少 2 公分。');
 
   // 8) 不得有封面頁
@@ -354,7 +352,14 @@ async function runDocxChecks(buf){
 }
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
-/* ===== 參考文獻：前處理 / 切條 / 去重 / 分類（新版） ===== */
+/* ===== 參考文獻：前處理 / 切條 / 去重 / 分類（含四層統計） ===== */
+// 0) 去索引（1. / 1、/ 一、）工具
+function _stripLeadingIndex(s) {
+  return s
+    .replace(/^\s*\d+\s*[\.、]\s*/, '')
+    .replace(/^\s*[一二三四五六七八九十]+\s*[\.、]\s*/, '')
+    .trim();
+}
 // B) 參考文獻前處理：修補連字號斷行、跨行網址、收斂空白
 function _preCleanRefText(s) {
   return s
@@ -381,20 +386,21 @@ function _parseReferenceEntries(refText) {
   let cur = '';
 
   for (const raw of lines) {
-    const line = raw.replace(/\s+$/,'');
+    const line0 = raw.replace(/\s+$/,'');
+    const line = _stripLeadingIndex(line0); // 忽略編號
     if (!cur) { cur = line; continue; }
 
     if (_isContinuationLine(line)) {
       cur += ' ' + line;               // 併入上一筆
-    } else if (/^\d+\./.test(line)) {  // 1. 2. 3. 編號開頭 → 開新筆
-      entries.push(cur);
-      cur = line.replace(/^\d+\.\s*/, '');
+    } else if (/^\d+\./.test(line0) || /^[一二三四五六七八九十]+\s*[\.、]/.test(line0)) {  // 新筆（原始含編號）
+      entries.push(_stripLeadingIndex(cur));
+      cur = _stripLeadingIndex(line0.replace(/^\s+/, ''));
     } else {
-      if (/；$/.test(cur)) { entries.push(cur); cur = line; }
+      if (/；$/.test(cur)) { entries.push(_stripLeadingIndex(cur)); cur = line; }
       else { cur += ' ' + line; }
     }
   }
-  if (cur) entries.push(cur);
+  if (cur) entries.push(_stripLeadingIndex(cur));
 
   return entries.filter(s => s.replace(/\s/g,'').length >= 6);
 }
@@ -464,6 +470,43 @@ function _classifyReference(item) {
   return 'nonweb';
 }
 
+/* ===== 合格判斷（四層統計用） ===== */
+function _hasYear(text) {
+  return /（\d{4}）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b/.test(text);
+}
+function _textWithoutUrls(s) {
+  return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
+}
+function _isQualifiedRef(item) {
+  const s = item;
+
+  // 與 _classifyReference 相同的出版證據
+  const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
+  const hasJournalMeta =
+    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
+    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s) ||
+    /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) ||
+    /,\s*\d{1,4}\b(?!\s*頁)/.test(s);
+  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
+  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
+  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
+  const hasDOI          = /(doi\.org|doi:)/i.test(s);
+  const hasAcademicPlatform =
+    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
+
+  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) {
+    return true;
+  }
+
+  // 次佳條件：有年份且不是「只有網址」
+  if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) {
+    return true;
+  }
+
+  // 只有網址或殘句 → 不合格
+  return false;
+}
+
 /* ===== 文字規則 ===== */
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
@@ -504,14 +547,14 @@ function runTextRules(pageTexts){
     addRow('疑似缺少引號之直接引文（格式錯誤）',false,`疑似片段數：${noQuoteButCite.length}（抽樣檢出）`,'直接引用原文時，請加上「」。');
   }
 
-  // === 參考文獻（新版切條＋前處理＋分類） ===
+  // === 參考文獻（新版切條＋前處理＋分類＋四層統計） ===
   const refAnchorIdx = fullText.indexOf('參考文獻');
   const refTextRaw   = refAnchorIdx >= 0 ? fullText.slice(refAnchorIdx) : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
   let refEntries     = refAnchorIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
   refEntries         = _dedupReferences(refEntries);
 
-  // A/B/C 統計（A=總數；B=含年份推估；C=含網址/DOI/取自的數量）
+  // A/B/C 舊統計（保留以利對照）
   const A_total = refEntries.length;
   const B_hasYear = refEntries.filter(s => /(（\d{4}）|\(\d{4}\)|\b\d{4}\b年)/.test(s)).length;
   const C_hasLink = refEntries.filter(s => /(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(s)).length;
@@ -521,10 +564,20 @@ function runTextRules(pageTexts){
   const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
   const webCount    = classified.filter(x => x.kind === 'web').length;
 
-  // 14) 參考文獻 ≥ 3
-  addRow('參考文獻 ≥ 3', A_total >= 3,
-    `A. 總數：${A_total}｜B. 含年份推估：${B_hasYear}｜C. 含網址/DOI：${C_hasLink}`,
-    '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條），至少 3 筆。');
+  // ===== 新增：合格 / 不合格 統計 =====
+  const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
+  const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
+
+  // 14) 參考文獻 ≥ 3（四層統計）
+  const evidence13 = [
+    `檢查總數量：${A_total}`,
+    `合格數量：${qualifiedCount}`,
+    `不合格數量：${unqualifiedCount}`,
+    `網路來源數量：${webCount}`,
+    `（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`
+  ].join('｜');
+  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
+    '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
   // 15) 圖表需有標號/標題與來源（保留原邏輯）
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
@@ -552,10 +605,13 @@ function runTextRules(pageTexts){
     `引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
     '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
 
-  // 17) 參考文獻來源不可全為網路（新版）
+  // 17) 參考文獻來源不可全為網路（新版四層）
   const nonAllWebPass = (A_total > 0) && (webCount < A_total);
-  const explain16 = `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}（純網路≡社群/影音/一般網站文章；具出版/卷期/頁碼/DOI/學術平台證據者皆為非網路）`;
-  addRow('參考文獻來源不可全為網路', nonAllWebPass, explain16, '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。');
+  const evidence16 = [
+    `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}`,
+    `（檢查總數量：${A_total}｜合格：${qualifiedCount}｜不合格：${unqualifiedCount}）`
+  ].join('｜');
+  addRow('參考文獻來源不可全為網路', nonAllWebPass, evidence16, '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。');
 
   // 18) 字體/字型規範（同步進階結果或給建議）
   syncBasicFontRuleMirror();
@@ -645,7 +701,7 @@ function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
   const weight=x=>x.severity==='critical'?2:(x.severity==='major'?1:0.5);
   const max=passFailRows.reduce((a,x)=>a+weight(x),0)||1; const score=Math.round(passFailRows.reduce((a,x)=>a+(x.pass?weight(x):0),0)/max*100);
   const hasCriticalFail=passFailRows.some(x=>!x.pass && x.severity==='critical'); const status=hasCriticalFail?'revise':'pass';
-  const summary={meta:{report_id:(crypto.randomUUID?.()||String(Math.random()).slice(2)),generated_at:new Date().toISOString(),file:{name:fileName,pages,type:fileExt},rules_version:'v1.3'},
+  const summary={meta:{report_id:(crypto.randomUUID?.()||String(Math.random()).slice(2)),generated_at:new Date().toISOString(),file:{name:fileName,pages,type:fileExt},rules_version:'v1.4'},
     summary:{score,totals:{checks:passFailRows.length,pass:passFailRows.filter(x=>x.pass).length,fail:passFailRows.filter(x=>!x.pass).length},status},
     checks:passFailRows.map(x=>({rule_id:x.rule_id,category:x.category,severity:x.severity,pass:x.pass,evidence:x.evidence||null,suggestion:x.suggestion||null}))};
   lastSummaryJSON=summary; jsonPreview.textContent=JSON.stringify(summary,null,2);
@@ -684,7 +740,7 @@ async function fetchCounter(){
 if(ENABLE_COUNTER)fetchCounter();
 </script>
 
-<!-- ===== 快取迴避（C）清理舊版 SW/Cache：安全保守，執行一次即可，保留也無害 ===== -->
+<!-- ===== 快取清理：若曾註冊 SW/Cache，避免舊版檔卡住 ===== -->
 <script>
   (async () => {
     try {
@@ -696,7 +752,7 @@ if(ENABLE_COUNTER)fetchCounter();
         const keys = await caches.keys();
         for (const k of keys) { await caches.delete(k); }
       }
-    } catch (e) { /* 忽略 */ }
+    } catch (e) { /* ignore */ }
   })();
 </script>
 </body>
