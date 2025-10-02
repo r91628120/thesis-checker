@@ -371,12 +371,16 @@ function _isCategoryHeader(line) {
 }
 // 參考文獻前處理：跨頁安全、修補連字號、清理空白
 function _preCleanRefText(s) {
-  return s
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')   // 分頁標記 → 換行
-    .replace(/^\s*\d{1,4}\s*$/gm, '')       // 獨立頁碼行（8、9…）移除
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 英文連字號斷行修補
-    .replace(/[ \t]+\n/g, '\n')             // 行尾多餘空白
-    .replace(/\n{2,}/g, '\n')               // 多重空行
+  return (s || '')
+    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')           // 分頁記號 → 單純換行
+    .replace(/^\s*\d{1,4}\s*$/gm, '')               // 清掉獨立頁碼行
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 英文連字號斷行
+    .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')       // 網址另起一行 → 併回上一行
+    .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')       // DOI 另起一行 → 併回上一行
+    // 若上一行不是以句號/分號/引號/括號結尾，推定是跨頁被切開 → 直接合併
+    .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{2,}/g, '\n')
     .trim();
 }
 // 續行判斷：縮排行 / URL / DOI / 取自 / Available at / 網址 / 項符號 / 純網域 / 以 / 開頭網址
@@ -390,51 +394,67 @@ function _isContinuationLine(line) {
     /^\/[^\s]/.test(line)                   // 以 / 開頭的網址續行
   );
 }
-// 切條器：支援括號式編號；忽略小標；URL 另起一行併回上一筆
+// ====== PATCH v1.6: 參考文獻類別小標偵測（略過計數） ======
+function _isCategoryHeader(line) {
+  const s = (line || '').replace(/^[\s\u3000]+/, '');
+  if (/^(陸、)?\s*參考文獻\s*$/.test(s)) return true;
+  if (/^[一二三四五六七八九十]+\s*、\s*[\u4e00-\u9fa5]{1,10}(類|資源)$/.test(s)) return true; // 一、書籍類 / 二、期刊論文類 …
+  if (/^(（?[一二三四五六七八九十\d]+）?)\s*[\u4e00-\u9fa5]{1,10}(類|資源)$/.test(s)) return true; // （一）書籍類
+  return false;
+}
+// ====== PATCH v1.6: 參考文獻切條（支援無日期、中文作者、網址續行、略過小標） ======
 function _parseReferenceEntries(refText) {
-  const lines = refText.split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
   const entries = [];
   let cur = '';
 
   for (const raw of lines) {
-    const line0    = raw;                               // 原樣（含全形空白）
-    const lineTrim = line0.replace(/^[\s\u3000]+/, ''); // 去前導空白
-    if (_isCategoryHeader(lineTrim)) continue;          // 小標略過
+    const line0    = raw;                           // 原始（含全形空白）
+    const lineTrim = line0.replace(/^[\s\u3000]+/, '');
+    if (_isCategoryHeader(lineTrim)) continue;      // 類別小標不算條目
 
-    // 是否為新條目（括號式/非括號式/中文數字）
-    const isNewItem =
-      /^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s+/.test(line0) ||
-      /^[\s\u3000]*\d+\s*[\.．、]\s+/.test(line0) ||
-      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s+/.test(line0) ||
-      /^[\s\u3000]*[\u4e00-\u9fa5]{1,6}.*（(\d{4}|無日期)）/.test(line0) ||   // ← 中文作者（無日期/年份）
-      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0); // ← 英文 (n.d.)
+    // 會自動續行的情況（網址/DOI/縮排行/項目符號/純網域）
+    const isContinuation =
+      /^\s{2,}/.test(lineTrim) ||
+      /^[\u3000]+/.test(lineTrim) ||
+      /^(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(lineTrim) ||
+      /^[-–•．·●]/.test(lineTrim) ||
+      /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(lineTrim) ||
+      /^\/[^\s]/.test(lineTrim);
 
-    const line = _stripLeadingIndex(lineTrim);
+    // 去掉「1.」「1、」「一、」等前導編號
+    const line = lineTrim
+      .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s*/, '')
+      .replace(/^[\s\u3000]*\d+\s*[\.．、]\s*/, '')
+      .replace(/^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s*/, '')
+      .trim();
 
     if (!cur) { cur = line; continue; }
 
-    // URL/DOI/縮排行 → 續行
-    if (_isContinuationLine(lineTrim)) { cur += ' ' + lineTrim; continue; }
-
-    // 新條目 → 先收前一條
-    if (isNewItem) {
-      if (cur) entries.push(_stripLeadingIndex(cur));
-      cur = _stripLeadingIndex(lineTrim);
+    if (isContinuation) {                // 網址/DOI/縮排行 → 併入上一條
+      cur += ' ' + lineTrim;
       continue;
     }
 
-    // 其他：上一行以分號結尾→收斂，否則續行
-    if (/[；;]$/.test(cur)) {
-      entries.push(_stripLeadingIndex(cur));
+    // 新條目判斷：數字/中文序號，或「中文作者＋（年份｜無日期）」、英文 Surname (Year|n.d.)
+    const isNewItem =
+      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[\u4e00-\u9fa5]{1,6}.*（(\d{4}|無日期)）/.test(line0) ||
+      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0);
+
+    if (isNewItem) {
+      if (cur) entries.push(cur.trim());
       cur = line;
     } else {
       cur += ' ' + line;
     }
   }
-  if (cur) entries.push(_stripLeadingIndex(cur));
 
-  // 過短殘句剔除
-  return entries.filter(s => s.replace(/\s/g,'').length >= 6);
+  if (cur) entries.push(cur.trim());
+
+  // 過短殘句剔除（避免只有網址或幾個字被算一條）
+  return entries.filter(s => s.replace(/\s/g, '').length >= 6);
 }
 // 去重：以規範化鍵值移除重複
 function _normRefKey(s) {
@@ -488,7 +508,10 @@ function _classifyReference(item) {
 }
 
 /* ===== 合格判斷（四層統計用） ===== */
-function _hasYear(text) { return /（\d{4}）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b/.test(text); }
+// ====== PATCH v1.6: 年份或無日期偵測 ======
+function _hasYear(text) {
+  return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
+}
 function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
 function _isQualifiedRef(item) {
   const s = item;
