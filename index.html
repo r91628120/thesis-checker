@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
+<script>console.log("載入版本:", (new URL(location.href)).searchParams.get('v') || APP_VER);</script> 
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03h'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03i'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -401,16 +402,7 @@ function _isContinuationLine(line) {
     /^\/[^\s]/.test(line)                   // 以 / 開頭的網址續行
   );
 }
-// ====== PATCH v1.6: 參考文獻類別小標偵測（略過計數） ======
-function _isCategoryHeader(line) {
-  const s = (line || '').replace(/^[\s\u3000]+/, '');
-  if (/^(陸、)?\s*參考文獻\s*$/.test(s)) return true;
-  if (/^[一二三四五六七八九十]+\s*、\s*[\u4e00-\u9fa5]{1,10}(類|資源)$/.test(s)) return true; // 一、書籍類 / 二、期刊論文類 …
-  if (/^(（?[一二三四五六七八九十\d]+）?)\s*[\u4e00-\u9fa5]{1,10}(類|資源)$/.test(s)) return true; // （一）書籍類
-  return false;
-}
-// ====== PATCH v1.6: 參考文獻切條（支援無日期、中文作者、網址續行、略過小標） ======
-// —— 參考文獻切條：支援跨頁、網址/DOI/短網址續行、中文作者+(年份|無日期)、英文 (Year|n.d.) —— 
+// ====== 參考文獻切條：支援跨頁、網址/DOI/短網址續行、中文作者+(年份|無日期)、英文 (Year|n.d.) ======
 function _parseReferenceEntries(refText) {
   const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
   const entries = [];
@@ -535,7 +527,6 @@ function _classifyReference(item) {
 }
 
 /* ===== 合格判斷（四層統計用） ===== */
-// ====== PATCH v1.6: 年份或無日期偵測 ======
 function _hasYear(text) {
   return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
 }
