@@ -8,7 +8,7 @@
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03j'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03k'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -419,53 +419,52 @@ function _parseReferenceEntries(refText) {
   const entries = [];
   let cur = '';
 
+  // 常見短網址
   const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
 
   for (const raw of lines) {
-    const line0 = raw; // 保留原樣
+    const line0 = raw;
     const lineTrim = line0.replace(/^[\s\u3000]+/, '');
 
-    // 跳過類別小標（書籍類/期刊類/網路資料…）
+    // 跳過類別小標
     if (_isCategoryHeader(lineTrim)) continue;
 
-    // 是否為續行（要併回上一條）
+    // 判斷是否為續行（網址/短網址/縮排）
     const isContinuation =
-      /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(lineTrim) || // 明確的連結行
-      SHORT_DOMAINS.test(lineTrim) ||                                                 // 短網址
-      /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(lineTrim) ||                   // 純網域
-      /^[-–•．·●]/.test(lineTrim) || /^\s{2,}/.test(line0) || /^[\u3000]+/.test(line0); // 縮排行/項符號
+      /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(lineTrim) ||
+      SHORT_DOMAINS.test(lineTrim) ||
+      /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(lineTrim) ||
+      /^[-–•．·●]/.test(lineTrim) ||
+      /^\s{2,}/.test(line0) || /^[\u3000]+/.test(line0);
 
-    // 去除前導編號（1. / 1、 / （一） / 一、 / 十一、）
+    // 去除前導編號
     const line = lineTrim
       .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '')
       .trim();
 
-    // 初始：先納入
     if (!cur) { cur = line; continue; }
 
-    // 續行：直接併回上一條
+    // 若為續行，合併至上一條
     if (isContinuation) { cur += ' ' + lineTrim; continue; }
 
-    // 是否為「新條目開頭」
+    // 判斷是否為新條目
     const isNewItem =
-      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||                             // 1. / 1、
-      /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(line0) ||   // 一、/ 十一、
-      /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(line0) || // （一）
-      /^[\s\u3000]*[\u4e00-\u9fa5]{1,8}.*（(\d{4}|無日期)）/.test(line0) ||     // 中文作者 +（年份/無日期）
-      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0); // 英文 Surname(year|n.d.)
+      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(line0) ||
+      /^[\s\u3000]*[\u4e00-\u9fa5]{1,8}.*（(\d{4}|無日期)）/.test(line0) ||     // 中文作者+年份/無日期
+      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0); // 英文作者(year|n.d.)
 
-    // 若不是新條目，且上一條也沒有句末符號 → 視為上一條續句（跨頁/換行）
     const prevEndsCleanly = /[。．\.\?？!！；;）)」”]$/.test(cur);
-    if (!isNewItem && !prevEndsCleanly) { cur += ' ' + line; continue; }
 
-    // 新條目：收斂上一條
     if (isNewItem) { entries.push(cur.trim()); cur = line; }
-    else { cur += ' ' + line; } // 保守合併
+    else if (!prevEndsCleanly) { cur += ' ' + line; }
+    else { cur += ' ' + line; }
   }
 
   if (cur) entries.push(cur.trim());
 
-  // 剔除過短殘句（避免單純網址）
+  // 剔除過短殘句
   return entries.filter(s => s.replace(/\s/g, '').length >= 6);
 }
 // 去重：以規範化鍵值移除重複
@@ -550,19 +549,21 @@ function runTextRules(pageTexts){
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const sec=RULES.sixSections;
   const refIdx=fullText.indexOf('參考文獻');
-
-  // 9) 不得含校名/姓名（避開參考文獻）
+    // 9) 不得含校名/姓名（避開參考文獻）
   const schoolHits=[]; const schoolPages=new Set();
   for(let p=1;p<=pages;p++){
     const t=pageTexts[p]||'';
     const pageStartOffset = fullText.indexOf(pageTexts[p]);
+    // 若該頁文字位於「參考文獻」之後，跳過不檢查
     if(refIdx>=0 && pageStartOffset>=refIdx) continue;
-    for(const re of SCHOOL_PATTERNS){ const m=t.match(re); if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);} }
+    for(const re of SCHOOL_PATTERNS){
+      const m=t.match(re);
+      if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);}
+    }
   }
   addRow('不得含校名/姓名',schoolHits.length===0,
     schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
     '請去識別化（以 XXX 取代完整校名）。');
-
   // 10) 六大段落順序
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
