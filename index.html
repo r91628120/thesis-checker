@@ -8,7 +8,7 @@
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03i'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03j'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -380,13 +380,24 @@ function _isCategoryHeader(line) {
 // 參考文獻前處理：跨頁安全、修補連字號、清理空白
 function _preCleanRefText(s) {
   return (s || '')
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')           // 分頁記號 → 單純換行
-    .replace(/^\s*\d{1,4}\s*$/gm, '')               // 清掉獨立頁碼行
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 英文連字號斷行
-    .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')       // 網址另起一行 → 併回上一行
-    .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')       // DOI 另起一行 → 併回上一行
-    // 若上一行不是以句號/分號/引號/括號結尾，推定是跨頁被切開 → 直接合併
+    // 讓每頁結束先變換行
+    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
+    // 清掉獨立頁碼行
+    .replace(/^\s*\d{1,4}\s*$/gm, '')
+    // 英文連字號被切行 -> 接回
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
+    // 網址/DOI 另起一行 -> 併回上一條
+    .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
+    .replace(/\n\s*(www\.\S+)/g, ' $1')
+    .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
+    // **重點：在「條目編號」（1. / 1、 / （一） / 一、 / 十一、…）前強制插入換行**
+    // 若該標記不是在行首（意即被接成同一行），先切一刀
+    .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
+    // 有時 PDF 會把「十  一、」之類的中文字空格拆開，合併掉奇怪空白
+    .replace(/[　\s]+([\.．、])/g, '$1')
+    // 若上一行不是句末符號，推定跨頁斷行 -> 合併
     .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
+    // 清理多餘空白
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{2,}/g, '\n')
     .trim();
@@ -408,71 +419,53 @@ function _parseReferenceEntries(refText) {
   const entries = [];
   let cur = '';
 
-  // 常見短網址/轉址網域（避免被誤判不是網址）
   const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
 
   for (const raw of lines) {
-    const line0    = raw;                       // 原始（保留全形空白）
+    const line0 = raw; // 保留原樣
     const lineTrim = line0.replace(/^[\s\u3000]+/, '');
 
-    // 1) 類別小標（不列入計數）
+    // 跳過類別小標（書籍類/期刊類/網路資料…）
     if (_isCategoryHeader(lineTrim)) continue;
 
-    // 2) 這行是否屬於“續行”（要併回上一條）
+    // 是否為續行（要併回上一條）
     const isContinuation =
-      // 開頭就是網址 / DOI / 取自 / Available at / 網址
-      /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(lineTrim) ||
-      // 只有短網址或純網域
-      SHORT_DOMAINS.test(lineTrim) ||
-      /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(lineTrim) ||
-      // 黏著的項目符號或縮排續行
-      /^[-–•．·●]/.test(lineTrim) || /^\s{2,}/.test(line0) || /^[\u3000]+/.test(line0);
+      /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(lineTrim) || // 明確的連結行
+      SHORT_DOMAINS.test(lineTrim) ||                                                 // 短網址
+      /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(lineTrim) ||                   // 純網域
+      /^[-–•．·●]/.test(lineTrim) || /^\s{2,}/.test(line0) || /^[\u3000]+/.test(line0); // 縮排行/項符號
 
-    // 3) 去掉前導編號（1. / 1、 / （一） / 一、 …）
+    // 去除前導編號（1. / 1、 / （一） / 一、 / 十一、）
     const line = lineTrim
-      .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十]+)\s*[)）]\s*[\.．、]?\s*/, '')
-      .replace(/^[\s\u3000]*\d+\s*[\.．、]\s*/, '')
-      .replace(/^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]\s*/, '')
+      .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '')
       .trim();
 
-    // 先把第一行放進暫存
+    // 初始：先納入
     if (!cur) { cur = line; continue; }
 
-    // 4) 若是續行 → 直接併回上一條（處理跨頁網址、下一行書名、頁碼等）
-    if (isContinuation) {
-      cur += ' ' + lineTrim;
-      continue;
-    }
+    // 續行：直接併回上一條
+    if (isContinuation) { cur += ' ' + lineTrim; continue; }
 
-    // 5) 這行是否為“新條目”的開頭？
-    //    規則：數字/序號開頭，或「中文作者＋（年份|無日期）」、英文 Surname (Year|n.d.)
+    // 是否為「新條目開頭」
     const isNewItem =
-      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||
-      /^[\s\u3000]*[一二三四五六七八九十]+\s*[\.．、]/.test(line0) ||
-      /^[\s\u3000]*[\u4e00-\u9fa5]{1,6}.*（(\d{4}|無日期)）/.test(line0) ||
-      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0);
+      /^[\s\u3000]*\d+\s*[\.．、]/.test(line0) ||                             // 1. / 1、
+      /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(line0) ||   // 一、/ 十一、
+      /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(line0) || // （一）
+      /^[\s\u3000]*[\u4e00-\u9fa5]{1,8}.*（(\d{4}|無日期)）/.test(line0) ||     // 中文作者 +（年份/無日期）
+      /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(line0); // 英文 Surname(year|n.d.)
 
-    // 6) 不是新條目 → 視為上一條的延續（處理跨頁被拆成兩行但沒有網址的情況）
-    //    例如：上一行以作者結束、下一行接書名／出版社；或上一行不以句末符號收尾。
+    // 若不是新條目，且上一條也沒有句末符號 → 視為上一條續句（跨頁/換行）
     const prevEndsCleanly = /[。．\.\?？!！；;）)」”]$/.test(cur);
-    if (!isNewItem && !prevEndsCleanly) {
-      cur += ' ' + line;
-      continue;
-    }
+    if (!isNewItem && !prevEndsCleanly) { cur += ' ' + line; continue; }
 
-    if (isNewItem) {
-      // 收斂上一條
-      if (cur) entries.push(cur.trim());
-      cur = line;
-    } else {
-      // 保守合併：不是明確新條，也不是明確結尾 → 視為續行
-      cur += ' ' + line;
-    }
+    // 新條目：收斂上一條
+    if (isNewItem) { entries.push(cur.trim()); cur = line; }
+    else { cur += ' ' + line; } // 保守合併
   }
 
   if (cur) entries.push(cur.trim());
 
-  // 7) 剔除過短殘句（僅網址或太短的片段）
+  // 剔除過短殘句（避免單純網址）
   return entries.filter(s => s.replace(/\s/g, '').length >= 6);
 }
 // 去重：以規範化鍵值移除重複
