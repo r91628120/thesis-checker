@@ -1,14 +1,13 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<script>console.log("載入版本:", (new URL(location.href)).searchParams.get('v') || APP_VER);</script> 
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
 
 <!-- ===== 快取迴避：發版時改 APP_VER ===== -->
 <script>
-  const APP_VER = '2025-10-03k'; // ← 每次發版改這個字串
+  const APP_VER = '2025-10-03m'; // ← 每次發版改這個字串
   (function () {
     try {
       const url = new URL(location.href);
@@ -18,6 +17,7 @@
       }
     } catch (e) { /* ignore */ }
   })();
+  console.log("載入版本:", (new URL(location.href)).searchParams.get('v') || APP_VER);
 </script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
@@ -335,6 +335,7 @@ async function runPdfChecks(buf){
     '請確認版面設定至少 2 公分。');
 
   // 8) 不得有封面頁
+  const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
   addRow('不得有封面頁（4–10頁）',coverHits.length===0, coverHits.length?`第1頁疑似封面關鍵字：${coverHits.join('、')}`:'未發現','4–10頁之小論文不應包含封面資訊。');
 
@@ -377,7 +378,7 @@ function _isCategoryHeader(line) {
 
   return false;
 }
-// 參考文獻前處理：跨頁安全、修補連字號、清理空白
+// 參考文獻前處理：跨頁安全、修補連字號、清理空白、數字斷裂修補
 function _preCleanRefText(s) {
   return (s || '')
     // 讓每頁結束先變換行
@@ -390,10 +391,11 @@ function _preCleanRefText(s) {
     .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
     .replace(/\n\s*(www\.\S+)/g, ' $1')
     .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
-    // **重點：在「條目編號」（1. / 1、 / （一） / 一、 / 十一、…）前強制插入換行**
-    // 若該標記不是在行首（意即被接成同一行），先切一刀
+    // 修補「十  一、」→「十一、」
+    .replace(/([一二三四五六七八九十百千])\s+([一二三四五六七八九十百千])/g, '$1$2')
+    // 在「條目編號」（1./1、/（一）/一、/十一、…）前強制插入換行（若接成同一行）
     .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
-    // 有時 PDF 會把「十  一、」之類的中文字空格拆開，合併掉奇怪空白
+    // 去除奇怪空白
     .replace(/[　\s]+([\.．、])/g, '$1')
     // 若上一行不是句末符號，推定跨頁斷行 -> 合併
     .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
@@ -547,14 +549,20 @@ function _isQualifiedRef(item) {
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
-  const sec=RULES.sixSections;
-  const refIdx=fullText.indexOf('參考文獻');
-    // 9) 不得含校名/姓名（避開參考文獻）
+
+  // 參考文獻錨點（支援「參考資料／References」）
+  const refAnchors = ['參考文獻','參考資料','References']
+    .map(t => fullText.indexOf(t))
+    .filter(i => i >= 0)
+    .sort((a,b) => a - b);
+  const refIdx = refAnchors.length ? refAnchors[0] : -1;
+
+  // 8) 不得含校名/姓名（避開參考文獻之後的頁面）
   const schoolHits=[]; const schoolPages=new Set();
   for(let p=1;p<=pages;p++){
     const t=pageTexts[p]||'';
     const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    // 若該頁文字位於「參考文獻」之後，跳過不檢查
+    // 若該頁文字位於「參考文獻/參考資料/References」之後，跳過不檢查
     if(refIdx>=0 && pageStartOffset>=refIdx) continue;
     for(const re of SCHOOL_PATTERNS){
       const m=t.match(re);
@@ -564,7 +572,9 @@ function runTextRules(pageTexts){
   addRow('不得含校名/姓名',schoolHits.length===0,
     schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
     '請去識別化（以 XXX 取代完整校名）。');
+
   // 10) 六大段落順序
+  const sec=RULES.sixSections;
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
@@ -586,15 +596,14 @@ function runTextRules(pageTexts){
   }
 
   // === 參考文獻（新版切條＋前處理＋分類＋四層統計） ===
-  const refAnchorIdx = fullText.indexOf('參考文獻');
-  const refTextRaw   = refAnchorIdx >= 0 ? fullText.slice(refAnchorIdx) : '';
+  const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx) : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
-  let refEntries     = refAnchorIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
+  let refEntries     = refIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
   refEntries         = _dedupReferences(refEntries);
 
   // A/B/C 舊統計（保留以利對照）
   const A_total = refEntries.length;
-  const B_hasYear = refEntries.filter(s => /(（\d{4}）|\(\d{4}\)|\b\d{4}\b年)/.test(s)).length;
+  const B_hasYear = refEntries.filter(s => _hasYear(s)).length;
   const C_hasLink = refEntries.filter(s => /(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(s)).length;
 
   // 分類：nonweb / web
