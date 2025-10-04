@@ -361,21 +361,25 @@ function _isCategoryHeader(line) {
 // 參考文獻前處理：跨頁/網址續行/中文數字修補
 function _preCleanRefText(s) {
   return (s || '')
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
-    .replace(/^\s*\d{1,4}\s*$/gm, '')
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
+    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')         // 跨頁符號還原為換行
+    .replace(/^\s*\d{1,4}\s*$/gm, '')             // 只有頁碼的一行移除
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 斷字接回
+    // URL/DOI 如果在新行，併到上一條
     .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
     .replace(/\n\s*(www\.\S+)/g, ' $1')
     .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
+    // 中文數字被拆行的修補
     .replace(/([一二三四五六七八九十百千])\s+([一二三四五六七八九十百千])/g, '$1$2')
+    // 以「1.」「（一）」「一、」之類符號作為可能的新起點，Before 插入換行
     .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
+    // 把無意義的硬斷行合併
     .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{2,}/g, '\n')
     .trim();
 }
 
-// 文獻切條（強化：第一行若是網址也不會吞掉）
+// 文獻切條（支援數字/中文數字/作者-年份；網址行併入上一條；短網址白名單）
 function _parseReferenceEntries(refText) {
   const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
   const entries = [];
@@ -389,19 +393,21 @@ function _parseReferenceEntries(refText) {
     /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
 
   const isNewItemByAuthorYear = s =>
-    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*（(\d{4}|無日期)）/.test(s) ||
-    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
+    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*（(\d{4}|無日期)）/.test(s) ||      // 中文作者 +（年份/無日期）
+    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s); // 英文作者 (Year/n.d.)
 
   const isContinuation = s =>
     /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
     /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(s) ||
     /^[-–•．·●]/.test(s) ||
-    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||
+    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||  // 裸網域
     /^\/[^\s]/.test(s) ||
     SHORT_DOMAINS.test(s);
 
   for (const raw of lines) {
     const line0 = raw;
+
+    // 小節抬頭（書籍類 / 期刊類 / 網路資源…）直接略過
     if (_isCategoryHeader(line0)) continue;
 
     const looksNew = isNewItemByIndex(line0) || isNewItemByAuthorYear(line0);
@@ -412,15 +418,14 @@ function _parseReferenceEntries(refText) {
       .trim();
 
     if (!cur) {
-      if (cont && !looksNew) continue; // 開頭就是網址，等到下一條目
+      if (cont && !looksNew) continue; // 第一行就是 URL，等下一條的起點
       cur = base;
       continue;
     }
 
     if (looksNew) { entries.push(cur.trim()); cur = base; continue; }
-
-    if (cont) { cur += ' ' + line0.trim(); }
-    else { if (!/[。．\.\?？!！；;）)」”]$/.test(cur)) cur += ' ' + base; else cur += ' ' + base; }
+    if (cont)     { cur += ' ' + line0.trim(); }
+    else          { cur += ' ' + base; }
   }
 
   if (cur) entries.push(cur.trim());
