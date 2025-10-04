@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-04a';
+  const APP_VER = '2025-10-04b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -466,7 +466,7 @@ function _classifyReference(item) {
   const s = item;
   const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
   const hasJournalMeta =
-    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
+    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+)/i.test(s) ||
     /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s) ||
     /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) ||
     /,\s*\d{1,4}\b(?!\s*頁)/.test(s);
@@ -657,7 +657,7 @@ function addRow(rule,pass,evidence,suggestion){
     '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
     '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
     '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
-    'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
+    'Cloud Run 字體字型檢查':[...[]] && {rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
   };
   const meta=map[rule]||{rule_id:'misc',category:'其他',severity:'minor'};
   _rowsBuffer.push({rule_id:meta.rule_id,category:meta.category,severity:meta.severity,pass,evidence:typeof evidence==='string'?{note:evidence}:(evidence||null),suggestion:suggestion||null});
