@@ -336,14 +336,16 @@ function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;
 /* ===== 參考文獻工具（修正版） ===== */
 
 // 取「最後一個」參考文獻標題位置，避免目錄/正文提前提到
+// 找「最後一個」參考文獻標題位置
 function _findRefStart(fullText) {
   const text = fullText || '';
-  const pat = /(^|\n)[^\n]{0,6}\s*(?:陸[、，.]?\s*)?(參考文獻|參考資料|References)\s*$/gmi;
+  const pat = /(^|\n)[^\n]{0,12}?(?:陸\s*[、，．\.]?\s*)?(?:參考文獻|參考資料|References)\s*[:：]?\s*$/gmi;
   let m, lastIdx = -1;
-  while ((m = pat.exec(text)) !== null) lastIdx = m.index + (m[1] ? m[1].length : 0);
+  while ((m = pat.exec(text)) !== null) {
+    lastIdx = m.index + (m[1] ? m[1].length : 0);
+  }
   if (lastIdx < 0) {
-    const cands = ['參考文獻','參考資料','References']
-      .map(t => text.lastIndexOf(t)).filter(i => i >= 0);
+    const cands = ['參考文獻','參考資料','References'].map(t => text.lastIndexOf(t)).filter(i => i>=0);
     if (cands.length) lastIdx = Math.max(...cands);
   }
   return lastIdx;
@@ -359,20 +361,50 @@ function _isCategoryHeader(line) {
 }
 
 // 參考文獻前處理：跨頁/網址續行/中文數字修補
-function _preCleanRefText(s) {
-  return (s || '')
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
-    .replace(/^\s*\d{1,4}\s*$/gm, '')
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
-    .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
-    .replace(/\n\s*(www\.\S+)/g, ' $1')
-    .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
-    .replace(/([一二三四五六七八九十百千])\s+([一二三四五六七八九十百千])/g, '$1$2')
-    .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
-    .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{2,}/g, '\n')
-    .trim();
+function _parseReferenceEntries(refText) {
+  const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const entries = [];
+  let cur = '';
+
+  const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
+
+  const isNewItemByIndex = s =>
+    /^[\s\u3000]*\d+\s*[\.．、]/.test(s) ||
+    /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(s) ||
+    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
+
+  const isNewItemByAuthorYear = s =>
+    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*（(\d{4}|無日期)）/.test(s) ||
+    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
+
+  const isContinuation = s =>
+    /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
+    /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(s) ||
+    /^[-–•．·●]/.test(s) ||
+    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||
+    SHORT_DOMAINS.test(s);
+
+  for (const raw of lines) {
+    const line0 = raw;
+    if (_isCategoryHeader(line0)) continue;
+
+    const looksNew = isNewItemByIndex(line0) || isNewItemByAuthorYear(line0);
+    const cont     = isContinuation(line0);
+
+    const base = line0
+      .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '')
+      .trim();
+
+    if (!cur) { cur = (cont && !looksNew) ? line0.trim() : base; continue; }
+
+    if (looksNew) { entries.push(cur.trim()); cur = base; continue; }
+
+    if (cont) cur += ' ' + line0.trim();
+    else cur += ' ' + base;
+  }
+
+  if (cur) entries.push(cur.trim());
+  return entries.filter(s => s.replace(/\s/g, '').length >= 6);
 }
 
 // 文獻切條（強化：第一行若是網址也不會吞掉）
@@ -505,23 +537,24 @@ function runTextRules(pageTexts){
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 參考文獻起點（改：取最後一個）
-  const refIdx = _findRefStart(fullText);
+  // 找參考文獻錨點
+const refIdx = _findRefStart(fullText);
 
-  // 8) 校名/姓名（參考文獻之後略過）
-  const schoolHits=[]; const schoolPages=new Set();
-  for(let p=1;p<=pages;p++){
-    const t=pageTexts[p]||'';
-    const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    if(refIdx>=0 && pageStartOffset>=refIdx) continue;
-    for(const re of SCHOOL_PATTERNS){
-      const m=t.match(re);
-      if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);}
-    }
+// 11) 不得含校名/姓名（避開參考文獻之後）
+const schoolHits=[]; const schoolPages=new Set();
+for(let p=1;p<=pages;p++){
+  const t=pageTexts[p]||'';
+  const pageStartOffset = fullText.indexOf(pageTexts[p]);
+  if(refIdx>=0 && pageStartOffset>=refIdx) continue; // 跳過參考文獻之後
+  for(const re of SCHOOL_PATTERNS){
+    const m=t.match(re);
+    if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);}
   }
-  addRow('不得含校名/姓名',schoolHits.length===0,
-    schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
-    '請去識別化（以 XXX 取代完整校名）。');
+}
+addRow('不得含校名/姓名',schoolHits.length===0,
+  schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
+  '請去識別化（以 XXX 取代完整校名）。');
+
 
   // 參考文獻：切條 + 四層統計
   const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx) : '';
