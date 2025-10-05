@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-04f';
+  const APP_VER = '2025-10-05g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -485,6 +485,89 @@ function _classifyReference(item) {
   return 'nonweb';
 }
 
+/* ===== 圖表檢查升級：工具常數與函式（新增） ===== */
+
+// 支援中文數字標號（圖一、表二…）
+const CN_NUM = '[一二三四五六七八九十百千]+';   // 中文數字樣式
+const AR_NUM = '\\d+';                            // 阿拉伯數字
+const FIGTAB_LABEL = new RegExp(
+  '(^|\\n|\\s)(圖|表)\\s*(' + AR_NUM + '|' + CN_NUM + ')[\\s．\\.、：:]', 'g'
+);
+
+// 來源詞彙（擴充）
+const SOURCE_LABEL = /(資料來源[:：]|圖片來源[:：]|出處[:：]|來源[:：])/;
+
+// 圖/表附近視窗（跨頁容錯拉大）
+const WINDOW_BEFORE = 0;       // 嚴格只看下方
+const WINDOW_AFTER  = 400;     // 向後 400 字
+const WINDOW_EXTRA  = 200;     // 再向後延伸（避免換行/跨頁）
+
+// 自製/自繪等自我來源（免比對參考文獻）
+const SELF_MADE = /(作者自(製|繪|攝|整理)|自製|自行(繪製|整理|攝影)|研究者自製|自行製作)/;
+
+/** 取出「就近的來源行」：只在圖/表 *下方* 視窗內找來源詞彙 */
+function _extractNearbySource(fullText, startIdx) {
+  const from = Math.max(0, startIdx - WINDOW_BEFORE);
+  const to   = Math.min(fullText.length, startIdx + WINDOW_AFTER + WINDOW_EXTRA);
+  const slice = fullText.slice(from, to);
+
+  // 只取「圖表之後」的內容
+  const after = slice.slice(Math.min(slice.length, startIdx - from));
+
+  // 找第一個來源詞彙
+  const m = after.match(SOURCE_LABEL);
+  if (!m) return null;
+
+  // 來源詞彙起點在 after 的哪裡？
+  const pos = after.search(SOURCE_LABEL);
+  if (pos < 0) return null;
+
+  // 抓該行到行尾（或下一個斷行）
+  const tail = after.slice(pos);
+  const line = tail.split(/\r?\n/)[0].trim();
+
+  // 拿掉標籤（資料來源：）保留內容
+  const content = line.replace(SOURCE_LABEL, '').trim();
+
+  return {
+    label: line,              // 含「資料來源：」整行
+    content,                  // 去掉標籤的內容
+    hasSelfMade: SELF_MADE.test(line)
+  };
+}
+
+/** 檢查「就近片段」是否存在作者–年份制（視為內嵌來源） */
+function _hasInlineCiteNearby(fullText, startIdx) {
+  const from = Math.max(0, startIdx - 80);
+  const to   = Math.min(fullText.length, startIdx + 200);
+  const slice = fullText.slice(from, to);
+  // （王小明，2023）或 王小明（2023）或 無日期/n.d.
+  const INLINE = /(（[^，\n]{1,12}，\s*(\d{4}|無日期)）|[^\s，、]{1,12}（\s*(\d{4}|n\.?d\.?)）)/;
+  return INLINE.test(slice);
+}
+
+/** 判斷來源行看起來像「完整參考文獻」 */
+function _looksLikeFullReference(line) {
+  const s = line || '';
+  const hasYear = _hasYear(s);
+  const hasMeta = /(出版社|Publishing|Press|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+|Vol\.?|No\.?|pp?\.?|doi\.org|https?:\/\/)/i.test(s);
+  return hasYear && hasMeta;
+}
+
+/** 嘗試把來源行（已去除「資料來源：」）對應到「陸、參考文獻」清單 */
+function _matchSourceToRefs(srcContent, refEntries) {
+  if (!srcContent) return { matched: false, hit: null };
+  const skey = _normRefKey(srcContent);
+  for (const r of refEntries) {
+    const rkey = _normRefKey(r);
+    // 互為包含即可視為對上（避免極嚴格完全一致）
+    if (skey.includes(rkey) || rkey.includes(skey)) {
+      return { matched: true, hit: r };
+    }
+  }
+  return { matched: false, hit: null };
+}
+
 /* ===== 文字規則（只有第11、12項含微調） ===== */
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
@@ -555,19 +638,114 @@ function runTextRules(pageTexts){
     '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
   // 圖表
-  const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
-  const totalFT=figMatches.length+tabMatches.length;
-  const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
-  let tableInlineOK=0; if(tabMatches.length){
-    let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
+  /* ===== 圖表需有標號/標題與來源 —— 升級版（中文數字、內嵌引注、對位比對、跨頁容錯） ===== */
+(() => {
+  const entries = []; // 每一個圖/表的檢查結果
+
+  // 逐一找「圖/表 + 編號」（支援阿拉伯數字與中文數字）
+  let m;
+  while ((m = FIGTAB_LABEL.exec(fullText)) !== null) {
+    const whole = m[0];
+    const kind  = m[2];        // 圖 or 表
+    const idx   = m.index;     // 在全文中的位置
+
+    // 1) 來源行（只取下方就近的第一個來源標籤）
+    const near = _extractNearbySource(fullText, idx);  // { label, content, hasSelfMade } | null
+
+    // 2) 內嵌引注（就近片段內出現 (作者, 年份) 或 作者(年份)）
+    const hasInline = _hasInlineCiteNearby(fullText, idx);
+
+    // 3) 判斷是否視為「已提供來源」
+    const hasSourceLine = !!near;
+    const isSelfMade    = !!(near && near.hasSelfMade);
+    // 表格：沿用舊有 tableInlineOK 概念；圖表新增 figureInlineOK
+    const inlineOK      = hasInline; // 無論圖或表，只要偵測到就當作 OK
+
+    // 4) 若來源行看起來像完整參考文獻，嘗試對到「陸、參考文獻」
+    let looksFullRef = false, refMatched = false, refHit = null;
+    if (hasSourceLine && !isSelfMade) {
+      looksFullRef = _looksLikeFullReference(near.content);
+      if (looksFullRef) {
+        const mres = _matchSourceToRefs(near.content, refEntries);
+        refMatched = mres.matched; refHit = mres.hit;
+      }
+    }
+
+    entries.push({
+      kind,
+      label: whole.trim(),
+      index: idx,
+      hasSourceLine,
+      sourceLine: near?.label || '',
+      sourceContent: near?.content || '',
+      isSelfMade,
+      inlineOK,
+      looksFullRef,
+      refMatched,
+      refHit
+    });
   }
-  const lackSource = (totalFT>0 && (srcAll+tableInlineOK)<totalFT);
-  const lackLabel = (totalFT===0 && srcAll>0);
-  const figPass = totalFT===0 ? true : (!lackSource && !lackLabel);
-  const explain = (totalFT===0 && srcAll>0) ? '（文件出現多筆「資料來源：」但未偵測到任何「圖x/表x」標號，因此判定「缺標號＝是」。）' : '';
-  addRow('圖表需有標號/標題與來源',figPass,
-    `檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'} ${explain}`,
-    '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
+
+  const totalFT = entries.length;
+
+  // 「來源是否足夠」的新判定：逐一對位
+  // 規則：每一個圖/表只要具備「來源行」或「內嵌引注」或「自製」三者之一，即視為這個項目有來源。
+  const withAnySource = entries.filter(it => it.hasSourceLine || it.inlineOK || it.isSelfMade).length;
+  const lackSource = totalFT > 0 && (withAnySource < totalFT);
+
+  // 缺標號的新判定：有「來源」但完全找不到圖/表標號（極端情況）
+  // → 若 totalFT === 0 但全文仍出現來源詞彙，則視為「缺標號」
+  const anySourceTokens = (fullText.match(SOURCE_LABEL) || []).length > 0;
+  const lackLabel = (totalFT === 0 && anySourceTokens);
+
+  // 新版通過條件
+  const figPass = totalFT === 0 ? true : (!lackSource && !lackLabel);
+
+  // 統計細節
+  const tableInlineOK = entries.filter(it => it.kind === '表' && it.inlineOK).length;
+  const figureInlineOK = entries.filter(it => it.kind === '圖' && it.inlineOK).length;
+  const sourceLineCount = entries.filter(it => it.hasSourceLine).length;
+  const selfMadeCount   = entries.filter(it => it.isSelfMade).length;
+  const fullRefCount    = entries.filter(it => it.looksFullRef).length;
+  const fullRefMatched  = entries.filter(it => it.looksFullRef && it.refMatched).length;
+  const fullRefUnmatch  = entries.filter(it => it.looksFullRef && !it.refMatched).length;
+
+  // 準備證據字串（維持你原頁面風格）
+  const parts = [
+    `檢出圖/表：${totalFT} 項`,
+    `就近來源行：${sourceLineCount} 項`,
+    `表內已引注：${tableInlineOK} 項`,
+    `圖內已引注：${figureInlineOK} 項`,
+    `自製/自繪：${selfMadeCount} 項`,
+    `判定缺來源：${lackSource ? '是' : '否'}`,
+    `判定缺標號：${lackLabel ? '是' : '否'}`
+  ];
+
+  // 若有完整參考文獻的來源行，再補充比對狀態
+  if (fullRefCount > 0) {
+    parts.push(`來源含完整文獻：${fullRefCount} 項`);
+    parts.push(`其中已對到「陸、參考文獻」：${fullRefMatched} 項`);
+    parts.push(`未對到者：${fullRefUnmatch} 項`);
+  }
+
+  // 若存在未對到的完整文獻來源，列舉前幾筆（避免過長）
+  let suggest = '圖或表上方置左標號+標題；下方標示「資料來源：…」。若於圖/表內已（作者，年份）引注，可視為已提供來源。';
+  if (fullRefUnmatch > 0) {
+    const samples = entries
+      .filter(it => it.looksFullRef && !it.refMatched)
+      .slice(0, 3)
+      .map(it => `「${it.sourceContent.slice(0, 60)}…」`)
+      .join('；');
+    suggest += ` 檢測到有完整參考文獻卻未出現在「陸、參考文獻」：${samples}。請把這些文獻補進「陸、參考文獻」。`;
+  }
+
+  addRow(
+    '圖表需有標號/標題與來源',
+    figPass,
+    parts.join('｜'),
+    suggest
+  );
+})();
 
   // 一致性
   const refJoined = refEntries.join('\n');
