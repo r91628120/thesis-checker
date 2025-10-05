@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-04f';
+  const APP_VER = '2025-10-04a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -18,18 +18,6 @@
     } catch (e) {}
   })();
   console.log("載入版本:", (new URL(location.href)).searchParams.get('v') || APP_VER);
-
-  // 盡力清掉舊版 SW / caches，避免吃舊檔
-  (async () => {
-    try{
-      const regs = await (navigator.serviceWorker?.getRegistrations?.()||[]);
-      for (const r of regs) await r.unregister();
-      if (window.caches?.keys) {
-        const keys = await caches.keys();
-        for (const k of keys) await caches.delete(k);
-      }
-    }catch(e){}
-  })();
 </script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
@@ -38,7 +26,7 @@
 <style>
 :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
-.wrap{max-width:980px;margin:auto;padding:24px}
+.wrap{max-width:960px;margin:auto;padding:24px}
 header h1{margin:0 0 4px;font-size:clamp(22px,4vw,28px)}header p{margin:0;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px}
 .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.pill{background:#eef2ff;border:1px solid #e5e7eb;border-radius:999px;padding:.3rem .6rem;font-size:12px}
@@ -70,7 +58,8 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
   <header>
     <h1>高中職小論文格式自檢系統</h1>
     <p>支援 PDF / DOCX；解析僅在瀏覽器記憶體中，完成即釋放，不留存。</p>
-    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">—</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
+    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
+    <div class="hint" style="margin-top:8px">© 2025 CTVS Library · r91628120@ctvs.ptc.edu.tw</div>
   </header>
 
   <section class="card">
@@ -96,7 +85,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <button onclick="document.getElementById('file').click()">開始檢查</button>
       <button type="button" style="margin-left:auto" onclick="window.open('https://forms.gle/k8Bo5C2YMuXm1ZK79','_blank')">提建議</button>
     </div>
-    <div class="drop hint" style="margin-top:16px; text-align:left">Tips：若 PDF 抽不到文字（像掃描影像或亂碼），請改傳 DOCX。</div>
+    <div class="drop hint" style="margin-top:16px; text-align:left">Tips：檢查時若發現解析不到文字（如 PDF 符號亂碼），請改用 Word 檔上傳。</div>
   </section>
 
   <section class="card">
@@ -115,7 +104,6 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 </div>
 
 <script>
-/* ====== 一些共用參數 / 小工具 ====== */
 const RULES = {
   minPages: 4,
   maxPages: 10,
@@ -128,15 +116,15 @@ const PUNCT = /[，、。：；！!？?\s"“”'‘’—…·．。]/g;
 let fileBase = '';
 let pageTexts = [];  // 1-based
 
-// 顯示行
 let resultCount = 0;
 function addRow(name, pass, evidence, hint) {
   const rid = 'r' + (++resultCount);
   const row = document.createElement('tr');
-  row.innerHTML = `<td class="num">${resultCount}</td><td>${name}</td><td>${
-    pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>'
-  }</td><td>${evidence||''}</td><td class="hint">${hint||''}</td>`;
+  row.innerHTML = '<td class="num"></td><td>' + name + '</td><td>' +
+    (pass?'<span class="ok">OK</span>':'<span class="bad">NO</span>') +
+    '</td><td>' + (evidence || '') + '</td><td class="hint">' + (hint || '') + '</td>';
   row.id = rid;
+  if (!pass) row.querySelector('.bad').closest('td').style.color = '#b91c1c';
   document.getElementById('results').appendChild(row);
   return row;
 }
@@ -160,9 +148,16 @@ function stripHtml(html) {
 </script>
 
 <script>
-/* ====== 參考文獻處理（#11 略過、#12 正確切條與四層統計） ====== */
+// 是否章節小標
+function _isCategoryHeader(line) {
+  const s = (line || '').replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+  if (/^(陸[、，.]?)?\s*(參考文獻|參考資料|References)\s*$/i.test(s)) return true;
+  if (/^([（(]?\s*[一二三四五六七八九十\d]+\s*[)）]?\s*[\.．、]?)\s*[\u4e00-\u9fa5A-Za-z]{0,12}(書籍|專書|期刊|期刊論文|論文|博碩士|會議|報紙|電子報|網站|網路|網路相關資源|資料|文獻|法規|政府|機構)\s*(類|資料|資源)?\s*$/.test(s)) return true;
+  if (/^[〈《]\s*[\u4e00-\u9fa5A-Za-z]{1,12}\s*(類|資料|資源)?\s*[〉》]$/.test(s)) return true;
+  return false;
+}
 
-// 取「最後一個」參考文獻標題位置，避免目錄/正文提前提到
+// 參考文獻起點（取「最後一次」）
 function _findRefStart(fullText) {
   const text = fullText || '';
   const pat = /(^|\n)[^\n]{0,6}\s*(?:陸[、，.]?\s*)?(參考文獻|參考資料|References)\s*$/gmi;
@@ -176,39 +171,25 @@ function _findRefStart(fullText) {
   return lastIdx;
 }
 
-// 是否章節小標
-function _isCategoryHeader(line) {
-  const s = (line || '').replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
-  if (/^(陸[、，.]?)?\s*(參考文獻|參考資料|References)\s*$/i.test(s)) return true;
-  if (/^([（(]?\s*[一二三四五六七八九十\d]+\s*[)）]?\s*[\.．、]?)\s*[\u4e00-\u9fa5A-Za-z]{0,12}(書籍|專書|期刊|期刊論文|論文|博碩士|會議|報紙|電子報|網站|網路|網路相關資源|資料|文獻|法規|政府|機構)\s*(類|資料|資源)?\s*$/.test(s)) return true;
-  if (/^[〈《]\s*[\u4e00-\u9fa5A-Za-z]{1,12}\s*(類|資料|資源)?\s*[〉》]$/.test(s)) return true;
-  return false;
-}
-
-// 參考文獻前處理：跨頁/網址續行/中文數字修補
+// 參考文獻前處理
 function _preCleanRefText(s) {
   return (s || '')
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')         // 跨頁符號還原為換行
-    .replace(/^\s*\d{1,4}\s*$/gm, '')             // 只有頁碼的一行移除
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2') // 斷字接回
-    // URL/DOI 如果在新行，併到上一條
+    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
+    .replace(/^\s*\d{1,4}\s*$/gm, '')
+    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
     .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
     .replace(/\n\s*(www\.\S+)/g, ' $1')
     .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
-    // 短網址如果在新行，併到上一條
     .replace(/\n\s*((?:reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)\S*)/gi, ' $1')
-    // 中文數字被拆行的修補
     .replace(/([一二三四五六七八九十百千])\s+([一二三四五六七八九十百千])/g, '$1$2')
-    // 以「1.」「（一）」「一、」之類符號作為可能的新起點，Before 插入換行
     .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
-    // 把無意義的硬斷行合併
     .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{2,}/g, '\n')
     .trim();
 }
 
-// 文獻切條（支援數字/中文數字/作者-年份；網址行併入上一條；短網址白名單）
+// 參考文獻切條
 function _parseReferenceEntries(refText) {
   const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
 
@@ -223,21 +204,20 @@ function _parseReferenceEntries(refText) {
     /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
 
   const isNewItemByAuthorYear = s =>
-    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*[（(]\s*(\d{4}|無日期)\s*[)）]/.test(s) ||      // 中文作者 +（年份/無日期）
-    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}[（(]\s*(\d{4}|[Nn]\.?[Dd]\.?)\s*[)）]/.test(s); // 英文作者 (Year/n.d.)
+    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*（(\d{4}|無日期)）/.test(s) ||
+    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
 
   const isContinuation = s =>
     /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
     /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(s) ||
     /^[-–•．·●]/.test(s) ||
-    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||  // 裸網域
+    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||
     /^\/[^\s]/.test(s) ||
     SHORT_DOMAINS.test(s);
 
   for (const raw of lines) {
     const line0 = raw;
 
-    // 小節抬頭（書籍類 / 期刊類 / 網路資源…）直接略過
     if (_isCategoryHeader(line0)) continue;
 
     const looksNew = isNewItemByIndex(line0) || isNewItemByAuthorYear(line0);
@@ -248,7 +228,7 @@ function _parseReferenceEntries(refText) {
       .trim();
 
     if (!cur) {
-      if (cont && !looksNew) continue; // 第一行就是 URL，等下一條的起點
+      if (cont && !looksNew) continue;
       cur = base;
       continue;
     }
@@ -323,36 +303,30 @@ function _classifyReference(item) {
 </script>
 
 <script>
-/* ===== 規則主程式（含 #11 略過、#12 四層統計） ===== */
-function runTextRules(pageTextsIn){
-  pageTexts = pageTextsIn;
+function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
 
-  // 1) 頁碼/頁數（簡要）
-  const pageOK = pages>=RULES.minPages && pages<=RULES.maxPages;
-  addRow('頁數 4–10 頁', pageOK, `偵測頁數：${pages}`, '4–10頁為參賽門檻。');
-
-  // 2) 六大段落
+  // 六段落
   const sec=RULES.sixSections;
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
-  addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請依「前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻」排列。');
+  addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // 3) 內文引註
+  // 作者-年份
   const citeA=/（[^，\n]{1,12}，\s*\d{4}）/g, citeB=/[^\s，。、]{1,12}（\s*\d{4}）/g;
   const hasCite=(fullText.match(citeA)?.length||0)+(fullText.match(citeB)?.length||0);
   addRow('內文引註採 作者-年份',hasCite>0,hasCite?`檢出 ${hasCite} 處`:'未檢出引註樣式','請使用（姓名，年份）或 姓名（年份）。');
 
-  // 4) 直接引文長度
+  // 直接引文長度
   const quotesRaw=[...(fullText.match(/「[^」]{1,200}」/g)||[]),...(fullText.match(/“[^”]{1,200}”/g)||[])];
   const clean=s=>s.replace(PUNCT,''); const isDirect=q=>clean(q).length>=RULES.minQuoteCharsForDirect;
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
 
-  // 5) 參考文獻起點（取最後一個）
+  // 參考文獻起點（取最後一次）
   const refIdx = _findRefStart(fullText);
 
-  // 6) 不得含校名/姓名（參考文獻之後略過）
+  // 8) 校名/姓名（參考文獻之後略過） —— ★ 修正點：跨頁頁面切前段
   const SCHOOL_PATTERNS = [
     /國立臺灣大學|國立台灣大學|國立中興大學|國立清華大學|國立交通大學|陽明交通大學|國立成功大學|國立政治大學/,
     /國立中正大學|國立中央大學|國立中山大學|國立臺北大學|國立臺灣師範大學|國立臺灣科技大學|國立臺北科技大學|國立屏東科技大學/,
@@ -362,18 +336,18 @@ function runTextRules(pageTextsIn){
   for(let p=1;p<=pages;p++){
     let t=pageTexts[p]||'';
     const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    if(refIdx>=0 && pageStartOffset>=refIdx) continue; // 完整在參考文獻之後
-    if(refIdx>=0 && pageStartOffset < refIdx && pageStartOffset + t.length > refIdx) {
-      t = t.slice(0, refIdx - pageStartOffset); // 跨過界的頁，只取前段
-    }
+    if(refIdx>=0 && pageStartOffset>=refIdx) continue;
+    if(refIdx>=0 && pageStartOffset < refIdx && (pageStartOffset + t.length) > refIdx){ t = t.slice(0, refIdx - pageStartOffset); }
     for(const re of SCHOOL_PATTERNS){
       const m=t.match(re);
       if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);}
     }
   }
-  addRow('不得含校名/姓名',schoolHits.length===0,schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現','本檢查會自動略過「參考文獻」區段，避免學位論文出處誤判。');
+  addRow('不得含校名/姓名',schoolHits.length===0,
+    schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
+    '請去識別化（以 XXX 取代完整校名）。');
 
-  // 7) 參考文獻：切條 + 四層統計
+  // 參考文獻：切條 + 四層統計 —— ★ 修正點：移除標題行
   const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
   let refEntries     = refIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
@@ -390,23 +364,29 @@ function runTextRules(pageTextsIn){
   const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
   const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
 
-  const evidence12 = [
+  const evidence13 = [
      `檢查總數量：${A_total}`,
      `合格數量：${qualifiedCount}`,
      `不合格數量：${unqualifiedCount}`,
      `網路來源數量：${webCount}`,
      `（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`
   ].join('｜');
-  addRow('參考文獻 ≥ 3', A_total >= 3, evidence12,'以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
+  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,'以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
-  // 8) 圖表（簡化）
+  // 圖表（原版邏輯保留）
   const figMatches=fullText.match(/(^|\n|\s)圖\s*\d+[\s．.、：:]/g)||[], tabMatches=fullText.match(/(^|\n|\s)表\s*\d+[\s．.、：:]/g)||[];
   const totalFT=figMatches.length+tabMatches.length;
   const srcAll=(fullText.match(/資料來源[:：]/g)||[]).length;
-  const figPass = totalFT===0 ? true : (srcAll>=totalFT);
-  addRow('圖表需有標號/標題與來源',figPass,`檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項`,`圖/表需上方標號+標題；下方標示「資料來源：…」。`);
+  let tableInlineOK=0; if(tabMatches.length){
+    let pos=0; while((pos=fullText.indexOf('表',pos))>=0){const slice=fullText.slice(Math.max(0,pos-120),Math.min(fullText.length,pos+200)); if(/表\s*\d+/.test(slice) && /(（[^，\n]{1,12}，\s*\d{4}）|[^\s，、]{1,12}（\s*\d{4}）)/.test(slice)) tableInlineOK++; pos+=1;}
+  }
+  const lackSource = (totalFT>0 && (srcAll+tableInlineOK)<totalFT);
+  const lackLabel = (totalFT===0 && srcAll>0);
+  const figPass = totalFT===0 ? true : (!lackSource && !lackLabel);
+  const explain = (totalFT===0 && srcAll>0) ? '（文件出現多筆「資料來源：」但未偵測到任何「圖x/表x」標號，因此判定「缺標號＝是」。）' : '';
+  addRow('圖表需有標號/標題與來源',figPass,`檢出圖/表 ${totalFT} 項；資料來源紀錄 ${srcAll} 項；表內已引注 ${tableInlineOK} 項；判定缺來源：${lackSource?'是':'否'}；判定缺標號：${lackLabel?'是':'否'} ${explain}`,'圖或表上方置左標號+標題；下方標示「資料來源：…」。若於表內已（作者，年代）引注，可不於表下再標。');
 
-  // 9) 引註一致性（簡化）
+  // 引註一致性（原版保留）
   const refJoined = refEntries.join('\n');
   const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
   let linked=0; for(const c of citations){ if(refJoined.includes(c)) linked++; }
@@ -415,7 +395,9 @@ function runTextRules(pageTextsIn){
   const reverseUnlinked = refAuthors.filter(a=>!citations.some(c=>c.startsWith(a))).length;
   addRow('參考文獻與內文引註一致性',unlinkedInText===0 && reverseUnlinked<=1,`引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,'內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
 
-  // 10) 來源不可全為網路
+  // 來源不可全為網路（原版保留）
+  const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
+  const webCount    = classified.filter(x => x.kind === 'web').length;
   const nonAllWebPass = (A_total > 0) && (webCount < A_total);
   const evidence16 = [
     `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}`,
@@ -423,10 +405,10 @@ function runTextRules(pageTextsIn){
   ].join('｜');
   addRow('參考文獻來源不可全為網路', nonAllWebPass, evidence16, '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。');
 
-  // 11) 字體 Mirror（保留掛鉤）
+  // 字體 mirror（保留）
   syncBasicFontRuleMirror();
 
-  // 12) 外部檢索助手
+  // 外部檢索助手（保留）
   const extEvidence=buildExternalSearchEvidence(fileBase||'小論文篇名');
   addRow('作品是否已於校外發表/得獎（需人工/GPT）',true,extEvidence,'使用下方「外部檢索助手」或「複製查核提示」至 AI 小助手進行確認。');
   setTimeout(()=>initExternalSearchAssist(fileBase||'小論文篇名'),0);
@@ -434,7 +416,6 @@ function runTextRules(pageTextsIn){
 </script>
 
 <script>
-/* ====== 上傳 / 解析 ====== */
 const consent = document.getElementById('consent');
 const fileInput = document.getElementById('file');
 const drop = document.getElementById('drop');
@@ -482,7 +463,7 @@ async function handleFile(file){
       const buf = await file.arrayBuffer();
       const r = await window.mammoth.convertToHtml({arrayBuffer: buf});
       const text = stripHtml(r.value);
-      runTextRules(['', text]); // 當作單頁
+      runTextRules(['', text]);
     } else {
       alert('請上傳 PDF 或 DOCX 檔案。');
     }
@@ -494,9 +475,8 @@ async function handleFile(file){
 </script>
 
 <script>
-/* ====== 其餘掛鉤（維持相容） ====== */
-function syncBasicFontRuleMirror(){ /* 保留掛鉤，若有自動字體規則可在此 mirror 顯示 */ }
-
+// 相容掛鉤（保留）
+function syncBasicFontRuleMirror(){ /* 可在此 mirror 字體規則顯示 */ }
 function buildExternalSearchEvidence(title){
   const lines = [
     `#1 Google Scholar（繁中）：${title} site:scholar.google.com`,
@@ -526,6 +506,22 @@ function initExternalSearchAssist(title){
     ul.appendChild(li);
   }
 }
+</script>
+
+<script>
+// 盡力清掉舊版 SW / caches，避免吃舊檔（保留）
+(async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) { await r.unregister(); }
+    }
+    if (window.caches?.keys) {
+      const keys = await caches.keys();
+      for (const k of keys) { await caches.delete(k); }
+    }
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>
