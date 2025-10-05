@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06a';
+  const APP_VER = '2025-10-06b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -701,6 +701,7 @@ function runTextRules(pageTexts){
   // 新版通過條件
   const figPass = totalFT === 0 ? true : (!lackSource && !lackLabel);
 
+  
   // 統計細節
   const tableInlineOK = entries.filter(it => it.kind === '表' && it.inlineOK).length;
   const figureInlineOK = entries.filter(it => it.kind === '圖' && it.inlineOK).length;
@@ -709,6 +710,12 @@ function runTextRules(pageTexts){
   const fullRefCount    = entries.filter(it => it.looksFullRef).length;
   const fullRefMatched  = entries.filter(it => it.looksFullRef && it.refMatched).length;
   const fullRefUnmatch  = entries.filter(it => it.looksFullRef && !it.refMatched).length;
+
+  // 新增：分開統計「圖」與「表」，以及「表內圖片引注」
+  const figureCount = entries.filter(it => it.kind === '圖').length;
+  const tableCount  = entries.filter(it => it.kind === '表').length;
+  const tableImageInline = entries.filter(it => it.kind === '表' && it.hasSourceLine && /圖片來源[:：]/.test(it.sourceLine)).length;
+
 
   // 準備證據字串（維持你原頁面風格）
   const parts = [
@@ -742,10 +749,11 @@ function runTextRules(pageTexts){
   addRow(
     '圖表需有標號/標題與來源',
     figPass,
-    parts.join('｜'),
+    parts.join('｜') + '<br/>' +
+      (`圖：${figureCount} 項｜表：${tableCount} 項`) + '<br/>' +
+      (`表內圖片引注：${tableImageInline} 項`),
     suggest
-  );
-})();
+  );})();
 
   // 一致性
   const refJoined = refEntries.join('\n');
