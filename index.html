@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06e';
+  const APP_VER = '2025-10-06a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -127,7 +127,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzi_z7YhjLPy3vHBnrKuYq-bz31vyWhiixd2-SA2ajcYB6RM_bGBYXvAxndif86Om1e/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4kpKUuxEKf86f67x7DAp8wX8epixiTmaWXUYpGZFaSaUt12iPpPq9IT7Zk5hL2ZB7/exec";
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
@@ -340,15 +340,22 @@ function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;
 
 // 取「最後一個」參考文獻標題位置
 function _findRefStart(fullText) {
-  const text = fullText || '';
-  const pat = /(^|\n)[^\n]{0,6}\s*(?:陸[、，.]?\s*)?(參考文獻|參考資料|References)\s*$/gmi;
+  const text = (fullText || '').replace(/\[\[PAGE_SPLIT\]\]/g, '\n');
+  // 允許：六/陸/6/VI/Ⅵ/第六 + 參考文獻|參考資料|References（可含冒號）
+  const pat = /(^|\n)\s*[^\n]{0,12}?\s*(?:[（(]?\s*(?:六|陸|6|VI|Ⅵ|第\s*六)\s*[)）]?\s*[\.．、]?)?\s*(參考文獻|參考資料|References?)\s*[:：]?\s*(?:$|\n)/gmi;
   let m, lastIdx = -1;
-  while ((m = pat.exec(text)) !== null) lastIdx = m.index + (m[1] ? m[1].length : 0);
+  while ((m = pat.exec(text)) !== null) {
+    // 定位到該行最開頭（去掉換行字元）
+    lastIdx = m.index + (m[1] ? m[1].length : 0);
+  }
   if (lastIdx < 0) {
-    const cands = ['參考文獻','參考資料','References']
-      .map(t => text.lastIndexOf(t)).filter(i => i >= 0);
+    // 後備策略：直接找最後一次出現的關鍵字
+    const keys = ['參考文獻','參考資料','References','Reference'];
+    const cands = keys.map(k => text.lastIndexOf(k)).filter(i => i >= 0);
     if (cands.length) lastIdx = Math.max(...cands);
   }
+  return lastIdx;
+}
   return lastIdx;
 }
 
@@ -614,7 +621,9 @@ function runTextRules(pageTexts){
     '請去識別化（以 XXX 取代完整校名）。');
 
   // 12) 參考文獻切條 + 四層統計 —— ★修正：移除標題行
-  const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
+  const refTextRaw   = refIdx >= 0 
+    ? fullText.slice(refIdx).replace(/^(?:[（(]?\s*(?:六|陸|6|VI|Ⅵ|第\s*六)\s*[)）]?\s*[\.．、]?\s*)?(?:參考文獻|參考資料|References?)\s*[:：]?\s*[\r\n]*/i, '')
+    : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
   let refEntries     = refIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
   refEntries         = _dedupReferences(refEntries);
@@ -895,8 +904,8 @@ async function fetchCounter(){
     const text = await r.text();
     let data = null;
     try { data = JSON.parse(text); } catch (e) {
-      const m = text.match(/\"count\"\s*:\s*(\d+)/);
-      if (m) data = { count: parseInt(m[1], 10) };
+      const mm = text.match(/\"count\"\s*:\s*(\d+)/);
+      if (mm) data = { count: parseInt(mm[1], 10) };
     }
     const el = document.getElementById('counter') || document.querySelector('[data-counter]') || document.querySelector('#counterText, .counter-text');
     if (data && typeof data.count === 'number' && !Number.isNaN(data.count)) {
