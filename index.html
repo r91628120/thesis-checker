@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06c';
+  const APP_VER = '2025-10-06d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -337,15 +337,22 @@ function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;
 
 // 取「最後一個」參考文獻標題位置
 function _findRefStart(fullText) {
-  const text = fullText || '';
-  const pat = /(^|\n)[^\n]{0,6}\s*(?:陸[、，.]?\s*)?(參考文獻|參考資料|References)\s*$/gmi;
+  const text = (fullText || '').replace(/\[\[PAGE_SPLIT\]\]/g, '\n');
+  // 允許：六/陸/6/VI/Ⅵ/第六 + 參考文獻|參考資料|References（可含冒號）
+  const pat = /(^|\n)\s*[^\n]{0,12}?\s*(?:[（(]?\s*(?:六|陸|6|VI|Ⅵ|第\s*六)\s*[)）]?\s*[\.．、]?)?\s*(參考文獻|參考資料|References?)\s*[:：]?\s*(?:$|\n)/gmi;
   let m, lastIdx = -1;
-  while ((m = pat.exec(text)) !== null) lastIdx = m.index + (m[1] ? m[1].length : 0);
+  while ((m = pat.exec(text)) !== null) {
+    // 定位到該行最開頭（去掉換行字元）
+    lastIdx = m.index + (m[1] ? m[1].length : 0);
+  }
   if (lastIdx < 0) {
-    const cands = ['參考文獻','參考資料','References']
-      .map(t => text.lastIndexOf(t)).filter(i => i >= 0);
+    // 後備策略：直接找最後一次出現的關鍵字
+    const keys = ['參考文獻','參考資料','References','Reference'];
+    const cands = keys.map(k => text.lastIndexOf(k)).filter(i => i >= 0);
     if (cands.length) lastIdx = Math.max(...cands);
   }
+  return lastIdx;
+}
   return lastIdx;
 }
 
@@ -569,66 +576,6 @@ function _matchSourceToRefs(srcContent, refEntries) {
 }
 
 /* ===== 文字規則（只有第11、12項含微調） ===== */
-
-/* ===== 強化版：參考文獻解析與分類 + 嚴格比對 ===== */
-function _parseReferenceEntries_strict(fullText) {
-  const text = fullText.replace(/\u3000/g, ' ').replace(/\s+$/gm, '');
-  const lines = text.split(/\r?\n/);
-  const refs = [];
-  let cur = '';
-  const startRe = /^(?:[（(]?[一二三四五六七八九十]+[)）]?[、.．]?\s*|\d+[、.．]\s*|[A-Za-z一-龥][^\n]{0,30}?\(\d{4})/;
-  for (let raw of lines) {
-    const line = raw.trim();
-    if (!line) continue;
-    if (startRe.test(line)) {
-      if (cur) refs.push(cur.trim());
-      cur = line;
-    } else {
-      // 若上一行疑似文獻延伸（網址、DOI、頁碼），併入同一條
-      if (/https?:\/\/|doi\.org|頁\s*\d+|pp?\./i.test(line) || cur) {
-        cur += ' ' + line;
-      } else {
-        cur = line;
-      }
-    }
-  }
-  if (cur) refs.push(cur.trim());
-  // 去重（常見網址重複）
-  const uniq = [];
-  const seen = new Set();
-  for (const r of refs) {
-    const k = r.replace(/\s+/g,' ').strip?.() ?? r.replace(/\s+/g,' ');
-    if (!seen.has(k)) { seen.add(k); uniq.push(r); }
-  }
-  return uniq;
-}
-
-function _splitRefByType(refs) {
-  const book = [], web = [];
-  for (const r of refs) {
-    if (/https?:\/\//.test(r) || /(網站|Blog|Pixnet|網址)/i.test(r)) web.push(r);
-    else if (/(出版社|有限公司|Press|Publishing)/.test(r)) book.push(r);
-    else if (/doi\.org/i.test(r)) web.push(r);
-    else (r.length > 60 ? book : web).push(r);
-  }
-  return {book, web};
-}
-
-// 嚴格：作者(或來源名稱) + 年份 需同時匹配
-function _matchSourceToRefs(srcContent, refEntries) {
-  if (!srcContent) return { matched:false, hit:null };
-  const clean = srcContent.replace(/^(資料來源|圖片來源)[:：]\s*/,'').trim();
-  const y = (clean.match(/(\d{4})/)||[])[1] || null;
-  const key = _normRefKey(clean).replace(/\b(資料來源|圖片來源)\b/g,'');
-  for (const r of refEntries) {
-    const ry = (r.match(/(\d{4})/)||[])[1] || null;
-    const rkey = _normRefKey(r);
-    if (y && ry && y === ry && (rkey.includes(key) || key.includes(rkey))) {
-      return { matched:true, hit:r };
-    }
-  }
-  return { matched:false, hit:null };
-}
 function runTextRules(pageTexts){
   const pages=pageTexts.length-1||1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
@@ -671,7 +618,9 @@ function runTextRules(pageTexts){
     '請去識別化（以 XXX 取代完整校名）。');
 
   // 12) 參考文獻切條 + 四層統計 —— ★修正：移除標題行
-  const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
+  const refTextRaw   = refIdx >= 0 
+    ? fullText.slice(refIdx).replace(/^(?:[（(]?\s*(?:六|陸|6|VI|Ⅵ|第\s*六)\s*[)）]?\s*[\.．、]?\s*)?(?:參考文獻|參考資料|References?)\s*[:：]?\s*[\r\n]*/i, '')
+    : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
   let refEntries     = refIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
   refEntries         = _dedupReferences(refEntries);
@@ -694,21 +643,10 @@ function runTextRules(pageTexts){
      `網路來源數量：${webCount}`,
      `（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`
   ].join('｜');
-  
-(() => {
-  const refEntries = _parseReferenceEntries_strict(fullText);
-  const { book, web } = _splitRefByType(refEntries);
-  const total = refEntries.length;
-  const pass = total >= 3;
-  const preview = refEntries.slice(0,3).map((r,i)=>`(${i+1}) ${r.slice(0,60)}…`).join('<br/>');
-  addRow(
-    '參考文獻 ≥ 3',
-    pass,
-    `檢出文獻：${total} 筆（書籍 ${book.length}｜網路 ${web.length}）` + '<br/>' + preview,
-    pass ? 'OK' : '參考文獻少於 3 筆，請補足。'
-  );
-})();
-// 圖表
+  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
+    '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
+
+  // 圖表
   /* ===== 圖表需有標號/標題與來源 —— 升級版（中文數字、內嵌引注、對位比對、跨頁容錯） ===== */
 (() => {
   const entries = []; // 每一個圖/表的檢查結果
@@ -772,6 +710,7 @@ function runTextRules(pageTexts){
   // 新版通過條件
   const figPass = totalFT === 0 ? true : (!lackSource && !lackLabel);
 
+  
   // 統計細節
   const tableInlineOK = entries.filter(it => it.kind === '表' && it.inlineOK).length;
   const figureInlineOK = entries.filter(it => it.kind === '圖' && it.inlineOK).length;
@@ -780,6 +719,12 @@ function runTextRules(pageTexts){
   const fullRefCount    = entries.filter(it => it.looksFullRef).length;
   const fullRefMatched  = entries.filter(it => it.looksFullRef && it.refMatched).length;
   const fullRefUnmatch  = entries.filter(it => it.looksFullRef && !it.refMatched).length;
+
+  // 新增：分開統計「圖」與「表」，以及「表內圖片引注」
+  const figureCount = entries.filter(it => it.kind === '圖').length;
+  const tableCount  = entries.filter(it => it.kind === '表').length;
+  const tableImageInline = entries.filter(it => it.kind === '表' && it.hasSourceLine && /圖片來源[:：]/.test(it.sourceLine)).length;
+
 
   // 準備證據字串（維持你原頁面風格）
   const parts = [
@@ -813,10 +758,11 @@ function runTextRules(pageTexts){
   addRow(
     '圖表需有標號/標題與來源',
     figPass,
-    parts.join('｜'),
+    parts.join('｜') + '<br/>' +
+      (`圖：${figureCount} 項｜表：${tableCount} 項`) + '<br/>' +
+      (`表內圖片引注：${tableImageInline} 項`),
     suggest
-  );
-})();
+  );})();
 
   // 一致性
   const refJoined = refEntries.join('\n');
