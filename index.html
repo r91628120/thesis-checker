@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06f';
+  const APP_VER = '2025-10-06g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -127,7 +127,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4kpKUuxEKf86f67x7DAp8wX8epixiTmaWXUYpGZFaSaUt12iPpPq9IT7Zk5hL2ZB7/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmhSM_Rjwu187DnItnBhBDCnunvxDV0qQiIWMjQa6DPKHC4Ck-QS_rqv7FVHLphE2_/exec";
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
@@ -159,7 +159,12 @@ function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;sta
 consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
 // 自動啟用：若進頁面時已勾選
 if (consent && consent.checked) { setUploadEnabled(true); }
-
+// 頁面載入完成時也檢查一次，避免一開始就被鎖住
+window.addEventListener('DOMContentLoaded', () => {
+  if (consent && consent.checked) {
+    setUploadEnabled(true);
+  }
+});
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
@@ -895,34 +900,36 @@ async function bumpCounterEveryTime(){
     await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({action:'increment',site:'essayguard'})});
   }catch(e){}
 }
-async function fetchCounter(){
-  
+async function fetchCounter() {
   try {
-    const url = (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) ? GAS_WEB_APP_URL : '';
-    if (!url) throw new Error('GAS url missing');
-    const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=get', { cache: 'no-store' });
-    const text = await r.text();
-    let data = null;
-    try { data = JSON.parse(text); } catch (e) {
-      const mm = text.match(/\"count\"\s*:\s*(\d+)/);
-      if (mm) data = { count: parseInt(mm[1], 10) };
+    const url = GAS_WEB_APP_URL;
+    if (!url) throw new Error('GAS URL missing');
+
+    const res  = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=get', { cache: 'no-store' });
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // 後備：GAS 若沒設 JSON MIME，改抓 "count": 數字
+      const m = text.match(/"count"\s*:\s*(\d+)/);
+      data = m ? { count: parseInt(m[1], 10) } : null;
     }
-    const el = document.getElementById('counter') || document.querySelector('[data-counter]') || document.querySelector('#counterText, .counter-text');
+
+    const el = document.getElementById('counter');
     if (data && typeof data.count === 'number' && !Number.isNaN(data.count)) {
-      if (el) el.textContent = data.count.toLocaleString();
+      el.textContent = data.count.toLocaleString();
     } else {
-      if (el) el.textContent = '0';
+      el.textContent = '暫不可用';
     }
   } catch (err) {
-    const el = document.getElementById('counter') || document.querySelector('[data-counter]') || document.querySelector('#counterText, .counter-text');
+    console.error('GAS counter error:', err);
+    const el = document.getElementById('counter');
     if (el) el.textContent = '暫不可用';
   }
-}});
-    const text=await res.text();let data;try{data=JSON.parse(text);}catch{data={};}
-    if(typeof data.count==='number'){counterEl.textContent=data.count.toLocaleString();}else{counterEl.textContent='0';}
-  }catch(e){counterEl.textContent='0';}
 }
-if(ENABLE_COUNTER)fetchCounter();
+if (ENABLE_COUNTER) fetchCounter();
 
 /* ===== 快取清理（避免 SW 舊檔） ===== */
 (async () => {
