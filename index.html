@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06g';
+  const APP_VER = '2025-10-06h';
   (function () {
     try {
       const url = new URL(location.href);
@@ -127,7 +127,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmhSM_Rjwu187DnItnBhBDCnunvxDV0qQiIWMjQa6DPKHC4Ck-QS_rqv7FVHLphE2_/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzOFkeqdMaTGsfj9Ys1t3ROxd_UxBh_jQ3qOm4y9KDysyz1pSuaU9PUgQGFU4HKGqdB/exec";
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
@@ -155,16 +155,39 @@ const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《�
 const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部)/g];
 
 /* ===== 可用性 ===== */
-function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;startBtn.disabled=!ok||!has;clearBtn.disabled=!ok||!has;fontCheckBtn.disabled=!ok||!has||fileExt!=='pdf'}
-consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
-// 自動啟用：若進頁面時已勾選
-if (consent && consent.checked) { setUploadEnabled(true); }
-// 頁面載入完成時也檢查一次，避免一開始就被鎖住
-window.addEventListener('DOMContentLoaded', () => {
-  if (consent && consent.checked) {
-    setUploadEnabled(true);
+function setUploadEnabled(ok){
+  // 檔案輸入本體
+  if (ok) {
+    fileInput.disabled = false;
+    fileInput.removeAttribute('disabled'); // ← 關鍵：同時移除屬性
+  } else {
+    fileInput.disabled = true;
+    fileInput.setAttribute('disabled',''); 
   }
-});
+
+  // UI 其它按鈕
+  const has = !!arrayBuffer;
+  startBtn.disabled    = !ok || !has;
+  clearBtn.disabled    = !ok || !has;
+  fontCheckBtn.disabled= !ok || !has || fileExt!=='pdf';
+
+// 讓「選擇檔案」標籤一定能打開 file dialog（就算瀏覽器對 label 行為挑剔）
+const pickLabel = document.querySelector('label.file');
+if (pickLabel) {
+  pickLabel.addEventListener('click', (e) => {
+    if (fileInput.disabled) {
+      e.preventDefault();
+      statusEl.textContent = '請先勾選上方「我已閱讀並同意…」';
+      return;
+    }
+    // 明確觸發
+    fileInput.click();
+  });
+}
+
+  // 拖拉容器（可視性）
+  drop.setAttribute('aria-disabled', String(!ok));
+}
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
