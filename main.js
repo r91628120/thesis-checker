@@ -10,7 +10,7 @@
  */
 
 
-  const APP_VER = '2025-10-07a';
+  const APP_VER = '2025-10-07b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -891,3 +891,26 @@ if(ENABLE_COUNTER)fetchCounter();
 })();
 
 console.log('小論文格式自檢系統 v2025-10-07a loaded.');
+
+
+async function fetchCounter(url, el){
+  try {
+    const r = await fetch(url + (url.includes('?')?'&':'?') + 'action=get', { cache: 'no-store' });
+    const text = await r.text();
+    let data=null;
+    try { data = JSON.parse(text); } catch { const m = text.match(/"count"\s*:\s*(\d+)/); if (m) data={count:parseInt(m[1],10)}; }
+    if (data && Number.isFinite(data.count)) el.textContent = data.count.toLocaleString();
+    else el.textContent = '暫不可用';
+  } catch (e) { console.error(e); if (el) el.textContent='暫不可用'; }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const counterEl = document.getElementById('counter') || document.querySelector('[data-counter]');
+  if (counterEl){
+    if (typeof GAS_WEB_APP_URL==='string' && GAS_WEB_APP_URL.trim()){
+      fetchCounter(GAS_WEB_APP_URL, counterEl);
+    } else {
+      counterEl.textContent = '暫不可用';
+    }
+  }
+});
+
