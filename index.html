@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06h';
+  const APP_VER = '2025-10-06i';
   (function () {
     try {
       const url = new URL(location.href);
@@ -156,38 +156,16 @@ const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|
 
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){
-  // 檔案輸入本體
-  if (ok) {
-    fileInput.disabled = false;
-    fileInput.removeAttribute('disabled'); // ← 關鍵：同時移除屬性
-  } else {
-    fileInput.disabled = true;
-    fileInput.setAttribute('disabled',''); 
-  }
-
-  // UI 其它按鈕
+  fileInput.disabled = !ok;
   const has = !!arrayBuffer;
-  startBtn.disabled    = !ok || !has;
-  clearBtn.disabled    = !ok || !has;
-  fontCheckBtn.disabled= !ok || !has || fileExt!=='pdf';
-
-// 讓「選擇檔案」標籤一定能打開 file dialog（就算瀏覽器對 label 行為挑剔）
-const pickLabel = document.querySelector('label.file');
-if (pickLabel) {
-  pickLabel.addEventListener('click', (e) => {
-    if (fileInput.disabled) {
-      e.preventDefault();
-      statusEl.textContent = '請先勾選上方「我已閱讀並同意…」';
-      return;
-    }
-    // 明確觸發
-    fileInput.click();
-  });
+  startBtn.disabled = !ok || !has;
+  clearBtn.disabled = !ok || !has;
+  fontCheckBtn.disabled = !ok || !has || fileExt !== 'pdf';
 }
-
-  // 拖拉容器（可視性）
-  drop.setAttribute('aria-disabled', String(!ok));
-}
+consent.addEventListener('change',()=>{
+  setUploadEnabled(consent.checked);
+  statusEl.textContent = consent.checked ? '已同意，可上傳。' : '請先同意政策。';
+});
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
