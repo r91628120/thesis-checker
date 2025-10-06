@@ -1,4 +1,3 @@
-
 /*
  * 高中職小論文格式自檢系統
  * 主程式檔案：main.js
@@ -913,4 +912,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+
+
+/* === AFT: Robust counter override === */
+(function(){
+  function AFT_fetchCounter(url, el){
+    (async () => {
+      try {
+        const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=get', { cache: 'no-store' });
+        const text = await r.text();
+        let data = null;
+        try { data = JSON.parse(text); } catch (e) {
+          const m = text && text.match(/"count"\s*:\s*(\d+)/);
+          if (m) data = { count: parseInt(m[1], 10) };
+        }
+        if (data && Number.isFinite(data.count)) {
+          if (el) el.textContent = Number(data.count).toLocaleString();
+        } else {
+          if (el) el.textContent = '暫不可用';
+        }
+      } catch (err) {
+        console.error('[AFT counter]', err);
+        if (el) el.textContent = '暫不可用';
+      }
+    })();
+  }
+  try { window.fetchCounter = AFT_fetchCounter; } catch(e){}
+})();
+
+
+
+/* === AFT: UI init guard (file picker + version + counter) === */
+(function(){
+  if (window.__AFT_INIT_DONE__) return;
+  window.__AFT_INIT_DONE__ = true;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const verHost = document.querySelector('#appVer, #version, #ver, [data-version], [data-app-ver], #counterBox .mono');
+      if (verHost) verHost.textContent = 'v=' + (typeof APP_VER!=='undefined'?APP_VER:'2025-10-09a');
+      console.log('小論文格式自檢系統 v' + (typeof APP_VER!=='undefined'?APP_VER:'2025-10-09a') + ' loaded.');
+
+      let fileInput = document.getElementById('file') || document.querySelector('input[type="file"]');
+      const consent  = document.getElementById('consent');
+      const pickerEl = document.querySelector('[data-filepicker]') || document.querySelector('label[for="file"]') ||
+                       [...document.querySelectorAll('button,a,label')].find(el=>/選擇檔案/.test(el.textContent||''));
+      if (!fileInput){
+        fileInput = document.createElement('input');
+        fileInput.type = 'file'; fileInput.id = 'file';
+        fileInput.accept = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        fileInput.style.position='fixed'; fileInput.style.left='-9999px'; fileInput.style.top='-9999px';
+        document.body.appendChild(fileInput);
+      }
+      function setUploadEnabled(ok){
+        if (fileInput){
+          if (ok){ fileInput.disabled=false; fileInput.removeAttribute('disabled'); }
+          else   { fileInput.disabled=true;  fileInput.setAttribute('disabled',''); }
+        }
+      }
+      setUploadEnabled(consent ? consent.checked : true);
+      if (consent) consent.addEventListener('change', ()=> setUploadEnabled(consent.checked));
+
+      if (pickerEl && fileInput){
+        pickerEl.addEventListener('click', (e) => {
+          if (fileInput.disabled){ e.preventDefault(); return; }
+          try { fileInput.showPicker ? fileInput.showPicker() : fileInput.click(); }
+          catch { fileInput.click(); }
+        });
+      }
+      const dropZone = document.querySelector('[data-dropzone], .dropzone, .uploader, .file-area');
+      if (dropZone){
+        dropZone.addEventListener('click', (e) => {
+          if (e.target.closest('button, a, input, label')) return;
+          if (!fileInput.disabled) fileInput.click();
+        });
+      }
+
+      const counterEl = document.getElementById('counter') || document.querySelector('[data-counter]');
+      if (counterEl){
+        const url = (typeof GAS_WEB_APP_URL === 'string') ? GAS_WEB_APP_URL.trim() : '';
+        if (url) { (window.fetchCounter || function(){}) (url, counterEl); }
+        else { counterEl.textContent = '暫不可用'; }
+      }
+    } catch (e){
+      console.error('[AFT init]', e);
+    }
+  });
+})();
 
