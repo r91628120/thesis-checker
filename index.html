@@ -613,7 +613,8 @@ function runTextRules(pageTexts){
   // 12) 參考文獻切條 + 四層統計 —— ★修正：移除標題行
   const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
-  let refEntries     = refIdx >= 0 ? _parseReferenceEntries(refTextFull) : [];
+  const MAX_REF_CHECK = Infinity;  // 全檢查：不限制筆數
+  let refEntries = refIdx >= 0 ? _parseReferenceEntries(refTextFull).slice(0, MAX_REF_CHECK) : [];
   refEntries         = _dedupReferences(refEntries);
 
   const A_total = refEntries.length;
