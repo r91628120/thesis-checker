@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-06c';
+  const APP_VER = '2025-10-07d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -362,14 +362,18 @@ function _isCategoryHeader(line) {
 function _preCleanRefText(s) {
   return (s || '')
     .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
+    // 行號、獨立頁碼
     .replace(/^\s*\d{1,4}\s*$/gm, '')
+    // 連字斷行接回
     .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
-    .replace(/\n\s*(https?:\/\/\S+)/g, ' $1')
-    .replace(/\n\s*(www\.\S+)/g, ' $1')
-    .replace(/\n\s*(doi\.org\/\S+)/gi, ' $1')
-    .replace(/\n\s*((?:reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)\S*)/gi, ' $1') /* 新增 */
-    .replace(/([一二三四五六七八九十百千])\s+([一二三四五六七八九十百千])/g, '$1$2')
+    // ——「關鍵」：把獨立網址行推回上一行（含短網址）
+    .replace(/\n\s*(https?:\/\/\S+)\s*$/gm, ' $1')
+    .replace(/\n\s*(www\.\S+)\s*$/gm, ' $1')
+    .replace(/\n\s*(doi\.org\/\S+)\s*$/gim, ' $1')
+    .replace(/\n\s*((?:reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)\S*)\s*$/gim, ' $1')
+    // 章節編號換行
     .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
+    // 殘餘換行壓平
     .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{2,}/g, '\n')
@@ -384,14 +388,14 @@ function _parseReferenceEntries(refText) {
 
   const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
 
-  const isNewItemByIndex = s =>
+  const isNewByIndex = s =>
     /^[\s\u3000]*\d+\s*[\.．、]/.test(s) ||
     /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(s) ||
     /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
 
-  const isNewItemByAuthorYear = s =>
-    /^[\s\u3000]*[\u4e00-\u9fa5]{1,12}.*（(\d{4}|無日期)）/.test(s) ||
-    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,30}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
+  const isNewByAuthorYear = s =>
+    /^[\s\u3000]*[\u4e00-\u9fa5]{1,20}.*（(\d{4}|無日期)）/.test(s) ||
+    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,40}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
 
   const isContinuation = s =>
     /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
@@ -401,45 +405,60 @@ function _parseReferenceEntries(refText) {
     /^\/[^\s]/.test(s) ||
     SHORT_DOMAINS.test(s);
 
+  const isUrlOnly = s => /^\s*(https?:\/\/|www\.|doi\.org\/)\S+\s*$/i.test(s);
+
   for (const raw of lines) {
-    const line0 = raw;
-    if (_isCategoryHeader(line0)) continue;
+    if (_isCategoryHeader(raw)) continue;
 
-    const looksNew = isNewItemByIndex(line0) || isNewItemByAuthorYear(line0);
-    const cont     = isContinuation(line0);
+    const looksNew = isNewByIndex(raw) || isNewByAuthorYear(raw);
+    const cont     = isContinuation(raw);
+    const base     = raw.replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '').trim();
 
-    const base = line0
-      .replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '')
-      .trim();
+    // 若目前沒有累積而又是「單獨網址行」，直接跳過
+    if (!cur && isUrlOnly(raw)) continue;
 
     if (!cur) {
-      if (cont && !looksNew) continue;
-      cur = base;
+      // 開第一條：若是純網址也略過
+      cur = isUrlOnly(base) ? '' : base;
       continue;
     }
 
-    if (looksNew) { entries.push(cur.trim()); cur = base; continue; }
+    if (looksNew) {
+      entries.push(cur.trim());
+      cur = isUrlOnly(base) ? '' : base;
+      continue;
+    }
 
-    if (cont) { cur += ' ' + line0.trim(); }
-    else { cur += ' ' + base; }
+    // 接續：網址/取自/doi 等都視為延續，直接加到同一條
+    cur += ' ' + raw.trim();
   }
 
   if (cur) entries.push(cur.trim());
-  return entries.filter(s => s.replace(/\s/g, '').length >= 6);
+
+  // 過濾掉只有網址的假條目與太短的殘片
+  return entries.filter(s =>
+    !/^\s*(https?:\/\/|www\.|doi\.org\/)\S+\s*$/i.test(s) &&
+    s.replace(/\s/g, '').length >= 6
+  );
 }
 
 function _normRefKey(s) {
-  return s.replace(/\s+/g, ' ')
-    .replace(/https?:\/\/(www\.)?/gi, '')
+  return s
+    .replace(/https?:\/\/(www\.)?/gi, '')   // URL 去頭
     .replace(/[，、；。]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 }
 function _dedupReferences(list) {
   const map = new Map();
-  for (const e of list) { const k = _normRefKey(e); if (!map.has(k)) map.set(k, e); }
+  for (const e of list) {
+    const k = _normRefKey(e);
+    if (!map.has(k)) map.set(k, e);
+  }
   return Array.from(map.values());
 }
+
 function _hasYear(text) {
   return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
 }
