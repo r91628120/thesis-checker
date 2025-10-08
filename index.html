@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-08b';
+  const APP_VER = '2025-10-08c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -582,93 +582,6 @@ function _matchSourceToRefs(srcContent, refEntries) {
   const skey = _normRefKey(srcContent);
   for (const r of refEntries) {
     const rkey = _normRefKey(r);
-    if (skey.includes(rkey) || rkey.includes(skey)) {
-      return { matched: true, hit: r };
-    }
-  }
-  return { matched: false, hit: null };
-}
-
-// 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
-const CN_NUM = '[一二三四五六七八九十百千]+';
-const AR_NUM = '\\d+';
-const FIGTAB_LABEL = new RegExp(
-  // 允許行首/空白後接：圖|表 + 可有空格(含全形) + 編號(阿拉伯/中文) + 可有空格(含全形) + 標點(：:、．. )
-  '(^|\\n|[\\s\\u3000])' +
-  '(圖|表)' +
-  '[\\s\\u3000]*' +
-  '(' + AR_NUM + '|' + CN_NUM + ')' +
-  '[\\s\\u3000]*[：:、．\\.]',
-  'g'
-);
-
-// 來源詞彙（擴充）
-const SOURCE_LABEL = /(資料來源[:：]|圖片來源[:：]|出處[:：]|來源[:：])/;
-
-// 圖/表附近視窗（跨頁容錯拉大）
-const WINDOW_BEFORE = 0;       // 嚴格只看下方
-const WINDOW_AFTER  = 400;     // 向後 400 字
-const WINDOW_EXTRA  = 200;     // 再向後延伸（避免換行/跨頁）
-
-// 自製/自繪等自我來源（免比對參考文獻）
-const SELF_MADE = /(作者自(製|繪|攝|整理)|自製|自行(繪製|整理|攝影)|研究者自製|自行製作)/;
-
-/** 取出「就近的來源行」：只在圖/表 *下方* 視窗內找來源詞彙 */
-function _extractNearbySource(fullText, startIdx) {
-  const from = Math.max(0, startIdx - WINDOW_BEFORE);
-  const to   = Math.min(fullText.length, startIdx + WINDOW_AFTER + WINDOW_EXTRA);
-  const slice = fullText.slice(from, to);
-
-  // 只取「圖表之後」的內容
-  const after = slice.slice(Math.min(slice.length, startIdx - from));
-
-  // 找第一個來源詞彙
-  const m = after.match(SOURCE_LABEL);
-  if (!m) return null;
-
-  // 來源詞彙起點在 after 的哪裡？
-  const pos = after.search(SOURCE_LABEL);
-  if (pos < 0) return null;
-
-  // 抓該行到行尾（或下一個斷行）
-  const tail = after.slice(pos);
-  const line = tail.split(/\r?\n/)[0].trim();
-
-  // 拿掉標籤（資料來源：）保留內容
-  const content = line.replace(SOURCE_LABEL, '').trim();
-
-  return {
-    label: line,              // 含「資料來源：」整行
-    content,                  // 去掉標籤的內容
-    hasSelfMade: SELF_MADE.test(line)
-  };
-}
-
-/** 檢查「就近片段」是否存在作者–年份制（視為內嵌來源） */
-function _hasInlineCiteNearby(fullText, startIdx) {
-  const from = Math.max(0, startIdx - 80);
-  const to   = Math.min(fullText.length, startIdx + 200);
-  const slice = fullText.slice(from, to);
-  // （王小明，2023）或 王小明（2023）或 無日期/n.d.
-  const INLINE = /(（[^，\n]{1,12}，\s*(\d{4}|無日期)）|[^\s，、]{1,12}（\s*(\d{4}|n\.?d\.?)）)/;
-  return INLINE.test(slice);
-}
-
-/** 判斷來源行看起來像「完整參考文獻」 */
-function _looksLikeFullReference(line) {
-  const s = line || '';
-  const hasYear = _hasYear(s);
-  const hasMeta = /(出版社|Publishing|Press|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+|Vol\.?|No\.?|pp?\.?|doi\.org|https?:\/\/)/i.test(s);
-  return hasYear && hasMeta;
-}
-
-/** 嘗試把來源行（已去除「資料來源：」）對應到「陸、參考文獻」清單 */
-function _matchSourceToRefs(srcContent, refEntries) {
-  if (!srcContent) return { matched: false, hit: null };
-  const skey = _normRefKey(srcContent);
-  for (const r of refEntries) {
-    const rkey = _normRefKey(r);
-    // 互為包含即可視為對上（避免極嚴格完全一致）
     if (skey.includes(rkey) || rkey.includes(skey)) {
       return { matched: true, hit: r };
     }
