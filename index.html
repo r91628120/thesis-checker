@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-07d';
+  const APP_VER = '2025-10-08a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -361,28 +361,34 @@ function _isCategoryHeader(line) {
 // 參考文獻前處理（新增短網址換行合併）
 function _preCleanRefText(s) {
   return (s || '')
+    // PDF 頁分隔標記 → 換行
     .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
-    // 行號、獨立頁碼
+
+    // 單獨頁碼/行號 → 移除
     .replace(/^\s*\d{1,4}\s*$/gm, '')
-    // 連字斷行接回
+
+    // 英數連字跨行 → 接回
     .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
-    // ——「關鍵」：把獨立網址行推回上一行（含短網址）
+
+    // 將「獨立網址行（含短網址）」推回上一行（避免被誤當成新條）
     .replace(/\n\s*(https?:\/\/\S+)\s*$/gm, ' $1')
     .replace(/\n\s*(www\.\S+)\s*$/gm, ' $1')
     .replace(/\n\s*(doi\.org\/\S+)\s*$/gim, ' $1')
     .replace(/\n\s*((?:reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)\S*)\s*$/gim, ' $1')
-    // 章節編號換行
-    .replace(/(?!^)([　\s]*)(?=[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、])/g, '\n')
-    // 殘餘換行壓平
-    .replace(/([^\.;。！？）”」])\n\s*([^\n])/g, '$1 $2')
+
+    // 有些學生會在每筆之間插「1 個空行」→ 保留 1 個換行即可（多於 2 個壓成 1 個）
+    .replace(/\n{3,}/g, '\n\n')
+
+    // 行尾空白 → 清理
     .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{2,}/g, '\n')
     .trim();
 }
 
 // 文獻切條
 function _parseReferenceEntries(refText) {
-  const lines = (refText || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
+  // 先按「至少一個換行」切；不先濾空，讓空行有機會當作「分隔符」
+  const rawLines = (refText || '').split(/\n+/);
+
   const entries = [];
   let cur = '';
 
@@ -394,8 +400,7 @@ function _parseReferenceEntries(refText) {
     /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
 
   const isNewByAuthorYear = s =>
-    /^[\s\u3000]*[\u4e00-\u9fa5]{1,20}.*（(\d{4}|無日期)）/.test(s) ||
-    /^[\s\u3000]*[A-Za-z][A-Za-z .-]{0,40}\(\s*(\d{4}|n\.?d\.?)\s*\)/.test(s);
+    /^[\s\u3000]*[\u4e00-\u9fa5A-Za-z].{0,40}[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/.test(s);
 
   const isContinuation = s =>
     /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
@@ -406,31 +411,47 @@ function _parseReferenceEntries(refText) {
     SHORT_DOMAINS.test(s);
 
   const isUrlOnly = s => /^\s*(https?:\/\/|www\.|doi\.org\/)\S+\s*$/i.test(s);
+  const isBlank   = s => !s || !s.trim();
 
-  for (const raw of lines) {
-    if (_isCategoryHeader(raw)) continue;
+  for (let raw of rawLines) {
+    const s = (raw || '').trim();
 
-    const looksNew = isNewByIndex(raw) || isNewByAuthorYear(raw);
-    const cont     = isContinuation(raw);
-    const base     = raw.replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '').trim();
+    // 類別小標 → 略過
+    if (_isCategoryHeader(s)) continue;
 
-    // 若目前沒有累積而又是「單獨網址行」，直接跳過
-    if (!cur && isUrlOnly(raw)) continue;
+    // 「純空行」：若目前有在累積條目，視為「條目結束」
+    if (isBlank(s)) {
+      if (cur) { entries.push(cur.trim()); cur = ''; }
+      continue;
+    }
 
-    if (!cur) {
-      // 開第一條：若是純網址也略過
+    // 去掉開頭編號（1.／一、／（一）等）
+    const base = s.replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '').trim();
+
+    // 沒在累積且遇到純網址 → 略過
+    if (!cur && isUrlOnly(s)) continue;
+
+    // 判斷是否「新條」：有明顯編號、或偵測到 作者(年份)
+    const looksNew = isNewByIndex(s) || isNewByAuthorYear(s);
+
+    if (!cur) {                // 目前沒有條目：開新條（若是純網址，跳過）
       cur = isUrlOnly(base) ? '' : base;
       continue;
     }
 
-    if (looksNew) {
+    if (looksNew) {            // 命中新條：收前一條、再開新條
       entries.push(cur.trim());
       cur = isUrlOnly(base) ? '' : base;
       continue;
     }
 
-    // 接續：網址/取自/doi 等都視為延續，直接加到同一條
-    cur += ' ' + raw.trim();
+    // 其他情況：延續（含網址、doi、取自…）
+    if (isContinuation(s)) {
+      cur += ' ' + s;
+    } else {
+      // 一般文本但沒有新條特徵 → 大多是同條延續
+      cur += ' ' + s;
+    }
   }
 
   if (cur) entries.push(cur.trim());
@@ -506,11 +527,17 @@ function _classifyReference(item) {
 
 /* ===== 圖表檢查升級：工具常數與函式（新增） ===== */
 
-// 支援中文數字標號（圖一、表二…）
-const CN_NUM = '[一二三四五六七八九十百千]+';   // 中文數字樣式
-const AR_NUM = '\\d+';                            // 阿拉伯數字
+// 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
+const CN_NUM = '[一二三四五六七八九十百千]+';
+const AR_NUM = '\\d+';
 const FIGTAB_LABEL = new RegExp(
-  '(^|\\n|\\s)(圖|表)\\s*(' + AR_NUM + '|' + CN_NUM + ')[\\s．\\.、：:]', 'g'
+  // 允許行首/空白後接：圖|表 + 可有空格(含全形) + 編號(阿拉伯/中文) + 可有空格(含全形) + 標點(：:、．. )
+  '(^|\\n|[\\s\\u3000])' +
+  '(圖|表)' +
+  '[\\s\\u3000]*' +
+  '(' + AR_NUM + '|' + CN_NUM + ')' +
+  '[\\s\\u3000]*[：:、．\\.]',
+  'g'
 );
 
 // 來源詞彙（擴充）
@@ -633,7 +660,10 @@ function runTextRules(pageTexts){
   const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
   const refTextFull  = _preCleanRefText(refTextRaw);
   const MAX_REF_CHECK = Infinity;  // 全檢查：不限制筆數
-  let refEntries = refIdx >= 0 ? _parseReferenceEntries(refTextFull).slice(0, MAX_REF_CHECK) : [];
+  let refEntries = refIdx >= 0
+    ? _parseReferenceEntries(_preCleanRefText(refTextFull)).slice(0, MAX_REF_CHECK)
+    : [];
+
   refEntries         = _dedupReferences(refEntries);
 
   const A_total = refEntries.length;
