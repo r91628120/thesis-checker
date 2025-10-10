@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-10b';
+  const APP_VER = '2025-10-10c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -400,7 +400,7 @@ function _parseReferenceEntries(refText) {
     // 2) 中文數字 一. / 一、 / 一＋空白
     /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*(?:[\.．、]\s*|\s{1,})/.test(s) ||
     // 3) 括號編號 （一）. / （一）、 / （一）＋空白
-    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*(?:[\.．、]\s*|\s{1,})/.test(s);
+    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*(?:[\.．、]?\s*|\s*)/.test(s);
 
   const isNewByAuthorYear = s =>
     /^[\s\u3000]*[\u4e00-\u9fa5A-Za-z].{0,40}[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/.test(s);
