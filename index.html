@@ -490,8 +490,16 @@ function _hasYear(text) {
   return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
 }
 function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
+// 作者 與 (年份) 之間必須有「半形空格」；支援中文全形括號與「無日期/n.d.」
+function _hasAuthorYearWithSpace(text) {
+  const s = String(text || '');
+  return /[\u4e00-\u9fa5A-Za-z．·・\-]{1,30}\s+[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/.test(s);
+}
+
 function _isQualifiedRef(item) {
-  const s = item;
+  const s = String(item || '').replace(/\s+/g, ' ').trim();
+
+  // 既有訊號（保留你的判斷）
   const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
   const hasJournalMeta =
     /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
@@ -504,11 +512,48 @@ function _isQualifiedRef(item) {
   const hasDOI          = /(doi\.org|doi:)/i.test(s);
   const hasAcademicPlatform =
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
+  const hasLink         = /(https?:\/\/|取自|Available at|網址)/i.test(s);
 
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) return true;
-  if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) return true;
-  return false;
+  // 年份與作者-年份空格（新規）
+  const hasYear   = /[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/i.test(s);
+  const aySpaceOK = _hasAuthorYearWithSpace(s);
+
+  // 「粗體線索」的文字判準（模擬）：書名 / 期刊名＋卷期 / 網頁段句＋URL
+  const hasBookLike =
+    /[)）]\s*。?\s*(《[^》]+》|〈[^〉]+〉|[^。]+?)。\s*[^。]*(出版社|文化|出版|公司)/.test(s);
+  const hasJournalLike =
+    /。\s*[^，。]{2,30}，\s*(第?\s*\d+\s*卷)?\s*(第?\s*\d+\s*期|\(\s*\d+\s*\))?[^。]*(\d+\s*[-–]\s*\d+|pp?\.\s*\d+)/.test(s);
+  const hasWebLike =
+    /。\s*[^。]{2,50}\s*(https?:\/\/|doi\.org)/i.test(s);
+  const hasBoldCue = hasBookLike || hasJournalLike || hasWebLike;
+
+  // 作者可為機構（教育部、○○局…）；機構作者不強制 ay 空格，但仍需年份與來源
+  const isOrgAuthor =
+    /(教育部|內政部|衛福部|疾管署|行政院|主計總處|各縣市政府|市政府|國家|學校|高中|大學|研究(所|中心)|基金會|協會|文化局|博物館|圖書館)/.test(s);
+
+  // 來源/出版訊號（任一即可）
+  const anySourceMeta =
+    hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform || hasLink;
+
+  // —— 最終判定（台灣高中職規範版）——
+  // 1) 必有年份
+  // 2) 個人作者 → 必須「作者 空格 (年份)」；機構作者 → 需有年份
+  // 3) 必須存在出版/來源訊息（anySourceMeta）
+  // 4) 必須有書名/期刊名/卷期/網頁段句等「粗體線索」之一
+  const authorOK = (aySpaceOK) || (isOrgAuthor && hasYear);
+
+  if (!hasYear)        return false;
+  if (!authorOK)       return false;
+  if (!anySourceMeta)  return false;
+  if (!hasBoldCue)     return false;
+
+  // 兼容你的最後保險（舊邏輯）：若完全沒有出版線索但字數夠且有年份，也可視為最低限度合格
+  // 但因本案要嚴格 2/7，建議關閉；若要保留，取消下一行註解：
+  // if (!anySourceMeta && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) return true;
+
+  return true;
 }
+
 function _classifyReference(item) {
   const s = item;
   const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
