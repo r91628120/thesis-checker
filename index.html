@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-10a';
+  const APP_VER = '2025-10-10b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -395,9 +395,12 @@ function _parseReferenceEntries(refText) {
   const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
 
   const isNewByIndex = s =>
-    /^[\s\u3000]*\d+\s*[\.．、]/.test(s) ||
-    /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*[\.．、]/.test(s) ||
-    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*[\.．、]/.test(s);
+    // 1) 阿拉伯數字 1. / 1、 / 1＋空白
+    /^[\s\u3000]*\d+\s*(?:[\.．、]\s*|\s{1,})/.test(s) ||
+    // 2) 中文數字 一. / 一、 / 一＋空白
+    /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*(?:[\.．、]\s*|\s{1,})/.test(s) ||
+    // 3) 括號編號 （一）. / （一）、 / （一）＋空白
+    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*(?:[\.．、]\s*|\s{1,})/.test(s);
 
   const isNewByAuthorYear = s =>
     /^[\s\u3000]*[\u4e00-\u9fa5A-Za-z].{0,40}[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/.test(s);
@@ -425,8 +428,11 @@ function _parseReferenceEntries(refText) {
       continue;
     }
 
-    // 去掉開頭編號（1.／一、／（一）等）
-    const base = s.replace(/^[\s\u3000]*[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?\s*[\.．、]\s*/, '').trim();
+    // 去掉開頭編號（1 / 一 / （一））後面「可有標點、或至少 1 個空白」
+   const base = s.replace(
+     /^[\s\u3000]*(?:[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?)\s*(?:[\.．、]\s*|\s{1,})/,
+     ''
+   ).trim();
 
     // 沒在累積且遇到純網址 → 略過
     if (!cur && isUrlOnly(s)) continue;
