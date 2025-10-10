@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-10c';
+  const APP_VER = '2025-10-10d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -742,10 +742,8 @@ function runTextRules(pageTexts){
   `總筆數：${A_total}｜合格：${qualifiedCount}｜不合格：${unqualifiedCount}` +
   `｜純網路來源：${webCount}` +
   `｜（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`;
-  const sampleRefs = refEntries.slice(0, 3).map((s, i) => `${i+1}. ${s}`).join('<br/>');
-  const evidence13x = evidence13 + (sampleRefs ? `<br/>前 3 筆：<br/>${sampleRefs}` : '');
 
-  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13x,
+  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
   '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
     // 圖表
