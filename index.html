@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11e';
+  const APP_VER = '2025-10-11f';
   (function () {
     try {
       const url = new URL(location.href);
@@ -502,6 +502,44 @@ function _hasAuthorYearWithSpace(text) {
   return RE.test(s);
 }
 
+// 1) 安全輸出 HTML（避免破版）
+function _escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
+// 2) 「作者 與 （年份）」之間必須有空格（支援全形括號與 n.d./無日期）
+function _hasAuthorYearWithSpace(text) {
+  const s = String(text || '');
+  return /[\u4e00-\u9fa5A-Za-z．\.\s]+?\s+[(（]\s*(\d{4}|n\.d\.?|無日期)\s*[)）]/i.test(s);
+}
+
+// 3) 逐條嚴格檢查：合格 / 不合格 + 理由（保守不放寬）
+function _qualifyRefStrict(s) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  const reasons = [];
+
+  // 須有（年份）
+  const hasYear = /[(（]\s*(\d{4}|n\.d\.?|無日期)\s*[)）]/i.test(t);
+  if (!hasYear) reasons.push('缺少（年份）');
+
+  // 作者 與 （年份）中間要有空格
+  const authorYearSpaceOk = _hasAuthorYearWithSpace(t);
+  if (!authorYearSpaceOk) reasons.push('作者與（年份）間未留空格');
+
+  // 須有網址/DOI（規範鼓勵可追溯）
+  const hasUrlOrDoi = /(https?:\/\/|doi\.org|DOI[:：])/i.test(t);
+  if (!hasUrlOrDoi) reasons.push('缺少網址/DOI');
+
+  // 學術性/出版線索（如果完全沒有出版線索而僅有網址→視為 web）
+  const hasPubLike = /(出版社|出版|Press\b|Publishing|學報|Journal|期|卷|頁|pp\.?|Vol\.?|No\.?)/i.test(t);
+  const isPureWeb = /(YouTube|Facebook|Instagram|IG|X\.com|Twitter|PTT|Dcard|blog|部落格|wiki|維基|medium\.com)/i.test(t);
+  let kind = (isPureWeb || (!hasPubLike && /(https?:\/\/)/.test(t))) ? 'web' : 'nonweb';
+
+  return { ok: reasons.length === 0, reasons, kind, text: s };
+}
+
 function _isQualifiedRef(item) {
   const s = String(item || '').replace(/\s+/g, ' ').trim();
 
@@ -848,6 +886,69 @@ function runTextRules(pageTexts){
   addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
   '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
+// === 既有統計：保留 ===
+const classified = refEntries.map(s => ({ text: s, kind: _classifyReference(s) }));
+const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
+const webCount    = classified.filter(x => x.kind === 'web').length;
+
+// === 嚴格逐條審查（新增） ===
+const _auditList = refEntries.map((s, i) => {
+  const r = _qualifyRefStrict(s);
+  return { idx: i + 1, ...r };
+});
+
+const strictPass = _auditList.filter(x => x.ok).length;
+const strictFail = _auditList.length - strictPass;
+
+// 供 summary 使用的次級統計（沿用你原本的 A/B/C 定義）
+const hasYearCount = refEntries.filter(_hasYear).length;
+const hasLinkCount = refEntries.filter(s => /(https?:\/\/|doi\.org|DOI[:：])/i.test(s)).length;
+
+// === 封裝 JSON 給 AI （新增）===
+window.__refAudit = {
+  stats: {
+    total: _auditList.length,
+    pass: strictPass,
+    fail: strictFail,
+    nonweb: _auditList.filter(x => x.kind === 'nonweb').length,
+    web: _auditList.filter(x => x.kind === 'web').length
+  },
+  items: _auditList   // 每筆：idx, text, ok, reasons[], kind
+};
+
+// === 逐條細節 UI（新增）===
+const listHtml = _auditList.map(x => {
+  return `<li data-ok="${x.ok ? '1' : '0'}">
+    <b>#${x.idx}</b> ${_escapeHtml(x.text)} 
+    ${x.ok ? '✅ <span class="ok">合格</span>' 
+           : '❌ <span class="bad">不合格</span>：' + x.reasons.map(_escapeHtml).join('、')}
+  </li>`;
+}).join('');
+
+const detailHtml = `
+  <details class="hint" style="margin-top:6px">
+    <summary>逐條檢查（點我展開）</summary>
+    <ol style="padding-left:22px;margin-top:6px">${listHtml}</ol>
+    <div style="margin-top:8px">
+      <button id="btnCopyRefAudit" class="btn btn-sm">📋 複製不合格清單給 AI</button>
+    </div>
+  </details>
+`;
+
+// === 覆寫第 12 項的 evidence 文案（以嚴格結果為主），其餘 A/B/C 保留 ===
+const evidence12_strict = 
+  `總筆數：${_auditList.length}｜合格：${strictPass}｜不合格：${strictFail}` +
+  `｜純網路來源：${webCount}` +
+  `｜（A.總數：${_auditList.length}｜B.含年份：${hasYearCount}｜C.含網址/DOI：${hasLinkCount}）`;
+
+const sampleRefs = refEntries.slice(0, 3).map((s, i) => `${i + 1}. ${_escapeHtml(s)}`).join('<br/>');
+const evidence12x = evidence12_strict + `<br/>前 3 筆：<br/>${sampleRefs}` + detailHtml;
+
+// === 呼叫你現有的 addRow ===
+addRow('參考文獻 ≥ 3', _auditList.length >= 3, evidence12x,
+  '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。'
+);
+
 // === 產生稽核 JSON 與複製按鈕 ===
 const refAudit = refEntries.map((t, i) => auditReference(t, i + 1));
 const evidence13JsonObj = {
@@ -1140,6 +1241,37 @@ if(ENABLE_COUNTER)fetchCounter();
     }
   } catch (e) {}
 })();
+
+// 逐條檢查：把不合格清單複製給 AI
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  if (!t || t.id !== 'btnCopyRefAudit') return;
+
+  const audit = window.__refAudit || {};
+  const items = Array.isArray(audit.items) ? audit.items : [];
+  const bad = items.filter(x => !x.ok).map(x => ({
+    idx: x.idx,
+    text: x.text,
+    reasons: x.reasons
+  }));
+
+  const payload = {
+    references: {
+      count: audit.stats?.total || 0,
+      pass: audit.stats?.pass || 0,
+      fail: audit.stats?.fail || 0,
+      nonweb: audit.stats?.nonweb || 0,
+      web: audit.stats?.web || 0,
+      not_ok: bad
+    }
+  };
+
+  const txt = JSON.stringify(payload, null, 2);
+  navigator.clipboard.writeText(txt)
+    .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
+    .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
+});
+
 </script>
 </body>
 </html>
