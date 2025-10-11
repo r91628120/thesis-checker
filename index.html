@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11h';
+  const APP_VER = '2025-10-11i';
   (function () {
     try {
       const url = new URL(location.href);
@@ -562,56 +562,20 @@ function _qualifyRefStrict(s) {
   return { ok, reasons, kind, text: s, rule_hits };
 }
 
+// 單筆參考文獻是否「基本合格」：供統計/分類用（嚴格原因與 rule_hits 由 _qualifyRefStrict 產）
+
 function _isQualifiedRef(item) {
+  // 先做基礎清理
   const s = String(item || '').replace(/\s+/g, ' ').trim();
 
-  // 既有訊號（保留你的判斷）
-  const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
-  const hasJournalMeta =
-    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
-    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s) ||
-    /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) ||
-    /,\s*\d{1,4}\b(?!\s*頁)/.test(s);
-  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
-  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
-  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
-  const hasDOI          = /(doi\.org|doi:)/i.test(s);
-  const hasAcademicPlatform =
-    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
-  const hasLink         = /(https?:\/\/|取自|Available at|網址)/i.test(s);
-
-  // 年份與作者-年份空格（新規）
-  const hasYear   = /[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/i.test(s);
-  const aySpaceOK = _hasAuthorYearWithSpace(s);
-
-  // 「粗體線索」的文字判準（模擬）：書名 / 期刊名＋卷期 / 網頁段句＋URL
-  const hasBookLike =
-    /[)）]\s*。?\s*(《[^》]+》|〈[^〉]+〉|[^。]+?)。\s*[^。]*(出版社|文化|出版|公司)/.test(s);
-  const hasJournalLike =
-    /。\s*[^，。]{2,30}，\s*(第?\s*\d+\s*卷)?\s*(第?\s*\d+\s*期|\(\s*\d+\s*\))?[^。]*(\d+\s*[-–]\s*\d+|pp?\.\s*\d+)/.test(s);
-  const hasWebLike =
-    /。\s*[^。]{0,80}\s*(https?:\/\/|doi\.org)/i.test(s);
-  const hasBoldCue = hasBookLike || hasJournalLike || hasWebLike;
-
-  // 作者可為機構（教育部、○○局…）；機構作者不強制 ay 空格，但仍需年份與來源
-  const isOrgAuthor =
-    /(教育部|內政部|衛福部|疾管署|行政院|主計總處|各縣市政府|市政府|國家|學校|高中|大學|研究(所|中心)|基金會|協會|文化局|博物館|圖書館)/.test(s);
-
-  // 來源/出版訊號（任一即可）
-  const anySourceMeta =function _isQualifiedRef(item) {
-  // 先做基礎清理（你原本就有）
-  const s = String(item || '').replace(/\s+/g, ' ').trim();
-
-  // ===== 保留你原本的判斷（出版社、期刊、論文、政府法規、報章、DOI、學術平台）
-  const hasPublisher = /(出版社|Press\b|Publishing|出版|文化|書局|圖書|圖書公司|書店|Author\s*\.$|出版公司|出版事業|出版集團|出版中心|出版部|出版室|Publishing House|Publishers|出版股份有限公司|有限公司|股份有限公司|事業股份有限公司|文化事業|文化有限公司|文化股份|書房|書局|書屋|書坊|文庫|典藏|館藏|館編).{0,12}$/.test(s)
-    // 增補常見台灣出版社關鍵詞（避免被誤判為純網路）
-    || /(麥浩斯|麥克斯|遠流|天下文化|聯經|三民|五南|高寶|時報文化|商周|親子天下|聯合文學|春天|木馬文化|大塊文化|典藏藝術).{0,12}$/.test(s);
+  // ===== 非網路出版類的線索（命中即視為有「出版證據」）=====
+  const hasPublisher =
+    /(出版社|Press\b|Publishing|出版|文化|書局|圖書).{0,12}$/.test(s) ||
+    /(麥浩斯|麥克斯|遠流|天下文化|聯經|三民|五南|高寶|時報文化|商周|親子天下|聯合文學|春天|木馬文化|大塊文化|典藏藝術).{0,12}$/.test(s);
 
   const hasJournalMeta =
     /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
-    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s) ||
-    /,\s*\d{1,4}\s*,\s*\d{1,4}\s*[-–]\s*\d{1,4}/.test(s) ||
-    /,\s*\d{1,4}\b(?!\s*頁)/.test(s);
+    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/i.test(s);
 
   const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
   const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
@@ -620,30 +584,23 @@ function _isQualifiedRef(item) {
   const hasAcademicPlatform =
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
 
-  // 只要命中這些「非網路」出版型態，就視為合格（基本門檻）
+  // 命中以上任何一個 → 視為「非網路」出版型態：仍需基本作者(年份)間空格
   if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) {
-    // 書籍／期刊等：仍需檢查「作者 與 （年份）」之間要有空格
     const authorYearSpaceOK = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\d{4}）/.test(s);
     return authorYearSpaceOK;
   }
 
-  // ===== 走到這裡：多半是「網路相關資源」
+  // ===== 網路類 =====
   const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
-
   if (hasLink) {
-    // 規範：網路資料 = 允許「作者（登載年月日）」或「（無日期）+ 擷取日期」
-    const hasZhDate = _hasZhDateInParens(s);
-    const hasNoDate = _hasNoDateWithRetrieval(s);
-
-    // 仍要求：作者（或機構） 與 括號之間必須有空格
-    // 例如「有機農業全球資訊網（2018年12月18日）」前面要有空格
-    const authorBeforeParensHasSpace =
-      /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\s*(?:\d{4}\s*年|\s*無日期)/.test(s);
-
-    return (hasZhDate || hasNoDate) && authorBeforeParensHasSpace;
+    // 網路規範：允許「作者（YYYY年M月D日）」或「（無日期）+ 擷取/取自」
+    const hasZhDate = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(s);
+    const hasNoDateWithRetrieval = /（\s*無日期\s*）/.test(s) && /(擷取日期|取自|Retrieved\s+from)/.test(s);
+    const authorBeforeParensHasSpace = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\s*(?:\d{4}\s*年|無日期)/.test(s);
+    return (hasZhDate || hasNoDateWithRetrieval) && authorBeforeParensHasSpace;
   }
 
-  // 最後保底：若有年份、且去掉網址後的文字長度夠長，也給過（跟你原本邏輯一致）
+  // ===== 保底：有年份且內文（去掉網址）夠長也給過（與舊版一致）=====
   if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) return true;
 
   return false;
