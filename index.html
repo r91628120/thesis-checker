@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11d';
+  const APP_VER = '2025-10-11e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -700,48 +700,6 @@ const WINDOW_EXTRA  = 200;
 
 // 自製/自繪等自我來源（免比對參考文獻）
 const SELF_MADE = /(作者自(製|繪|攝|整理)|自製|自行(繪製|整理|攝影)|研究者自製|自行製作)/;
-
-function _extractNearbySource(fullText, startIdx) {
-  const from = Math.max(0, startIdx - WINDOW_BEFORE);
-  const to   = Math.min(fullText.length, startIdx + WINDOW_AFTER + WINDOW_EXTRA);
-  const slice = fullText.slice(from, to);
-  const after = slice.slice(Math.min(slice.length, startIdx - from));
-  const m = after.match(SOURCE_LABEL);
-  if (!m) return null;
-  const pos = after.search(SOURCE_LABEL);
-  if (pos < 0) return null;
-  const tail = after.slice(pos);
-  const line = tail.split(/\r?\n/)[0].trim();
-  const content = line.replace(SOURCE_LABEL, '').trim();
-  return { label: line, content, hasSelfMade: SELF_MADE.test(line) };
-}
-
-function _hasInlineCiteNearby(fullText, startIdx) {
-  const from = Math.max(0, startIdx - 80);
-  const to   = Math.min(fullText.length, startIdx + 200);
-  const slice = fullText.slice(from, to);
-  const INLINE = /(（[^，\n]{1,12}，\s*(\d{4}|無日期)）|[^\s，、]{1,12}（\s*(\d{4}|n\.?d\.?)）)/;
-  return INLINE.test(slice);
-}
-
-function _looksLikeFullReference(line) {
-  const s = line || '';
-  const hasYear = _hasYear(s);
-  const hasMeta = /(出版社|Publishing|Press|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+|Vol\.?|No\.?|pp?\.?|doi\.org|https?:\/\/)/i.test(s);
-  return hasYear && hasMeta;
-}
-
-function _matchSourceToRefs(srcContent, refEntries) {
-  if (!srcContent) return { matched: false, hit: null };
-  const skey = _normRefKey(srcContent);
-  for (const r of refEntries) {
-    const rkey = _normRefKey(r);
-    if (skey.includes(rkey) || rkey.includes(skey)) {
-      return { matched: true, hit: r };
-    }
-  }
-  return { matched: false, hit: null };
-}
 
 // 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
 
