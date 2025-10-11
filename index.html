@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11f';
+  const APP_VER = '2025-10-11g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -876,15 +876,6 @@ function runTextRules(pageTexts){
 
   const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
   const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
-
-  // 讓呈現更直白：總筆數/合格/不合格，其他統計保留在後面
-  const evidence13 =
-  `總筆數：${A_total}｜合格：${qualifiedCount}｜不合格：${unqualifiedCount}` +
-  `｜純網路來源：${webCount}` +
-  `｜（A.總數：${A_total}｜B.含年份：${B_hasYear}｜C.含網址/DOI：${C_hasLink}）`;
-
-  addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
-  '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
 
 // === 既有統計：保留 ===
 const classified = refEntries.map(s => ({ text: s, kind: _classifyReference(s) }));
