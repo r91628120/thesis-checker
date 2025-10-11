@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11a';
+  const APP_VER = '2025-10-11b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -490,10 +490,16 @@ function _hasYear(text) {
   return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
 }
 function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
-// 作者 與 (年份) 之間必須有「半形空格」；支援中文全形括號與「無日期/n.d.」
+// 作者 與 (年份) 之間必須有「半形空格」；支援中文全形括號、無日期、以及 年/月/日
 function _hasAuthorYearWithSpace(text) {
   const s = String(text || '');
-  return /[\u4e00-\u9fa5A-Za-z．·・\-]{1,30}\s+[（(]\s*(\d{4}|無日期|n\.?d\.?)\s*[)）]/.test(s);
+  // 允許： (2002) | (無日期) | (n.d.) | (2018年12月18日) | (2018/12/18) | (2018-12-18)
+  const YEAR_CORE = '(?:\\d{4}|無日期|n\\.?d\\.?)';
+  const YEAR_TAIL = '(?:\\s*[年/\\-\\.]+\\s*\\d{1,2}(?:\\s*[月/\\-\\.]+\\s*\\d{1,2}(?:\\s*日)?)?)?';
+  const RE = new RegExp(
+    `[\\u4e00-\\u9fa5A-Za-z．·・\\-]{1,30}\\s+[（(]\\s*${YEAR_CORE}${YEAR_TAIL}\\s*[)）]`
+  );
+  return RE.test(s);
 }
 
 function _isQualifiedRef(item) {
@@ -524,7 +530,7 @@ function _isQualifiedRef(item) {
   const hasJournalLike =
     /。\s*[^，。]{2,30}，\s*(第?\s*\d+\s*卷)?\s*(第?\s*\d+\s*期|\(\s*\d+\s*\))?[^。]*(\d+\s*[-–]\s*\d+|pp?\.\s*\d+)/.test(s);
   const hasWebLike =
-    /。\s*[^。]{2,50}\s*(https?:\/\/|doi\.org)/i.test(s);
+    /。\s*[^。]{0,80}\s*(https?:\/\/|doi\.org)/i.test(s);
   const hasBoldCue = hasBookLike || hasJournalLike || hasWebLike;
 
   // 作者可為機構（教育部、○○局…）；機構作者不強制 ay 空格，但仍需年份與來源
