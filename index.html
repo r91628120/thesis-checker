@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11c';
+  const APP_VER = '2025-10-11d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -582,6 +582,103 @@ function _classifyReference(item) {
   return 'nonweb';
 }
 
+// 將單一參考文獻做細部稽核，回傳可序列化物件
+function auditReference(text, idx) {
+  const s = String(text || '').trim();
+
+  // 各子檢查（與你的現有規則對齊）
+  const hasYear =
+    /[（(]\s*(\d{4}|無日期|n\.?d\.?)(?:\s*[年\/\.\-]\s*\d{1,2}(?:\s*[月\/\.\-]\s*\d{1,2}(?:\s*日)?)?)?\s*[)）]/i.test(s) ||
+    /\b(19|20)\d{2}年/.test(s); // 支援 (2018年12月18日)
+
+  const isOrgAuthor = /(?:政府|部|署|處|會|基金會|研究院|學會|委員會|學校|大學|高中|國中|國小|公司|股份有限公司|集團|基金)/.test(s.split(/[。．]/)[0] || '');
+
+  const hasAuthorYearSpace = isOrgAuthor ? true : _hasAuthorYearWithSpace(s);
+
+  const hasUrlOrDoi = /(https?:\/\/|doi\.org|doi:)/i.test(s);
+
+  // 書/期刊/會議/法規/報紙等來源 cue（你的 _isQualifiedRef 亦會用到）
+  const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
+  const hasJournalLike =
+    /。\s*[^，。]{2,30}，\s*(第?\s*\d+\s*卷)?\s*(第?\s*\d+\s*期|\(\s*\d+\s*\))?[^。]*(\d+\s*[-–]\s*\d+|pp?\.\s*\d+)/.test(s) ||
+    /。\s*[^，。]{2,30}\s*[（(]\s*\d+\s*[)）]\s*[。．]?/.test(s);
+  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
+  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
+  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
+  const hasAcademicPlatform =
+    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
+
+  const hasSourceCue = hasPublisher || hasJournalLike || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasAcademicPlatform || hasUrlOrDoi;
+
+  // 「粗體線索」：書名/期刊名等（保守：仍沿用來源 cue 作為替代）
+  const hasBoldCue = hasPublisher || hasJournalLike || hasThesisOrConf || hasNewspaper;
+
+  // Web/Nonweb 分類（沿用你現有邏輯）
+  const kind = _classifyReference(s);
+
+  // 綜合是否合格（嚴格版）
+  const qualified =
+    hasYear &&
+    hasAuthorYearSpace &&     // 個人作者需空格；機構作者通過 isOrgAuthor 即放行此檢
+    hasSourceCue &&
+    hasBoldCue;
+
+  // 原因與建議
+  const reasons = [];
+  if (!hasYear) {
+    reasons.push({
+      code: 'YEAR_MISSING',
+      message: '未偵測到年份（或格式不符）。',
+      suggestion: '年份建議用半形括號： (2002)。亦支援 (2018年12月18日)。',
+      severity: 'error'
+    });
+  }
+  if (!hasAuthorYearSpace) {
+    reasons.push({
+      code: 'AUTHOR_YEAR_SPACE',
+      message: '個人作者與年份之間須有 1 個空白。',
+      suggestion: '例：王小明 (2020)。若為機構作者（教育部、某基金會等）可不需此規則。',
+      severity: 'error'
+    });
+  }
+  if (!hasSourceCue) {
+    reasons.push({
+      code: 'SOURCE_CUE_MISSING',
+      message: '未偵測到來源/出版訊息（出版社、期刊、會議、法規、報紙、學術平台或 URL/DOI）。',
+      suggestion: '書籍：補「書名、出版地、出版社」；期刊：補「期刊名、卷(期)、頁碼」；網頁：至少要有網址或 DOI。',
+      severity: 'error'
+    });
+  }
+  if (!hasBoldCue) {
+    reasons.push({
+      code: 'BOLD_CUE_MISSING',
+      message: '書名/期刊名等粗體線索未偵測。',
+      suggestion: '請補齊書名或期刊名等出版資訊（雖然 PDF 粗體無法辨識，仍以語境線索判定）。',
+      severity: 'warn'
+    });
+  }
+
+  // 太短又沒有任何線索的兜底
+  if (_textWithoutUrls(s).replace(/[，、；。.,]/g, '').length < 8 && reasons.length === 0) {
+    reasons.push({
+      code: 'TOO_WEAK',
+      message: '文字過短且缺乏有效線索，難以判定。',
+      suggestion: '補全作者、年份、題名與來源。',
+      severity: 'warn'
+    });
+  }
+
+  return {
+    index: idx,
+    text: s,
+    qualified,
+    checks: {
+      hasYear, hasAuthorYearSpace, hasSourceCue, hasBoldCue, isOrgAuthor, hasUrlOrDoi, kind
+    },
+    reasons
+  };
+}
+
 /* ===== 圖表檢查升級：工具常數與函式（新增） ===== */
 
 // 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
@@ -648,11 +745,7 @@ function _matchSourceToRefs(srcContent, refEntries) {
 
 // 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
 
-
-
-
 // 來源詞彙（擴充）
-
 
 // 圖/表附近視窗（跨頁容錯拉大）
        // 嚴格只看下方
@@ -796,6 +889,54 @@ function runTextRules(pageTexts){
 
   addRow('參考文獻 ≥ 3', A_total >= 3, evidence13,
   '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。');
+
+// === 產生稽核 JSON 與複製按鈕 ===
+const refAudit = refEntries.map((t, i) => auditReference(t, i + 1));
+const evidence13JsonObj = {
+  summary: {
+    total: A_total,
+    qualified: qualifiedCount,
+    unqualified: unqualifiedCount,
+    webCount
+  },
+  items: refAudit
+};
+const evidence13Json = JSON.stringify(evidence13JsonObj, null, 2);
+
+// 附加：JSON 與複製按鈕（不影響既有表格）
+const jsonBox = document.createElement('div');
+jsonBox.style.marginTop = '6px';
+jsonBox.innerHTML = `
+  <details>
+    <summary class="mono" style="cursor:pointer">顯示這份檢查的 JSON（給 AI/除錯用）</summary>
+    <div style="margin:8px 0">
+      <button id="btnCopyRefJson" class="pill">複製 JSON</button>
+      <button id="btnCopyRefBad" class="pill">複製「不合格」清單給 AI</button>
+    </div>
+    <pre id="refAuditJson" style="white-space:pre-wrap;overflow:auto;max-height:280px">${evidence13Json}</pre>
+  </details>
+`;
+document.querySelector('#resultCard').appendChild(jsonBox); // ✅ 改為附加在結果卡片底下
+
+// 複製 JSON 按鈕
+jsonBox.querySelector('#btnCopyRefJson').addEventListener('click', () => {
+  navigator.clipboard.writeText(evidence13Json).then(() => alert('已複製 JSON'));
+});
+
+// 複製不合格清單按鈕
+jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
+  const bad = refAudit.filter(x => !x.qualified);
+  const payload = bad.map(x =>
+    `#${x.index}\n${x.text}\n原因：\n- ${x.reasons.map(r => `${r.message}（建議：${r.suggestion}）`).join('\n- ')}`
+  ).join('\n\n');
+  const prompt = [
+    '請逐筆指出下列參考文獻的錯誤並提供修正後範例（符合台灣高中職小論文規範）。',
+    '規則重點：個人作者需「作者⎵(年份)」、書名/期刊名/卷(期)/頁碼、出版/來源線索（出版社、期刊資訊或網址/DOI）。',
+    '---',
+    payload
+  ].join('\n');
+  navigator.clipboard.writeText(prompt).then(() => alert('已複製「不合格」清單與說明給 AI'));
+});
 
     // 圖表
   /* ===== 圖表需有標號/標題與來源 —— 升級版（中文數字、內嵌引注、對位比對、跨頁容錯） ===== */
