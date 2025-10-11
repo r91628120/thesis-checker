@@ -490,17 +490,6 @@ function _hasYear(text) {
   return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
 }
 function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
-// 作者 與 (年份) 之間必須有「半形空格」；支援中文全形括號、無日期、以及 年/月/日
-function _hasAuthorYearWithSpace(text) {
-  const s = String(text || '');
-  // 允許： (2002) | (無日期) | (n.d.) | (2018年12月18日) | (2018/12/18) | (2018-12-18)
-  const YEAR_CORE = '(?:\\d{4}|無日期|n\\.?d\\.?)';
-  const YEAR_TAIL = '(?:\\s*[年/\\-\\.]+\\s*\\d{1,2}(?:\\s*[月/\\-\\.]+\\s*\\d{1,2}(?:\\s*日)?)?)?';
-  const RE = new RegExp(
-    `[\\u4e00-\\u9fa5A-Za-z．·・\\-]{1,30}\\s+[（(]\\s*${YEAR_CORE}${YEAR_TAIL}\\s*[)）]`
-  );
-  return RE.test(s);
-}
 
 // 1) 安全輸出 HTML（避免破版）
 function _escapeHtml(s) {
@@ -525,7 +514,7 @@ function _qualifyRefStrict(s) {
   if (!hasYear) reasons.push('缺少（年份）');
 
   // 作者 與 （年份）中間要有空格
-  const authorYearSpaceOk = _hasAuthorYearWithSpace(t);
+  const authorYearSpaceOk = (t);
   if (!authorYearSpaceOk) reasons.push('作者與（年份）間未留空格');
 
   // 須有網址/DOI（規範鼓勵可追溯）
@@ -876,11 +865,6 @@ function runTextRules(pageTexts){
 
   const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
   const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
-
-// === 既有統計：保留 ===
-const classified = refEntries.map(s => ({ text: s, kind: _classifyReference(s) }));
-const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
-const webCount    = classified.filter(x => x.kind === 'web').length;
 
 // === 嚴格逐條審查（新增） ===
 const _auditList = refEntries.map((s, i) => {
