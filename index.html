@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12j';
+  const APP_VER = '2025-10-12k';
   (function () {
     try {
       const url = new URL(location.href);
@@ -708,6 +708,20 @@ function makeZhDateForExample(sourceText){
   if (ym) return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
   if (y)  return `（${y[1]}年「請補月份與日期」）`;
   return '（「請補完整年月日」）';
+}
+
+// 去掉《》〈〉；若為 blog 且未標註就在標題後補［部落格文章］
+function sanitizeTitleAndSource(str){
+  let out = String(str || '').replace(/[《》〈〉]/g, '');
+  const isBlog = /(部落格|blog)/i.test(out) ||
+                 /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(out);
+  const hasBlogTag = /［\s*部落格文章\s*］/.test(out);
+  if (isBlog && !hasBlogTag) {
+    // 在最後一個全形句點前補上標籤（沒有句點就直接加在結尾）
+    if (/。/.test(out)) out = out.replace(/。(?!.*。)/, '［部落格文章］。');
+    else out += '［部落格文章］';
+  }
+  return out;
 }
 
 // 依規範產出「修正後範例」：移除《》《》〈〉、blog 補［部落格文章］、日期一定到日
