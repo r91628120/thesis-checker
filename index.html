@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12e';
+  const APP_VER = '2025-10-12f';
   (function () {
     try {
       const url = new URL(location.href);
@@ -571,11 +571,13 @@ function _qualifyRefStrict(s) {
   const kind = (isWebToken && !hasEbookPlatform) ? 'web' : 'nonweb';
 
   // 時間相關
-  const hasYearOnly = /[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(t);
-  const hasZhDate   = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(t);
-  const hasNoDate   = /（\s*無日期\s*）/.test(t);
-  const hasRetrievalToken = /(擷取日期|取自|Retrieved\s+from)/i.test(t);
-  const hasNoDateWithRetrieval = hasNoDate && hasRetrievalToken;
+  // 必須含「到日」的完整中文日期：（YYYY年M月D日）
+const hasZhDate = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(t);
+
+// 無日期＋擷取日期（另條件）
+const hasNoDate   = /（\s*無日期\s*）/.test(t);
+const hasRetrievalToken = /(擷取日期|取自|Retrieved\s+from)/i.test(t);
+const hasNoDateWithRetrieval = hasNoDate && hasRetrievalToken;
 
   // 作者與括號：中文不強制空格
   const authorParenOK = _hasAuthorYearWithParen(t);
@@ -593,8 +595,10 @@ function _qualifyRefStrict(s) {
   // 規則
   if (kind === 'web') {
     if (!(hasZhDate || hasNoDateWithRetrieval)) {
-      reasons.push('網路資料需標「登載年月日」；若無日期，改用「（無日期）擷取日期，取自網址」。');
+      reasons.push('網路/電子期刊/新聞/平台文需用「完整年月日（YYYY年M月D日）」；若無日期，改用「（無日期）擷取日期，取自網址」。');
     }
+  }
+
   } else {
     if (!hasYearOnly) reasons.push('未偵測到（年份），請補 4 位年份。');
   }
@@ -1301,6 +1305,20 @@ function syncBasicFontRuleMirror(){
   }
 }
 
+// 將 YYYY、YYYY年M月、YYYY年M月D日 轉成「YYYY年M月D日」，否則回傳 null
+function asFullZhDate(y, m, d){
+  const yy = Number(y), mm = Number(m), dd = Number(d);
+  if (!yy || !mm || !dd) return null;
+  return `${yy}年${mm}月${dd}日`;
+}
+
+// 從一條參考文獻字串抓中文年月日（容錯），只抓「到日」；抓不到回 null
+function extractFullZhDate(s){
+  const m = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*）/.exec(s);
+  if (!m) return null;
+  return asFullZhDate(m[1], m[2], m[3]);
+}
+
 /* ===== 下載/複製 ===== */
 downloadHtmlBtn.addEventListener('click',()=>{
   const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>'+document.querySelector('#resultCard').outerHTML;
@@ -1337,6 +1355,26 @@ if(ENABLE_COUNTER)fetchCounter();
     }
   } catch (e) {}
 })();
+
+// 用來產生「正確示範」的日期片段：必帶「到日」
+function makeZhDateForExample(sourceText){
+  const full = extractFullZhDate(sourceText);
+  if (full) return `（${full}）`;
+  // 若原文沒有「到日」，先嘗試抓到「年-月」或「年份」提醒補日
+  const ym = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*）/.exec(sourceText);
+  const y  = /（\s*(\d{4})\s*）/.exec(sourceText);
+  if (ym)  return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
+  if (y)   return `（${y[1]}年「請補月份與日期」）`;
+  return '（「請補完整年月日」）';
+}
+
+// === 範例：在你產出示範句子的地方這樣用 ===
+// 原本可能是：const datePart = m[0]; // 只到年或到月
+// 改成：
+const datePart = makeZhDateForExample(originalLine);
+
+// 再組合：作者 + datePart + 篇名 + 刊名 + 卷期 + 頁碼 + 取自網址
+
 
 // 逐條檢查：把不合格清單複製給 AI
 document.addEventListener('click', (ev) => {
