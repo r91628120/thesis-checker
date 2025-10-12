@@ -340,7 +340,7 @@ async function runPdfChecks(buf){
     '粗體樣式檢查（PDF）',
     hasBoldFont,
     hasBoldFont ? `檢出粗體字體 ${boldFontsList.join('、')}｜約 ${boldWordCount} 字` : '未檢出粗體樣式',
-    hasBoldFont ? 'OK（已檢測到粗體字體）' : '請確認書名、期刊名、卷期等需以粗體表示。'
+    hasBoldFont ? 'OK（已檢測到粗體字體）' : '請確認參考文獻之書名、期刊名、卷期等需以粗體表示。'
   );
 
   runTextRules(pageTexts);
