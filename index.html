@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12m';
+  const APP_VER = '2025-10-12n';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1389,19 +1389,34 @@ copyBtn.addEventListener('click',async()=>{if(!lastSummaryJSON){alert('尚未產
 downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}const blob=new Blob([JSON.stringify(lastSummaryJSON,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download((lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json');a.click();URL.revokeObjectURL(a.href);});
 
 /* ===== GAS 計數 ===== */
+/* ===== GAS 計數（避免 CORS 預檢，全部改成 GET） ===== */
 async function bumpCounterEveryTime(){
   try{
-    await fetch(GAS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({action:'increment',site:'essayguard'})});
-  }catch(e){}
+    // 用 GET 做 increment，避免 preflight；加 ts 防快取
+    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') +
+                'action=increment&site=essayguard&ts=' + Date.now();
+    await fetch(url, { headers: { 'Cache-Control':'no-cache' } });
+  }catch(e){
+    console.warn('counter increment failed', e);
+  }
 }
+
 async function fetchCounter(){
   try{
-    const res=await fetch(GAS_WEB_APP_URL+(GAS_WEB_APP_URL.includes('?')?'&':'?')+'action=get&site=essayguard',{headers:{'Accept':'application/json','Cache-Control':'no-cache'}});
-    const text=await res.text();let data;try{data=JSON.parse(text);}catch{data={};}
-    if(typeof data.count==='number'){counterEl.textContent=data.count.toLocaleString();}else{counterEl.textContent='0';}
-  }catch(e){counterEl.textContent='0';}
+    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') +
+                'action=get&site=essayguard&ts=' + Date.now();
+    const res = await fetch(url, { headers:{ 'Accept':'application/json','Cache-Control':'no-cache' }});
+    const data = await res.json().catch(() => ({}));
+    counterEl.textContent = (typeof data.count === 'number')
+      ? data.count.toLocaleString()
+      : '0';
+  }catch(e){
+    console.warn('counter get failed', e);
+    counterEl.textContent = '0';
+  }
 }
-if(ENABLE_COUNTER)fetchCounter();
+
+if (ENABLE_COUNTER) fetchCounter();
 
 /* ===== 快取清理（避免 SW 舊檔） ===== */
 (async () => {
