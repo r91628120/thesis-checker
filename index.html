@@ -1133,7 +1133,10 @@ jsonBox.innerHTML = `
     <pre id="refAuditJson" style="white-space:pre-wrap;overflow:auto;max-height:280px">${evidence13Json}</pre>
   </details>
 `;
-document.querySelector('#resultCard').appendChild(jsonBox); // ✅ 改為附加在結果卡片底下
+// 把 JSON 面板插到「按鈕群」與 <pre id="jsonPreview"> 之間
+const rc = document.getElementById('resultCard');
+const anchor = document.getElementById('jsonPreview');
+rc.insertBefore(jsonBox, anchor);
 
 // 複製 JSON 按鈕
 jsonBox.querySelector('#btnCopyRefJson').addEventListener('click', () => {
