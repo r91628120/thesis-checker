@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12a';
+  const APP_VER = '2025-10-12b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -346,7 +346,10 @@ async function runPdfChecks(buf){
 
 /* ===== DOCX ===== */
 async function runDocxChecks(buf){
-    // ===== DOCX 粗體偵測 =====
+  // 先把 DOCX 轉成 HTML
+  const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+
+  // ===== DOCX 粗體偵測 =====
   const boldTags = (html.match(/<(b|strong)>/gi) || []).length;
   addRow(
     '粗體樣式檢查（DOCX）',
@@ -355,11 +358,12 @@ async function runDocxChecks(buf){
     boldTags > 0 ? 'OK（已偵測到粗體文字樣式）' : '請確認書名、期刊名、卷期等需以粗體表示。'
   );
 
-  const {value:html}=await window.mammoth.convertToHtml({arrayBuffer:buf});
-  const text=stripHtml(html); _lastPageCount=0;
-  addRow('頁數 4–10（DOCX）',true,'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。','請匯出 PDF。');
+  const text = stripHtml(html);
+  _lastPageCount = 0;
+  addRow('頁數 4–10（DOCX）', true, 'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。', '請匯出 PDF。');
   runTextRules([text]);
 }
+
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
 
 /* ===== 參考文獻工具（僅小幅修正） ===== */
@@ -546,6 +550,10 @@ function _hasAuthorYearWithParen(text) {
   // 允許：張三（2001）、Zhang (2001)、Zhang(2001)、作者（無日期）
   return /[^\s，、。]{1,40}\s*[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(s);
 }
+// 舊名相容：舊程式若呼叫 _hasAuthorYearWithSpace，轉呼叫新函式
+function _hasAuthorYearWithSpace(text) {
+  return _hasAuthorYearWithParen(text);
+}
 
 // 3) 網路資料「年月日」與「無日期＋擷取日期」二擇一；移除中文空格強制
 function _qualifyRefStrict(s) {
@@ -693,7 +701,7 @@ function auditReference(text, idx) {
 
   const isOrgAuthor = /(?:政府|部|署|處|會|基金會|研究院|學會|委員會|學校|大學|高中|國中|國小|公司|股份有限公司|集團|基金)/.test(s.split(/[。．]/)[0] || '');
 
-  const hasAuthorYearSpace = isOrgAuthor ? true : _hasAuthorYearWithSpace(s);
+  const hasAuthorYearSpace = isOrgAuthor ? true : _hasAuthorYearWithParen(s);
 
   const hasUrlOrDoi = /(https?:\/\/|doi\.org|doi:)/i.test(s);
 
