@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-11j';
+  const APP_VER = '2025-10-12a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -225,6 +225,10 @@ function buildEvidenceString(data){
 async function runPdfChecks(buf){
   const {getDocument}=await window.loadPdfjs(); const pdf=await getDocument({data:buf}).promise;
   const numPages=pdf.numPages; _lastPageCount=numPages;
+ 
+  // ===== PDF 粗體偵測 =====
+  let boldWordCount = 0;
+  let boldFonts = new Set();
 
   const pageTexts=[];
   addRow('頁數 4–10',(numPages>=RULES.minPages&&numPages<=RULES.maxPages),`共 ${numPages} 頁`,'若少於4或多於10頁，請修訂篇幅。');
@@ -249,6 +253,12 @@ async function runPdfChecks(buf){
     for(const it of tc.items){
       const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
       const txt=(it.str||'').trim();
+
+            // 粗體字體名稱偵測
+      if (it.fontName && /bold|黑體|heavy|medium/i.test(it.fontName)) {
+        boldWordCount += (txt.length || 1);
+        boldFonts.add(it.fontName);
+      }
 
       if(txt){
         if(_lastXY){
@@ -321,11 +331,30 @@ async function runPdfChecks(buf){
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
   addRow('不得有封面頁（4–10頁）',coverHits.length===0, coverHits.length?`第1頁疑似封面關鍵字：${coverHits.join('、')}`:'未發現','4–10頁之小論文不應包含封面資訊。');
 
+  // ===== 粗體字體統計 =====
+  const boldFontsList = Array.from(boldFonts);
+  const hasBoldFont = boldWordCount > 0;
+  addRow(
+    '粗體樣式檢查（PDF）',
+    hasBoldFont,
+    hasBoldFont ? `檢出粗體字體 ${boldFontsList.join('、')}｜約 ${boldWordCount} 字` : '未檢出粗體樣式',
+    hasBoldFont ? 'OK（已檢測到粗體字體）' : '請確認書名、期刊名、卷期等需以粗體表示。'
+  );
+
   runTextRules(pageTexts);
 }
 
 /* ===== DOCX ===== */
 async function runDocxChecks(buf){
+    // ===== DOCX 粗體偵測 =====
+  const boldTags = (html.match(/<(b|strong)>/gi) || []).length;
+  addRow(
+    '粗體樣式檢查（DOCX）',
+    boldTags > 0,
+    boldTags > 0 ? `檢出 <b>/<strong> 標籤 ${boldTags} 處` : '未檢出粗體樣式',
+    boldTags > 0 ? 'OK（已偵測到粗體文字樣式）' : '請確認書名、期刊名、卷期等需以粗體表示。'
+  );
+
   const {value:html}=await window.mammoth.convertToHtml({arrayBuffer:buf});
   const text=stripHtml(html); _lastPageCount=0;
   addRow('頁數 4–10（DOCX）',true,'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。','請匯出 PDF。');
@@ -499,7 +528,8 @@ function _hasZhDateInParens(s) {
 // 是否有「無日期 + 擷取日期」的網路寫法
 function _hasNoDateWithRetrieval(s) {
   const noDate = /（\s*無日期\s*）/.test(s);
-  const retrieved = /(擷取日期|取自|Retrieved\s+from)/.test(s);
+  // 允許：擷取日期：2025年10月12日，取自 https://...
+  const retrieved = /(擷取日期\s*[:：]\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*，\s*取自\s*https?:\/\/\S+|取自\s*https?:\/\/\S+|Retrieved\s+from\s+https?:\/\/\S+)/i.test(s);
   return noDate && retrieved;
 }
 
@@ -510,54 +540,70 @@ function _escapeHtml(s) {
   }[c]));
 }
 
-// 2) 「作者 與 （年份）」之間必須有空格（支援全形括號與 n.d./無日期）
-function _hasAuthorYearWithSpace(text) {
+// 允許「無空格」的中文寫法；英/中皆可，空格可有可無
+function _hasAuthorYearWithParen(text) {
   const s = String(text || '');
-  return /[\u4e00-\u9fa5A-Za-z．\.\s]+?\s+[(（]\s*(\d{4}|n\.d\.?|無日期)\s*[)）]/i.test(s);
+  // 允許：張三（2001）、Zhang (2001)、Zhang(2001)、作者（無日期）
+  return /[^\s，、。]{1,40}\s*[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(s);
 }
 
-// 3) 逐條嚴格檢查：合格 / 不合格 + 理由（保守不放寬）
+// 3) 網路資料「年月日」與「無日期＋擷取日期」二擇一；移除中文空格強制
 function _qualifyRefStrict(s) {
   const t = String(s || '').replace(/\s+/g, ' ').trim();
   const reasons = [];
 
-  // === 基本檢查 ===
-  const hasYear = /[(（]\s*(\d{4}|n\.d\.?|無日期)\s*[)）]/i.test(t);
-  const hasUrlOrDoi = /(https?:\/\/|doi\.org|DOI[:：])/i.test(t);
-  const hasPubLike = /(出版社|出版|Press\b|Publishing|學報|Journal|期|卷|頁|pp\.?|Vol\.?|No\.?)/i.test(t);
-  const hasPublisherKw = /(麥浩斯|麥克斯|遠流|天下文化|聯經|三民|五南|高寶|時報文化|商周|親子天下|聯合文學|春天|木馬文化|大塊文化|典藏藝術)/.test(t);
-  const hasZhDate = _hasZhDateInParens(t);
-  const hasNoDateWithRetrieval = _hasNoDateWithRetrieval(t);
-  const authorSpaceOk = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（/.test(t);
-
-  // === 規則旗標 ===
-  const rule_hits = {
-    has_year: hasYear,
-    has_url: hasUrlOrDoi,
-    has_publisher: hasPubLike || hasPublisherKw,
-    author_space_ok: authorSpaceOk,
-    web_date_style_ok: hasZhDate || hasNoDateWithRetrieval,
-    publisher_like_hit: hasPublisherKw
-  };
-
-  // === 分類 ===
+  // 類別判定
   const isWeb = /(https?:\/\/|取自|Available at|網址)/i.test(t);
-  const kind = isWeb ? 'web' : 'nonweb';
+  const kind  = isWeb ? 'web' : 'nonweb';
 
-  // === 不合格原因累計 ===
+  // 時間相關
+  const hasYearOnly = /[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(t);
+  const hasZhDate   = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(t);
+
+  // 「無日期＋擷取日期」：只有在 (無日期) 且有 擷取日期/取自/ Retrieved from
+  const hasNoDate   = /（\s*無日期\s*）/.test(t);
+  const hasRetrievalToken = /(擷取日期|取自|Retrieved\s+from)/i.test(t);
+  const hasNoDateWithRetrieval = hasNoDate && hasRetrievalToken;
+
+  // 作者與括號：中文不強制空格
+  const authorParenOK = _hasAuthorYearWithParen(t);
+
+  // 來源線索（出版社/期刊/會議/法規/報紙/DOI/URL 其一）
+  const hasSourceCue =
+    /(出版社|Publishing|Press|出版|書局|文化|圖書)/.test(t) ||
+    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\s*\d+)/i.test(t) ||
+    /(學報|Journal|期刊|通訊|評論|會刊)/i.test(t) ||
+    /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(t) ||
+    /(法規|條例|辦法|函釋|教育部|衛福部|行政院|各縣市政府)/.test(t) ||
+    /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|天下雜誌|今周刊)/.test(t) ||
+    /(doi\.org|doi:)/i.test(t) || /(https?:\/\/)/i.test(t);
+
+  // ——— 規則 ———
   if (kind === 'web') {
-    if (!(hasZhDate || hasNoDateWithRetrieval)) reasons.push('網路資料缺少「登載年月日」或「無日期」＋「擷取日期」');
-    if (!authorSpaceOk) reasons.push('作者與（日期）間未留空格');
+    // 需要「作者（年月日）」或「（無日期）＋ 擷取日期/取自…」
+    if (!(hasZhDate || hasNoDateWithRetrieval)) {
+      reasons.push('網路資料需標「登載年月日」；若無日期，改用「（無日期）擷取日期，取自網址」。');
+    }
   } else {
-    if (!hasYear) reasons.push('缺少（年份）');
-    if (!authorSpaceOk) reasons.push('作者與（年份）間未留空格');
-    if (!(hasPubLike || hasPublisherKw)) reasons.push('缺少出版資訊（出版社或期刊名稱）');
+    // 書籍/（一般）期刊/論文等：以「作者（年份）」即可
+    if (!hasYearOnly) {
+      reasons.push('未偵測到（年份），請補 4 位年份。');
+    }
   }
 
-  if (!hasUrlOrDoi && kind === 'web') reasons.push('網路資料缺少網址或 DOI');
+  // 中文不強制作者與括號之間的空格（保留英語的寬鬆檢查）
+  if (!authorParenOK) {
+    reasons.push('作者與括號（年份/日期）格式不明，請使用：作者（年份）或 作者（YYYY年M月D日）。');
+  }
 
-  // === 總合判定 ===
+  if (!hasSourceCue) {
+    reasons.push('未偵測到出版/來源資訊（出版社、期刊/卷期頁、法規、DOI 或網址…）。');
+  }
+
   const ok = reasons.length === 0;
+  const rule_hits = {
+    kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue
+  };
 
   return { ok, reasons, kind, text: s, rule_hits };
 }
@@ -706,8 +752,8 @@ function auditReference(text, idx) {
   if (!hasBoldCue) {
     reasons.push({
       code: 'BOLD_CUE_MISSING',
-      message: '書名/期刊名等粗體線索未偵測。',
-      suggestion: '請補齊書名或期刊名等出版資訊（雖然 PDF 粗體無法辨識，仍以語境線索判定）。',
+      message: '書名／期刊名等應以粗體表示，但未偵測到相關樣式或出版線索。',
+      suggestion: '請將書名、期刊名、卷期資訊加粗（Bold），例如《商業周刊》、第5卷(2期)需以粗體顯示。',
       severity: 'warn'
     });
   }
