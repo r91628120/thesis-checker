@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12g';
+  const APP_VER = '2025-10-12j';
   (function () {
     try {
       const url = new URL(location.href);
@@ -693,6 +693,44 @@ const hasEbookPlatform =
   return 'nonweb';
 }
 
+// 取得「到日」的中文日期；抓不到傳回 null
+function extractFullZhDate(s){
+  const m = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*）/.exec(s);
+  return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : null;
+}
+
+// 產生「示範用」的正確日期片段（一定到日；抓不到就提示補日）
+function makeZhDateForExample(sourceText){
+  const full = extractFullZhDate(sourceText);
+  if (full) return `（${full}）`;
+  const ym = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*）/.exec(sourceText);
+  const y  = /（\s*(\d{4})\s*）/.exec(sourceText);
+  if (ym) return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
+  if (y)  return `（${y[1]}年「請補月份與日期」）`;
+  return '（「請補完整年月日」）';
+}
+
+// 依規範產出「修正後範例」：移除《》《》〈〉、blog 補［部落格文章］、日期一定到日
+function buildRefFixExample(originalLine){
+  const line = String(originalLine || '');
+
+  // 1) 先移除括號、補 blog 標籤
+  let clean = sanitizeTitleAndSource(line);
+
+  // 2) 產生「到日」日期片段
+  const datePart = makeZhDateForExample(clean);
+
+  // 3) 用新的日期片段覆蓋掉舊的（如果原本有任何括號日期）
+  if (/（[^）]*）/.test(clean)) {
+    clean = clean.replace(/（[^）]*）/, datePart);
+  } else {
+    // 沒有日期就插在作者後第一組括號位置（保守）
+    clean = clean.replace(/^(\S+?)（?/, `$1${datePart}`);
+  }
+
+  return clean;
+}
+
 // 將單一參考文獻做細部稽核，回傳可序列化物件
 function auditReference(text, idx) {
   const s = String(text || '').trim();
@@ -737,30 +775,42 @@ function auditReference(text, idx) {
     hasSourceCue &&
     hasBoldCue;
 
-    // A. 禁止《》《》與〈〉
-  const hasForbiddenBrackets = /[《》〈〉]/.test(s);
-  if (hasForbiddenBrackets) {
+// 網路/平台/電子期刊/新聞 → 一定要「年月日」或「（無日期）＋擷取日期」
+{
+  const fullDateOK = _hasZhDateInParens(s);
+  const noDateRetr = _hasNoDateWithRetrieval(s);
+  if (kind === 'web' && !(fullDateOK || noDateRetr)) {
     reasons.push({
-      code: 'BRACKETS_FORBIDDEN',
-      message: '書名、篇名、期刊名、出版社、網路來源等不需使用《》《》或〈〉括號。',
-      suggestion: '移除《》《》與〈〉，改為一般標點與空白分隔。',
+      code: 'WEB_DATE_INCOMPLETE',
+      message: '網路/電子期刊/新聞/平台文需用完整年月日（YYYY年M月D日）；若無日期，改用「（無日期）擷取日期，取自網址」。',
+      suggestion: '修正範例：' + buildRefFixExample(s),
       severity: 'error'
     });
   }
+}
 
-  // B. 部落格文章必須加［部落格文章］
-  const looksBlog =
-    /(部落格|blog)/i.test(s) ||
-    /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
-  const hasBlogTag = /［\s*部落格文章\s*］/.test(s);
-  if (looksBlog && !hasBlogTag) {
-    reasons.push({
-      code: 'BLOG_TAG_MISSING',
-      message: '部落格文章需在標題後加［部落格文章］。',
-      suggestion: '例：作者（年月日）。文章標題［部落格文章］。取自：https://…',
-      severity: 'error'
-    });
-  }
+   // A. 禁用《》《》與〈〉
+if (/[《》〈〉]/.test(s)) {
+  reasons.push({
+    code: 'BRACKETS_FORBIDDEN',
+    message: '參考文獻中的書名、篇名、期刊、出版社與來源，不需使用《》《》或〈〉括號。',
+    suggestion: '修正範例：' + buildRefFixExample(s),
+    severity: 'error'
+  });
+}
+
+// B. 部落格文章要有［部落格文章］
+const looksBlog = /(部落格|blog)/i.test(s) || /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
+const hasBlogTag = /［\s*部落格文章\s*］/.test(s);
+if (looksBlog && !hasBlogTag) {
+  reasons.push({
+    code: 'BLOG_TAG_MISSING',
+    message: '部落格文章需在標題後加［部落格文章］。',
+    suggestion: '修正範例：' + buildRefFixExample(s),
+    severity: 'error'
+  });
+}
+
   
     // 原因與建議
   
