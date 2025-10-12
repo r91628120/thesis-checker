@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12r';
+  const APP_VER = '2025-10-12s';
   (function () {
     try {
       const url = new URL(location.href);
@@ -131,6 +131,10 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeFYEExTAvXu2L
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
+if (ENABLE_COUNTER) {
+  await bumpCounterEveryTime();  // 寫：+1
+  await fetchCounter();          // 讀：更新顯示
+}
 
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
@@ -138,6 +142,7 @@ const startBtn=document.getElementById('start'),clearBtn=document.getElementById
 const statusEl=document.getElementById('status'),resultCard=document.getElementById('resultCard'),tbody=document.getElementById('tbody');
 const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.getElementById('copyJson'),downloadJsonBtn=document.getElementById('downloadJson');
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
+const counterEl = document.getElementById('counter');  // ← 新增
 
 /* ===== 狀態 ===== */
 let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
