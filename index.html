@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12l';
+  const APP_VER = '2025-10-12m';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1125,10 +1125,10 @@ const jsonBox = document.createElement('div');
 jsonBox.style.marginTop = '6px';
 jsonBox.innerHTML = `
   <details>
-    <summary class="mono" style="cursor:pointer">顯示這份檢查的 JSON（給 AI/除錯用）</summary>
+    <summary class="mono" style="cursor:pointer">顯示參考文獻詳細報告（給 AI/除錯用）</summary>
     <div style="margin:8px 0">
-      <button id="btnCopyRefJson" class="pill">複製 JSON</button>
-      <button id="btnCopyRefBad" class="pill">複製「不合格」清單給 AI</button>
+      <button id="btnCopyRefJson" class="pill">複製文獻詳細報告</button>
+      <button id="btnCopyRefBad" class="pill">複製「不合格」文獻清單給 AI</button>
     </div>
     <pre id="refAuditJson" style="white-space:pre-wrap;overflow:auto;max-height:280px">${evidence13Json}</pre>
   </details>
