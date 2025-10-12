@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12c';
+  const APP_VER = '2025-10-12d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -157,6 +157,8 @@ const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;startBtn.disabled=!ok||!has;clearBtn.disabled=!ok||!has;fontCheckBtn.disabled=!ok||!has||fileExt!=='pdf'}
 consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
+// 可用性：頁面載入後先同步一次
+setUploadEnabled(consent.checked);
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
@@ -562,21 +564,15 @@ function _qualifyRefStrict(s) {
 
   const isWebToken = /(https?:\/\/|取自|Available at|網址)/i.test(t);
   const hasEbookPlatform =
-  /(電子書|e-?book)/i.test(t) ||
-  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(t);
+    /(電子書|e-?book)/i.test(t) ||
+    /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(t);
 
-// 若命中「電子書平台」則視為 nonweb；否則有網址/取自才當 web
-  const kind  = (isWebToken && !hasEbookPlatform) ? 'web' : 'nonweb';
-
-  // 類別判定
-  const isWeb = /(https?:\/\/|取自|Available at|網址)/i.test(t);
-  const kind  = isWeb ? 'web' : 'nonweb';
+  // 若命中「電子書平台」則視為 nonweb；否則有網址/取自才當 web
+  const kind = (isWebToken && !hasEbookPlatform) ? 'web' : 'nonweb';
 
   // 時間相關
   const hasYearOnly = /[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(t);
   const hasZhDate   = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(t);
-
-  // 「無日期＋擷取日期」：只有在 (無日期) 且有 擷取日期/取自/ Retrieved from
   const hasNoDate   = /（\s*無日期\s*）/.test(t);
   const hasRetrievalToken = /(擷取日期|取自|Retrieved\s+from)/i.test(t);
   const hasNoDateWithRetrieval = hasNoDate && hasRetrievalToken;
@@ -584,7 +580,7 @@ function _qualifyRefStrict(s) {
   // 作者與括號：中文不強制空格
   const authorParenOK = _hasAuthorYearWithParen(t);
 
-  // 來源線索（出版社/期刊/會議/法規/報紙/DOI/URL 其一）
+  // 來源線索
   const hasSourceCue =
     /(出版社|Publishing|Press|出版|書局|文化|圖書)/.test(t) ||
     /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\s*\d+)/i.test(t) ||
@@ -594,33 +590,24 @@ function _qualifyRefStrict(s) {
     /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|天下雜誌|今周刊)/.test(t) ||
     /(doi\.org|doi:)/i.test(t) || /(https?:\/\/)/i.test(t);
 
-  // ——— 規則 ———
+  // 規則
   if (kind === 'web') {
-    // 需要「作者（年月日）」或「（無日期）＋ 擷取日期/取自…」
     if (!(hasZhDate || hasNoDateWithRetrieval)) {
       reasons.push('網路資料需標「登載年月日」；若無日期，改用「（無日期）擷取日期，取自網址」。');
     }
   } else {
-    // 書籍/（一般）期刊/論文等：以「作者（年份）」即可
-    if (!hasYearOnly) {
-      reasons.push('未偵測到（年份），請補 4 位年份。');
-    }
+    if (!hasYearOnly) reasons.push('未偵測到（年份），請補 4 位年份。');
   }
 
-  // 中文不強制作者與括號之間的空格（保留英語的寬鬆檢查）
   if (!authorParenOK) {
     reasons.push('作者與括號（年份/日期）格式不明，請使用：作者（年份）或 作者（YYYY年M月D日）。');
   }
-
   if (!hasSourceCue) {
     reasons.push('未偵測到出版/來源資訊（出版社、期刊/卷期頁、法規、DOI 或網址…）。');
   }
 
   const ok = reasons.length === 0;
-  const rule_hits = {
-    kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue
-  };
-
+  const rule_hits = { kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue };
   return { ok, reasons, kind, text: s, rule_hits };
 }
 
@@ -712,6 +699,9 @@ const hasEbookPlatform =
 function auditReference(text, idx) {
   const s = String(text || '').trim();
 
+  // 先建 reasons，後面才 push
+  const reasons = [];
+
   // 各子檢查（與你的現有規則對齊）
   const hasYear =
     /[（(]\s*(\d{4}|無日期|n\.?d\.?)(?:\s*[年\/\.\-]\s*\d{1,2}(?:\s*[月\/\.\-]\s*\d{1,2}(?:\s*日)?)?)?\s*[)）]/i.test(s) ||
@@ -749,31 +739,30 @@ function auditReference(text, idx) {
     hasSourceCue &&
     hasBoldCue;
 
-  // A. 禁止《》《》與〈〉
+    // A. 禁止《》《》與〈〉
   const hasForbiddenBrackets = /[《》〈〉]/.test(s);
   if (hasForbiddenBrackets) {
     reasons.push({
       code: 'BRACKETS_FORBIDDEN',
       message: '書名、篇名、期刊名、出版社、網路來源等不需使用《》《》或〈〉括號。',
       suggestion: '移除《》《》與〈〉，改為一般標點與空白分隔。',
-      : 'error'
-  });
-}
+      severity: 'error'
+    });
+  }
 
-// B. 部落格文章必須加［部落格文章］
+  // B. 部落格文章必須加［部落格文章］
   const looksBlog =
     /(部落格|blog)/i.test(s) ||
     /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
   const hasBlogTag = /［\s*部落格文章\s*］/.test(s);
-
-if (looksBlog && !hasBlogTag) {
+  if (looksBlog && !hasBlogTag) {
     reasons.push({
       code: 'BLOG_TAG_MISSING',
       message: '部落格文章需在標題後加［部落格文章］。',
       suggestion: '例：作者（年月日）。文章標題［部落格文章］。取自：https://…',
       severity: 'error'
-  });
-}
+    });
+  }
   
     // 原因與建議
   const reasons = [];
