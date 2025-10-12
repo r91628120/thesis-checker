@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12b';
+  const APP_VER = '2025-10-12c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -560,6 +560,14 @@ function _qualifyRefStrict(s) {
   const t = String(s || '').replace(/\s+/g, ' ').trim();
   const reasons = [];
 
+  const isWebToken = /(https?:\/\/|取自|Available at|網址)/i.test(t);
+  const hasEbookPlatform =
+  /(電子書|e-?book)/i.test(t) ||
+  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(t);
+
+// 若命中「電子書平台」則視為 nonweb；否則有網址/取自才當 web
+  const kind  = (isWebToken && !hasEbookPlatform) ? 'web' : 'nonweb';
+
   // 類別判定
   const isWeb = /(https?:\/\/|取自|Available at|網址)/i.test(t);
   const kind  = isWeb ? 'web' : 'nonweb';
@@ -622,6 +630,11 @@ function _isQualifiedRef(item) {
   // 先做基礎清理
   const s = String(item || '').replace(/\s+/g, ' ').trim();
 
+  // 電子書/平台（視同非網路出版之證據）
+const hasEbookPlatform =
+  /(電子書|e-?book)/i.test(s) ||
+  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
+  
   // ===== 非網路出版類的線索（命中即視為有「出版證據」）=====
   const hasPublisher =
     /(出版社|Press\b|Publishing|出版|文化|書局|圖書).{0,12}$/.test(s) ||
@@ -639,10 +652,11 @@ function _isQualifiedRef(item) {
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
 
   // 命中以上任何一個 → 視為「非網路」出版型態：仍需基本作者(年份)間空格
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) {
+  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform || hasEbookPlatform) {
     const authorYearSpaceOK = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\d{4}）/.test(s);
     return authorYearSpaceOK;
   }
+
 
   // ===== 網路類 =====
   const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
@@ -663,6 +677,10 @@ function _isQualifiedRef(item) {
 function _classifyReference(item) {
   const s = String(item || '').trim();
 
+const hasEbookPlatform =
+  /(電子書|e-?book)/i.test(s) ||
+  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
+
   // 與 _isQualifiedRef 一致的「出版社/出版型態」識別（避免被歸為 web）
   const hasPublisher =
     /(出版社|Press\b|Publishing|出版|文化|書局|圖書|Author\s*\.$).{0,12}$/.test(s) ||
@@ -679,8 +697,8 @@ function _classifyReference(item) {
   const hasAcademicPlatform =
     /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
 
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform) {
-    return 'nonweb';
+  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform || hasEbookPlatform) {
+  return 'nonweb';
   }
 
   const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
@@ -731,7 +749,33 @@ function auditReference(text, idx) {
     hasSourceCue &&
     hasBoldCue;
 
-  // 原因與建議
+  // A. 禁止《》《》與〈〉
+  const hasForbiddenBrackets = /[《》〈〉]/.test(s);
+  if (hasForbiddenBrackets) {
+    reasons.push({
+      code: 'BRACKETS_FORBIDDEN',
+      message: '書名、篇名、期刊名、出版社、網路來源等不需使用《》《》或〈〉括號。',
+      suggestion: '移除《》《》與〈〉，改為一般標點與空白分隔。',
+      : 'error'
+  });
+}
+
+// B. 部落格文章必須加［部落格文章］
+  const looksBlog =
+    /(部落格|blog)/i.test(s) ||
+    /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
+  const hasBlogTag = /［\s*部落格文章\s*］/.test(s);
+
+if (looksBlog && !hasBlogTag) {
+    reasons.push({
+      code: 'BLOG_TAG_MISSING',
+      message: '部落格文章需在標題後加［部落格文章］。',
+      suggestion: '例：作者（年月日）。文章標題［部落格文章］。取自：https://…',
+      severity: 'error'
+  });
+}
+  
+    // 原因與建議
   const reasons = [];
   if (!hasYear) {
     reasons.push({
