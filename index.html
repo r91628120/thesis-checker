@@ -1251,36 +1251,6 @@ if(ENABLE_COUNTER)fetchCounter();
   } catch (e) {}
 })();
 
-// 逐條檢查：把不合格清單複製給 AI
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (!t || t.id !== 'btnCopyRefAudit') return;
-
-  const audit = window.__refAudit || {};
-  const items = Array.isArray(audit.items) ? audit.items : [];
-  const bad = items.filter(x => !x.ok).map(x => ({
-    idx: x.idx,
-    text: x.text,
-    reasons: x.reasons
-  }));
-
-  const payload = {
-    references: {
-      count: audit.stats?.total || 0,
-      pass: audit.stats?.pass || 0,
-      fail: audit.stats?.fail || 0,
-      nonweb: audit.stats?.nonweb || 0,
-      web: audit.stats?.web || 0,
-      not_ok: bad
-    }
-  };
-
-  const txt = JSON.stringify(payload, null, 2);
-  navigator.clipboard.writeText(txt)
-    .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
-    .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
-});
-
 </script>
 </body>
 </html>
