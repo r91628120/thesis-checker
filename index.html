@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13l';
+  const APP_VER = '2025-10-13m';
   (function () {
     try {
       const url = new URL(location.href);
@@ -145,8 +145,6 @@ let _ruleCounter=0;
 const _rowsBuffer=[];
 let _fontCheckMirror=null;
 
-if (ENABLE_COUNTER) fetchCounter();
-
 const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 // 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
 const MARGIN_TOL_PT = 0.8;
@@ -158,6 +156,8 @@ function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;sta
 consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
 // 可用性：頁面載入後先同步一次
 setUploadEnabled(consent.checked);
+// 再去抓人次（避免初始化鎖死 fileInput）
+if (ENABLE_COUNTER) fetchCounter();
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
