@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13d';
+  const APP_VER = '2025-10-13e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -154,7 +154,9 @@ const RULES={
   sixSections:['前言','文獻探討','研究方法','研究分析與結果','研究結論與建議','參考文獻'],
   quoteMaxChars:50,minQuoteCharsForDirect:10,marginCM:2.0
 };
-const CM_TO_PT=cm=>cm*72/2.54, MARGIN_PT=CM_TO_PT(RULES.marginCM);
+const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
+// 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
+const MARGIN_TOL_PT = 0.8;
 const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
 const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部)/g];
 
@@ -362,12 +364,16 @@ async function runPdfChecks(buf){
     pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,_lastPageCount)}`,
     '請在頁尾置中放置阿拉伯數字頁碼。');
 
-    const MPT = MARGIN_PT.toFixed(1);
+  const MPT = MARGIN_PT.toFixed(1);
+  const tol = MARGIN_TOL_PT.toFixed(1);
+// …在 addRow 的 evidence 字串裡：
+`（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}；允許 -${tol}pt 誤差）`
+ 
   const marginPass =
-    (isFinite(minLeft)   && minLeft   >= MARGIN_PT) &&
-    (isFinite(minRight)  && minRight  >= MARGIN_PT) &&
-    (isFinite(minBottom) && minBottom >= MARGIN_PT) &&
-    (isFinite(minTop)    && minTop    >= MARGIN_PT);
+  (isFinite(minLeft)   && (minLeft   + MARGIN_TOL_PT) >= MARGIN_PT) &&
+  (isFinite(minRight)  && (minRight  + MARGIN_TOL_PT) >= MARGIN_PT) &&
+  (isFinite(minBottom) && (minBottom + MARGIN_TOL_PT) >= MARGIN_PT) &&
+  (isFinite(minTop)    && (minTop    + MARGIN_TOL_PT) >= MARGIN_PT);
 
   addRow(
     '四周邊界 ≥ 2 公分（正文區推估）',
