@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13o';
+  const APP_VER = '2025-10-13p';
   (function () {
     try {
       const url = new URL(location.href);
@@ -148,6 +148,22 @@ let _fontCheckMirror=null;
 const MARGIN_TOL_PT = 0.8;
 const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
 const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部)/g];
+
+/* ===== 規則常數 ===== */
+const RULES = {
+  minPages: 4,
+  maxPages: 10,
+  maxSizeMB: 5,
+  sixSections: ['前言', '文獻探討', '研究方法', '研究分析與結果', '研究結論與建議', '參考文獻'],
+  quoteMaxChars: 50,
+  minQuoteCharsForDirect: 10,
+  marginCM: 2.0
+};
+
+/* ===== 邊界換算 ===== */
+const CM_TO_PT = cm => cm * 72 / 2.54;
+const MARGIN_PT = CM_TO_PT(RULES.marginCM);
+
 
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;startBtn.disabled=!ok||!has;clearBtn.disabled=!ok||!has;fontCheckBtn.disabled=!ok||!has||fileExt!=='pdf'}
@@ -940,8 +956,6 @@ if (looksBlog && !hasBlogTag) {
     severity: 'error'
   });
 }
-
-const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 
   
     // 原因與建議
