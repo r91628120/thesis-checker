@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13c';
+  const APP_VER = '2025-10-13d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -244,6 +244,10 @@ async function runPdfChecks(buf){
   let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
   let firstHeaderOK=false, firstFooterOK=false;
 
+  // 只量測第1頁正文用
+  let firstSectionY = null;    // 第1頁「壹、前言」那一行的 Y 座標（pdf.js 的 y 座標：越大越靠上）
+  const FIRST_BODY_GUESS_FALLBACK = 40; // 容差（pt），找不到「前言」時，往上略過 40pt 當作正文起點
+
   for(let p=1;p<=numPages;p++){
     const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
     const tc=await page.getTextContent();
@@ -285,6 +289,15 @@ async function runPdfChecks(buf){
         if(inTop2cm && centeredByMid && looksLikeTitle){ firstHeaderOK = true; }
       }
 
+      // 只在第1頁偵測「壹、前言／一、前言／1、前言」當作正文起點
+      if (p === 1 && txt) {
+        // 常見三種寫法：壹、一、1，加上 、．. 任一標點
+        if (/^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
+          // 記下這一行的 y（pdf.js：越大越靠近上緣）
+          firstSectionY = y;
+        }
+      }
+
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
       const inBottom2cm = (y <= bottomBandMaxY);
       const m = txt.match(/^\s*(?:第)?\s*[-—]*\s*(\d{1,4})\s*[-—]*(?:\s*頁)?\s*$/);
@@ -297,11 +310,33 @@ async function runPdfChecks(buf){
 
       if(y>=topBandMinY && txt){ headerTitleTexts.push(txt); }
 
-      const inBody=(y>MARGIN_PT)&&(y<(H-MARGIN_PT));
-      if(inBody){
-        const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
-        if(distLeft<minLeft)minLeft=distLeft; if(distRight<minRight)minRight=distRight; if(distBottom<minBottom)minBottom=distBottom; if(distTop<minTop)minTop=distTop;
+            // 只量測第1頁；且必須是正文區（下緣超過 2cm、上緣在 2cm 內）
+      const inBody = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
+
+      // 只採用第1頁且「位在〈壹、前言〉那行之下」的文字方塊
+      let isFirstPageBody = false;
+      if (p === 1 && inBody) {
+        // 找到「壹、前言」：正文在它之下（y 會比它小一些，留一點容差）
+        if (firstSectionY != null) {
+          isFirstPageBody = (y < firstSectionY - 2);
+        } else {
+          // 找不到就保守略過最上方約 40pt，視為正文起點
+          isFirstPageBody = (y < (H - MARGIN_PT - FIRST_BODY_GUESS_FALLBACK));
+        }
       }
+
+      if (isFirstPageBody) {
+        const distLeft   = x;
+        const distRight  = W - (x + w);
+        const distBottom = y;
+        const distTop    = H - y;
+
+        if (distLeft   < minLeft)   minLeft   = distLeft;
+        if (distRight  < minRight)  minRight  = distRight;
+        if (distBottom < minBottom) minBottom = distBottom;
+        if (distTop    < minTop)    minTop    = distTop;
+      }
+
     }
     if(hasCenterPageNum)pageNumOkPages.push(p);
     pageTexts[p]=pageBuf.join('');
@@ -327,11 +362,19 @@ async function runPdfChecks(buf){
     pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,_lastPageCount)}`,
     '請在頁尾置中放置阿拉伯數字頁碼。');
 
-  const MPT=MARGIN_PT.toFixed(1);
-  const marginPass=(isFinite(minLeft)&&minLeft>=MARGIN_PT)&&(isFinite(minRight)&&minRight>=MARGIN_PT)&&(isFinite(minBottom)&&minBottom>=MARGIN_PT)&&(isFinite(minTop)&&minTop>=MARGIN_PT);
-  addRow('四周邊界 ≥ 2 公分（正文區推估）',marginPass,
-    `估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}）`,
-    '請確認版面設定至少 2 公分。');
+    const MPT = MARGIN_PT.toFixed(1);
+  const marginPass =
+    (isFinite(minLeft)   && minLeft   >= MARGIN_PT) &&
+    (isFinite(minRight)  && minRight  >= MARGIN_PT) &&
+    (isFinite(minBottom) && minBottom >= MARGIN_PT) &&
+    (isFinite(minTop)    && minTop    >= MARGIN_PT);
+
+  addRow(
+    '四周邊界 ≥ 2 公分（正文區推估）',
+    marginPass,
+    `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}）`,
+    '只要第1頁正文四邊皆 ≥ 2 公分，即視為版面合格。'
+  );
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
