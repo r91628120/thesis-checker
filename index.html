@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13a';
+  const APP_VER = '2025-10-13b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -620,6 +620,11 @@ function _qualifyRefStrict(s) {
     reasons.push('部落格文章需在標題後加［部落格文章］。');
 }
 
+const maybeHasJournal = /(學報|期刊|雜誌|特刊|季刊|月刊|週刊)/.test(t);
+if (maybeHasJournal) {
+  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現（PDF 解析無法自動判斷，請人工確認）。');
+}
+
   const ok = reasons.length === 0;
   const rule_hits = { kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue };
   return { ok, reasons, kind, text: s, rule_hits };
@@ -740,26 +745,81 @@ function sanitizeTitleAndSource(str){
   return out;
 }
 
-// 依規範產出「修正後範例」：移除《》《》〈〉、blog 補［部落格文章］、日期一定到日
-function buildRefFixExample(originalLine){
-  const line = String(originalLine || '');
+/* ===== 修正示例產生器（含粗體呈現） ===== */
+function buildRefFixExample(rawText) {
+  if (!rawText) return "";
 
-  // 1) 先移除括號、補 blog 標籤
-  let clean = sanitizeTitleAndSource(line);
+  let s = String(rawText).trim();
 
-  // 2) 產生「到日」日期片段
-  const datePart = makeZhDateForExample(clean);
+  // ① 移除《》《》〈〉符號
+  s = s.replace(/[《》〈〉]/g, "");
 
-  // 3) 用新的日期片段覆蓋掉舊的（如果原本有任何括號日期）
-  if (/（[^）]*）/.test(clean)) {
-    clean = clean.replace(/（[^）]*）/, datePart);
-  } else {
-    // 沒有日期就插在作者後第一組括號位置（保守）
-    clean = clean.replace(/^(\S+?)（?/, `$1${datePart}`);
+  // ② 若為部落格文章，加上［部落格文章］
+  const isBlog =
+    /(部落格|blog|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
+  if (isBlog && !/［\s*部落格文章\s*］/.test(s)) {
+    s = s.replace(/(。|．)/, "［部落格文章］$1");
   }
 
-  return clean;
+  // ③ 若是網頁文但缺完整年月日 → 改為「（無日期）擷取日期」
+  if (/(http|https):\/\//.test(s) && !/\d{4}年\d{1,2}月\d{1,2}日/.test(s)) {
+    s = s.replace(/（\d{4}年\d{1,2}月?）?/, "（無日期）");
+    if (!/擷取日期/.test(s)) {
+      s += "擷取日期，取自網址。";
+    }
+  }
+
+  // ④ 建立示例前的標準化（清空多餘空白）
+  s = s.replace(/\s+/g, " ").trim();
+
+  // ⑤ 讓畫面上顯示粗體（書名、期刊名、卷期等）
+  s = boldExampleFields(s);
+
+  return s;
 }
+
+/* ===== 將期刊名與卷期加粗（僅畫面顯示用） ===== */
+function boldExampleFields(text) {
+  let s = String(text || "");
+
+  // 期刊或書名常見關鍵字，例如「學報」「期刊」「季刊」「雜誌」「特刊」等
+  s = s.replace(
+    /。([^。，“”]+?(?:期刊|學報|雜誌|通訊|評論|會刊|特刊|季刊|月刊|週刊|季報|年報)[^，。]*)，/,
+    (m, name) => `。<b>${name.trim()}</b>，`
+  );
+
+  // 卷期：例如 45(2)、121、第52期、第12卷
+  s = s.replace(
+    /([，、]\s*)(\d+\s*\(\s*\d+\s*\))/,
+    (m, sep, v) => `${sep}<b>${v.replace(/\s+/g, "")}</b>`
+  );
+  s = s.replace(
+    /([，、]\s*)(\d{1,4})(?=\s*[，、])/,
+    (m, sep, v) => `${sep}<b>${v}</b>`
+  );
+  s = s.replace(/(第\s*\d+\s*卷|第\s*\d+\s*期)/g, (m) =>
+    `<b>${m.replace(/\s+/g, "")}</b>`
+  );
+
+  return s;
+}
+
+/* ===== 若複製示例到剪貼簿：轉為純文字（粗體→(粗體)） ===== */
+function stripHtmlForClipboard(htmlText) {
+  return String(htmlText || "")
+    .replace(/<b>(.*?)<\/b>/g, "$1(粗體)")
+    .replace(/<\/?[^>]+>/g, "");
+}
+
+/* ===== 提示式規則：在 _qualifyRefStrict() 裡加入 ===== */
+// 在 _qualifyRefStrict() 結尾前 (const ok = reasons.length === 0;) 上方加入：
+/*
+const maybeHasJournal = /(學報|期刊|雜誌|特刊|季刊|月刊|週刊)/.test(t);
+if (maybeHasJournal) {
+  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現（PDF 解析無法自動判斷，請人工確認）。');
+}
+*/
+
 
 // 將單一參考文獻做細部稽核，回傳可序列化物件
 function auditReference(text, idx) {
