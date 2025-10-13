@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-12t';
+  const APP_VER = '2025-10-13a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -608,6 +608,18 @@ function _qualifyRefStrict(s) {
     reasons.push('未偵測到出版/來源資訊（出版社、期刊/卷期頁、法規、DOI 或網址…）。');
   }
 
+// 禁用《》《》與〈〉（整體規範不使用；blog 也不要括號，只在標題後加標籤）
+  if (/[《》〈〉]/.test(t)) {
+    reasons.push('參考文獻中的書名、篇名、期刊、出版社與來源，不需使用《》《》或〈〉括號。');
+  }
+
+// Blog 例外：需在標題後方加［部落格文章］
+  const looksBlog = /(部落格|blog)/i.test(t) ||
+                  /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(t);
+  if (looksBlog && !/［\s*部落格文章\s*］/.test(t)) {
+    reasons.push('部落格文章需在標題後加［部落格文章］。');
+}
+
   const ok = reasons.length === 0;
   const rule_hits = { kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue };
   return { ok, reasons, kind, text: s, rule_hits };
@@ -620,7 +632,7 @@ function _isQualifiedRef(item) {
   const s = String(item || '').replace(/\s+/g, ' ').trim();
 
   // 電子書/平台（視同非網路出版之證據）
-const hasEbookPlatform =
+  const hasEbookPlatform =
   /(電子書|e-?book)/i.test(s) ||
   /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
   
@@ -666,9 +678,9 @@ const hasEbookPlatform =
 function _classifyReference(item) {
   const s = String(item || '').trim();
 
-const hasEbookPlatform =
-  /(電子書|e-?book)/i.test(s) ||
-  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
+  const hasEbookPlatform =
+    /(電子書|e-?book)/i.test(s) ||
+    /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
 
   // 與 _isQualifiedRef 一致的「出版社/出版型態」識別（避免被歸為 web）
   const hasPublisher =
