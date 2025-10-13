@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13e';
+  const APP_VER = '2025-10-13f';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1106,18 +1106,32 @@ function _matchSourceToRefs(srcContent, refEntries) {
 
 /* ===== 文字規則（只有第11、12項含微調） ===== */
 function runTextRules(pageTexts){
-  const pages=pageTexts.length-1||1;
+  const pages = pageTexts.length - 1 || 1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
+
+  // 先找出「陸、參考文獻」的起點，接著切出只包含「參考文獻之前」的正文文字
+  const refIdx = _findRefStart(fullText);
+  const bodyText = (refIdx >= 0) ? fullText.slice(0, refIdx) : fullText;
+
 
   // 六段落
   const sec=RULES.sixSections;
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // 作者-年份
-  const citeA=/（[^，\n]{1,12}，\s*\d{4}）/g, citeB=/[^\s，。、]{1,12}（\s*\d{4}）/g;
-  const hasCite=(fullText.match(citeA)?.length||0)+(fullText.match(citeB)?.length||0);
-  addRow('內文引註採 作者-年份',hasCite>0,hasCite?`檢出 ${hasCite} 處`:'未檢出引註樣式','請使用（姓名，年份）或 姓名（年份）。');
+  // 作者-年份（只算「參考文獻」之前的正文）
+  const citeA = /（[^，\n]{1,12}，\s*(\d{4}|無日期|n\.?d\.?)）/g; // （姓名，年份/無日期/n.d.）
+  const citeB = /[^\s，。、]{1,12}（\s*(\d{4}|無日期|n\.?d\.?)）/g;  // 姓名（年份/無日期/n.d.）
+  const hasCite =
+    (bodyText.match(citeA)?.length || 0) +
+    (bodyText.match(citeB)?.length || 0);
+
+  addRow(
+    '內文引註採 作者-年份',
+    hasCite > 0,
+    hasCite ? `檢出 ${hasCite} 處（僅統計正文，不含參考文獻）` : '未檢出引註樣式',
+    '請使用（姓名，年份）或 姓名（年份）；英文可用 (n.d.)。'
+  );
 
   // 直接引文長度
   const quotesRaw=[...(fullText.match(/「[^」]{1,200}」/g)||[]),...(fullText.match(/“[^”]{1,200}”/g)||[])];
