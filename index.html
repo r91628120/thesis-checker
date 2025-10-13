@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13g';
+  const APP_VER = '2025-10-13h';
   (function () {
     try {
       const url = new URL(location.href);
@@ -132,10 +132,6 @@ const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
-// 首頁載入時先讀取一次計數（不要在這裡 +1）
-if (ENABLE_COUNTER) fetchCounter();
-
-
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
 const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
@@ -147,6 +143,9 @@ const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.get
 let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
 let _ruleCounter=0; const _rowsBuffer=[];
 let _fontCheckMirror=null;
+
+// 首頁載入時先讀取一次計數（不要在這裡 +1）
+if (ENABLE_COUNTER) fetchCounter();
 
 /* ===== 規則常數 ===== */
 const RULES={
