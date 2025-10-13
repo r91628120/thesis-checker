@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13n';
+  const APP_VER = '2025-10-13e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -132,6 +132,10 @@ const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
+// 首頁載入時先讀取一次計數（不要在這裡 +1）
+if (ENABLE_COUNTER) fetchCounter();
+
+
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
 const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
@@ -140,10 +144,17 @@ const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.g
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
 
 /* ===== 狀態 ===== */
-let arrayBuffer=null, fileName=null, fileBase=null, fileExt=null, lastSummaryJSON=null, _lastPageCount=0;
-let _ruleCounter=0;
-const _rowsBuffer=[];
-let _fontCheckMirror=null;const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
+let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
+let _ruleCounter=0; const _rowsBuffer=[];
+let _fontCheckMirror=null;
+
+/* ===== 規則常數 ===== */
+const RULES={
+  minPages:4,maxPages:10,maxSizeMB:5,
+  sixSections:['前言','文獻探討','研究方法','研究分析與結果','研究結論與建議','參考文獻'],
+  quoteMaxChars:50,minQuoteCharsForDirect:10,marginCM:2.0
+};
+const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 // 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
 const MARGIN_TOL_PT = 0.8;
 const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
@@ -151,10 +162,7 @@ const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|
 
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;startBtn.disabled=!ok||!has;clearBtn.disabled=!ok||!has;fontCheckBtn.disabled=!ok||!has||fileExt!=='pdf'}
-consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);
-// 再去抓人次（避免初始化鎖死 fileInput）
-if (ENABLE_COUNTER) fetchCounter();
-statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
+consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
 // 可用性：頁面載入後先同步一次
 setUploadEnabled(consent.checked);
 
@@ -358,8 +366,9 @@ async function runPdfChecks(buf){
 
   const MPT = MARGIN_PT.toFixed(1);
   const tol = MARGIN_TOL_PT.toFixed(1);
-  // …在 addRow 的 evidence 字串裡：
-
+// …在 addRow 的 evidence 字串裡：
+`（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}；允許 -${tol}pt 誤差）`
+ 
   const marginPass =
   (isFinite(minLeft)   && (minLeft   + MARGIN_TOL_PT) >= MARGIN_PT) &&
   (isFinite(minRight)  && (minRight  + MARGIN_TOL_PT) >= MARGIN_PT) &&
@@ -1097,38 +1106,27 @@ function _matchSourceToRefs(srcContent, refEntries) {
 
 /* ===== 文字規則（只有第11、12項含微調） ===== */
 function runTextRules(pageTexts){
-  const pages = pageTexts.length - 1 || 1;
+  const pages=pageTexts.length-1||1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
-
-  // 先找出「陸、參考文獻」的起點，接著切出只包含「參考文獻之前」的正文文字
-  const refIdx = _findRefStart(fullText);
-  const bodyText = (refIdx >= 0) ? fullText.slice(0, refIdx) : fullText;
-
 
   // 六段落
   const sec=RULES.sixSections;
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // 作者-年份（只算「參考文獻」之前的正文）
-  const citeA = /（[^，\n]{1,12}，\s*(\d{4}|無日期|n\.?d\.?)）/g; // （姓名，年份/無日期/n.d.）
-  const citeB = /[^\s，。、]{1,12}（\s*(\d{4}|無日期|n\.?d\.?)）/g;  // 姓名（年份/無日期/n.d.）
-  const hasCite =
-    (bodyText.match(citeA)?.length || 0) +
-    (bodyText.match(citeB)?.length || 0);
-
-  addRow(
-    '內文引註採 作者-年份',
-    hasCite > 0,
-    hasCite ? `檢出 ${hasCite} 處（僅統計正文，不含參考文獻）` : '未檢出引註樣式',
-    '請使用（姓名，年份）或 姓名（年份）；英文可用 (n.d.)。'
-  );
+  // 作者-年份
+  const citeA=/（[^，\n]{1,12}，\s*\d{4}）/g, citeB=/[^\s，。、]{1,12}（\s*\d{4}）/g;
+  const hasCite=(fullText.match(citeA)?.length||0)+(fullText.match(citeB)?.length||0);
+  addRow('內文引註採 作者-年份',hasCite>0,hasCite?`檢出 ${hasCite} 處`:'未檢出引註樣式','請使用（姓名，年份）或 姓名（年份）。');
 
   // 直接引文長度
   const quotesRaw=[...(fullText.match(/「[^」]{1,200}」/g)||[]),...(fullText.match(/“[^”]{1,200}”/g)||[])];
   const clean=s=>s.replace(PUNCT,''); const isDirect=q=>clean(q).length>=RULES.minQuoteCharsForDirect;
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
+
+  // 參考文獻錨點（最後一次）
+  const refIdx = _findRefStart(fullText);
 
   // 8) 不得含校名/姓名 —— ★修正：跨頁時只檢查錨點前半段
   const schoolHits=[]; const schoolPages=new Set();
@@ -1500,6 +1498,13 @@ function asFullZhDate(y, m, d){
   return `${yy}年${mm}月${dd}日`;
 }
 
+// 從一條參考文獻字串抓中文年月日（容錯），只抓「到日」；抓不到回 null
+function extractFullZhDate(s){
+  const m = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*）/.exec(s);
+  if (!m) return null;
+  return asFullZhDate(m[1], m[2], m[3]);
+}
+
 /* ===== 下載/複製 ===== */
 downloadHtmlBtn.addEventListener('click',()=>{
   const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>'+document.querySelector('#resultCard').outerHTML;
@@ -1550,6 +1555,18 @@ async function fetchCounter(){
     }
   } catch (e) {}
 })();
+
+// 用來產生「正確示範」的日期片段：必帶「到日」
+function makeZhDateForExample(sourceText){
+  const full = extractFullZhDate(sourceText);
+  if (full) return `（${full}）`;
+  // 若原文沒有「到日」，先嘗試抓到「年-月」或「年份」提醒補日
+  const ym = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*）/.exec(sourceText);
+  const y  = /（\s*(\d{4})\s*）/.exec(sourceText);
+  if (ym)  return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
+  if (y)   return `（${y[1]}年「請補月份與日期」）`;
+  return '（「請補完整年月日」）';
+}
 
 // 逐條檢查：把不合格清單複製給 AI
 document.addEventListener('click', (ev) => {
