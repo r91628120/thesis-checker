@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13f';
+  const APP_VER = '2025-10-13g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1512,13 +1512,6 @@ function asFullZhDate(y, m, d){
   return `${yy}年${mm}月${dd}日`;
 }
 
-// 從一條參考文獻字串抓中文年月日（容錯），只抓「到日」；抓不到回 null
-function extractFullZhDate(s){
-  const m = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*）/.exec(s);
-  if (!m) return null;
-  return asFullZhDate(m[1], m[2], m[3]);
-}
-
 /* ===== 下載/複製 ===== */
 downloadHtmlBtn.addEventListener('click',()=>{
   const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>'+document.querySelector('#resultCard').outerHTML;
@@ -1569,18 +1562,6 @@ async function fetchCounter(){
     }
   } catch (e) {}
 })();
-
-// 用來產生「正確示範」的日期片段：必帶「到日」
-function makeZhDateForExample(sourceText){
-  const full = extractFullZhDate(sourceText);
-  if (full) return `（${full}）`;
-  // 若原文沒有「到日」，先嘗試抓到「年-月」或「年份」提醒補日
-  const ym = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*）/.exec(sourceText);
-  const y  = /（\s*(\d{4})\s*）/.exec(sourceText);
-  if (ym)  return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
-  if (y)   return `（${y[1]}年「請補月份與日期」）`;
-  return '（「請補完整年月日」）';
-}
 
 // 逐條檢查：把不合格清單複製給 AI
 document.addEventListener('click', (ev) => {
