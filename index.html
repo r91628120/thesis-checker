@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13k';
+  const APP_VER = '2025-10-13l';
   (function () {
     try {
       const url = new URL(location.href);
@@ -140,8 +140,12 @@ const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.g
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
 
 /* ===== 狀態 ===== */
-let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
-let _ruleCounter=0; const _rowsBu
+let arrayBuffer=null, fileName=null, fileBase=null, fileExt=null, lastSummaryJSON=null, _lastPageCount=0;
+let _ruleCounter=0;
+const _rowsBuffer=[];
+let _fontCheckMirror=null;
+
+if (ENABLE_COUNTER) fetchCounter();
 
 const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 // 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
