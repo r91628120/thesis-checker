@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13h';
+  const APP_VER = '2025-10-13i';
   (function () {
     try {
       const url = new URL(location.href);
@@ -141,18 +141,49 @@ const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.get
 
 /* ===== 狀態 ===== */
 let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
-let _ruleCounter=0; const _rowsBuffer=[];
-let _fontCheckMirror=null;
+let _ruleCounter=0; const _rowsBu/* ===== UI 變數 ===== */
+const consent = document.getElementById('consent'),
+      fileInput = document.getElementById('file'),
+      drop = document.getElementById('drop'),
+      startBtn = document.getElementById('start'),
+      clearBtn = document.getElementById('clear'),
+      fontCheckBtn = document.getElementById('fontCheckBtn'),
+      statusEl = document.getElementById('status'),
+      resultCard = document.getElementById('resultCard'),
+      tbody = document.getElementById('tbody'),
+      downloadHtmlBtn = document.getElementById('downloadHtml'),
+      copyBtn = document.getElementById('copyJson'),
+      downloadJsonBtn = document.getElementById('downloadJson'),
+      jsonPreview = document.getElementById('jsonPreview'),
+      counterBox = document.getElementById('counterBox'),
+      counterEl = document.getElementById('counter'),      // ✅ 加在這裡
+      fileTagEl = document.getElementById('fileTag');
 
-// 首頁載入時先讀取一次計數（不要在這裡 +1）
+/* ===== 狀態變數 ===== */
+let arrayBuffer = null,
+    fileName = null,
+    fileBase = null,
+    fileExt = null,
+    lastSummaryJSON = null,
+    _lastPageCount = 0,
+    _ruleCounter = 0,
+    _rowsBuffer = [],
+    _fontCheckMirror = null;
+
+/* ===== 首頁載入：先讀取目前累積次數 ===== */
 if (ENABLE_COUNTER) fetchCounter();
 
 /* ===== 規則常數 ===== */
-const RULES={
-  minPages:4,maxPages:10,maxSizeMB:5,
-  sixSections:['前言','文獻探討','研究方法','研究分析與結果','研究結論與建議','參考文獻'],
-  quoteMaxChars:50,minQuoteCharsForDirect:10,marginCM:2.0
+const RULES = {
+  minPages: 4,
+  maxPages: 10,
+  maxSizeMB: 5,
+  sixSections: ['壹、前言', '貳、文獻探討', '參、研究方法', '肆、研究分析與結果', '伍、研究結論與建議', '陸、參考文獻'],
+  quoteMaxChars: 50,
+  minQuoteCharsForDirect: 10,
+  marginCM: 2.0
 };
+
 const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 // 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
 const MARGIN_TOL_PT = 0.8;
@@ -365,9 +396,8 @@ async function runPdfChecks(buf){
 
   const MPT = MARGIN_PT.toFixed(1);
   const tol = MARGIN_TOL_PT.toFixed(1);
-// …在 addRow 的 evidence 字串裡：
-`（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}；允許 -${tol}pt 誤差）`
- 
+  // …在 addRow 的 evidence 字串裡：
+
   const marginPass =
   (isFinite(minLeft)   && (minLeft   + MARGIN_TOL_PT) >= MARGIN_PT) &&
   (isFinite(minRight)  && (minRight  + MARGIN_TOL_PT) >= MARGIN_PT) &&
@@ -1137,9 +1167,6 @@ function runTextRules(pageTexts){
   const clean=s=>s.replace(PUNCT,''); const isDirect=q=>clean(q).length>=RULES.minQuoteCharsForDirect;
   const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
   addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
-
-  // 參考文獻錨點（最後一次）
-  const refIdx = _findRefStart(fullText);
 
   // 8) 不得含校名/姓名 —— ★修正：跨頁時只檢查錨點前半段
   const schoolHits=[]; const schoolPages=new Set();
