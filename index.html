@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13b';
+  const APP_VER = '2025-10-13c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -622,7 +622,7 @@ function _qualifyRefStrict(s) {
 
 const maybeHasJournal = /(學報|期刊|雜誌|特刊|季刊|月刊|週刊)/.test(t);
 if (maybeHasJournal) {
-  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現（PDF 解析無法自動判斷，請人工確認）。');
+  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現。PDF 解析無法自動判斷，請人工確認。');
 }
 
   const ok = reasons.length === 0;
@@ -807,7 +807,7 @@ function boldExampleFields(text) {
 /* ===== 若複製示例到剪貼簿：轉為純文字（粗體→(粗體)） ===== */
 function stripHtmlForClipboard(htmlText) {
   return String(htmlText || "")
-    .replace(/<b>(.*?)<\/b>/g, "$1(粗體)")
+    .replace(/<b>(.*?)<\/b>/g, "$1")
     .replace(/<\/?[^>]+>/g, "");
 }
 
@@ -932,7 +932,7 @@ if (looksBlog && !hasBlogTag) {
     reasons.push({
       code: 'BOLD_CUE_MISSING',
       message: '書名／期刊名等應以粗體表示，但未偵測到相關樣式或出版線索。',
-      suggestion: '請將書名、期刊名、卷期資訊加粗（Bold），例如《商業周刊》、第5卷(2期)需以粗體顯示。',
+      suggestion: '請將書名、期刊名、卷期資訊加粗（Bold），例如商業周刊、第5卷(2期)需以粗體顯示。',
       severity: 'warn'
     });
   }
