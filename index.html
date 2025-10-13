@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13j';
+  const APP_VER = '2025-10-13k';
   (function () {
     try {
       const url = new URL(location.href);
@@ -141,48 +141,7 @@ const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.get
 
 /* ===== 狀態 ===== */
 let arrayBuffer=null,fileName=null,fileBase=null,fileExt=null,lastSummaryJSON=null,_lastPageCount=0;
-let _ruleCounter=0; const _rowsBu/* ===== UI 變數 ===== */
-const consent = document.getElementById('consent'),
-      fileInput = document.getElementById('file'),
-      drop = document.getElementById('drop'),
-      startBtn = document.getElementById('start'),
-      clearBtn = document.getElementById('clear'),
-      fontCheckBtn = document.getElementById('fontCheckBtn'),
-      statusEl = document.getElementById('status'),
-      resultCard = document.getElementById('resultCard'),
-      tbody = document.getElementById('tbody'),
-      downloadHtmlBtn = document.getElementById('downloadHtml'),
-      copyBtn = document.getElementById('copyJson'),
-      downloadJsonBtn = document.getElementById('downloadJson'),
-      jsonPreview = document.getElementById('jsonPreview'),
-      counterBox = document.getElementById('counterBox'),
-      counterEl = document.getElementById('counter'),      // ✅ 加在這裡
-      fileTagEl = document.getElementById('fileTag');
-
-/* ===== 狀態變數 ===== */
-let arrayBuffer = null,
-    fileName = null,
-    fileBase = null,
-    fileExt = null,
-    lastSummaryJSON = null,
-    _lastPageCount = 0,
-    _ruleCounter = 0,
-    _rowsBuffer = [],
-    _fontCheckMirror = null;
-
-/* ===== 首頁載入：先讀取目前累積次數 ===== */
-if (ENABLE_COUNTER) fetchCounter();
-
-/* ===== 規則常數 ===== */
-const RULES = {
-  minPages: 4,
-  maxPages: 10,
-  maxSizeMB: 5,
-  sixSections: ['前言', '文獻探討', '研究方法', '研究分析與結果', '研究結論與建議', '參考文獻'],
-  quoteMaxChars: 50,
-  minQuoteCharsForDirect: 10,
-  marginCM: 2.0
-};
+let _ruleCounter=0; const _rowsBu
 
 const CM_TO_PT = cm => cm*72/2.54, MARGIN_PT = CM_TO_PT(RULES.marginCM);
 // 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
