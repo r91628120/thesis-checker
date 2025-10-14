@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-14b';
+  const APP_VER = '2025-10-14c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1428,15 +1428,82 @@ jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
   })();
 
   // 一致性
-  const refJoined = refEntries.join('\n');
-  const citations=(fullText.match(/（[^，\n]{1,12}，\s*\d{4}）/g)||[]).map(s=>s.replace(/[（）\s]/g,'').replace(/，/g,''));
-  let linked=0; for(const c of citations){ if(refJoined.includes(c)) linked++; }
-  const unlinkedInText = Math.max(0,citations.length-linked);
-  const refAuthors=(refJoined.match(/[\u4e00-\u9fa5A-Za-z]{1,12}（\d{4}/g)||[]).map(s=>s.replace(/（\d{4}.*/,'')); 
-  const reverseUnlinked = refAuthors.filter(a=>!citations.some(c=>c.startsWith(a))).length;
-  addRow('參考文獻與內文引註一致性',unlinkedInText===0 && reverseUnlinked<=1,
-    `引註共 ${citations.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
-    '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。');
+  // === 參考文獻與內文引註一致性（升級版） ===
+// 1) 收集「正文中的」各式引註
+const citePatterns = [
+  // 中文：括號內單/多作者、或含「等/無日期/n.d.」
+  /（[^\n()，]{1,20}(?:、|和)[^\n()，]{1,20}(?:(?:、|和)[^\n()，]{1,20}){0,6}，\s*(\d{4}|無日期|n\.?d\.?)）/g, // 多作者
+  /（[^\n()，]{1,40}(?:等)?，\s*(\d{4}|無日期|n\.?d\.?)）/g,                                                // 單作者/等
+  // 中文：作者在前
+  /[^\s，。、]{1,20}(?:、[^\s，。、]{1,20}){0,6}（\s*(\d{4}|無日期|n\.?d\.?)\s*）/g,
+  // 英文：括號內/作者在前，含 and/&/et al. 與 n.d.
+  /\(\s*[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){0,6}(?:\s*et al\.)?\s*,\s*(\d{4}|n\.?d\.)\s*\)/g,
+  /[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){0,6}(?:\s*et al\.)?\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g
+];
+
+const citationHits = [];
+for (const re of citePatterns) {
+  const m = bodyText.match(re);
+  if (m) citationHits.push(...m);
+}
+
+// 把每個命中的「作者群 + 年份」變成可比對的 key（只留作者字母/中文字 + 年份/n.d./無日期）
+function normCiteKey(s) {
+  const t = String(s || '').replace(/[（）()]/g,'').trim();
+  // 先抓年份（含 n.d./無日期）
+  const year = (t.match(/(無日期|n\.?d\.?|\d{4})/i) || [''])[0].toLowerCase().replace(/\s+/g,'');
+  // 簡化作者群：中文去掉標點，英文取姓氏們
+  let authorPart = t.split(/[,，]|\s+\d{4}|\s+n\.?d\.?|\s*無日期/i)[0] || '';
+  authorPart = authorPart
+    .replace(/等|et al\.?/gi, '')            // 去掉 等/et al.
+    .replace(/\s+and\s+|\s*&\s*|、|和/g, ' ') // 視為分隔
+    .replace(/[^\u4e00-\u9fa5A-Za-z\s]/g, '')// 去符號
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.replace(/^([A-Z])[A-Za-z']*$/,'$1').toLowerCase()) // 英文取姓氏開頭字母
+    .slice(0,7)                                                    // 最多 7 位作者
+    .join('');
+  return authorPart + '|' + year;
+}
+
+const citeKeys = citationHits.map(normCiteKey);
+
+// 2) 把參考文獻的「作者（年份）」也變成 key 來比
+function normRefKeyForCite(ref) {
+  const s = String(ref || '');
+  const year = (s.match(/（\s*(\d{4}|無日期)\s*）/) || s.match(/\(\s*(\d{4}|n\.?d\.)\s*\)/) || [,''])[1]
+    ?.toLowerCase().replace(/\s+/g,'') || '';
+  const head = s.split(/[。．]/)[0] || ''; // 取作者段
+  const authorPart = head
+    .replace(/等|et al\.?/gi, '')
+    .replace(/\s+and\s+|\s*&\s*|、|和/g, ' ')
+    .replace(/[^\u4e00-\u9fa5A-Za-z\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.replace(/^([A-Z])[A-Za-z']*$/,'$1').toLowerCase())
+    .slice(0,7)
+    .join('');
+  return authorPart + '|' + year;
+}
+
+const refKeys = refEntries.map(normRefKeyForCite);
+
+// 3) 交叉比對
+let linked = 0;
+for (const k of citeKeys) {
+  if (refKeys.includes(k)) linked++;
+}
+const unlinkedInText = Math.max(0, citeKeys.length - linked);
+
+// 反向：文獻在清單裡，但正文沒出現
+const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
+
+addRow(
+  '參考文獻與內文引註一致性',
+  unlinkedInText === 0 && reverseUnlinked <= 1,
+  `引註共 ${citeKeys.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
+  '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。'
+);
 
   // 來源不可全為網路
   const nonAllWebPass = (A_total > 0) && (webCount < A_total);
@@ -1560,14 +1627,15 @@ downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未
 /* ===== GAS 計數（GET 版） ===== */
 async function bumpCounterEveryTime(){
   try{
-    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') +
-                'action=increment&site=essayguard&ts=' + Date.now();
-    const res = await fetch(url, { headers:{ 'Cache-Control':'no-cache' }});
-    console.log('counter increment HTTP', res.status);
-  }catch(e){
-    console.warn('counter increment failed', e);
-  }
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Cache-Control':'no-cache'},
+      body: JSON.stringify({ action: 'increment' })
+    });
+    console.log('counter increment', res.status);
+  }catch(e){ console.warn('counter increment failed', e); }
 }
+
 
 async function fetchCounter(){
   try{
