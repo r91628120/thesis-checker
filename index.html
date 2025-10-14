@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-13p';
+  const APP_VER = '2025-10-14a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1126,19 +1126,37 @@ function runTextRules(pageTexts){
   const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
   addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
 
-  // 作者-年份（只算「參考文獻」之前的正文）
-  const citeA = /（[^，\n]{1,12}，\s*(\d{4}|無日期|n\.?d\.?)）/g; // （姓名，年份/無日期/n.d.）
-  const citeB = /[^\s，。、]{1,12}（\s*(\d{4}|無日期|n\.?d\.?)）/g;  // 姓名（年份/無日期/n.d.）
-  const hasCite =
-    (bodyText.match(citeA)?.length || 0) +
-    (bodyText.match(citeB)?.length || 0);
+  // 作者-年份（只算「參考文獻」之前的正文）— 擴充：等／et al.、中英混用、半形括號與逗號
+// 1) 中文括號內： （作者 等，年份） / （作者，年份） / （機構，無日期）
+const citeParenZh =
+  /（[^，\n()]{1,40}(?:等)?，\s*(\d{4}|無日期|n\.?d\.?)）/g;
 
-  addRow(
-    '內文引註採 作者-年份',
-    hasCite > 0,
-    hasCite ? `檢出 ${hasCite} 處（僅統計正文，不含參考文獻）` : '未檢出引註樣式',
-    '請使用（姓名，年份）或 姓名（年份）；英文可用 (n.d.)。'
-  );
+// 2) 英文括號內： (Author et al., 2022) / (Author, 2022) / (Author, n.d.)
+const citeParenEn =
+  /\(\s*[A-Z][A-Za-z.\s'\-]{0,40}(?:et al\.)?\s*,\s*(\d{4}|n\.?d\.)\s*\)/g;
+
+// 3) 中文作者在前： 作者 等（年份） / 作者（年份）
+const citeLeadZh =
+  /[^\s，。、]{1,20}(?:等)?（\s*(\d{4}|無日期|n\.?d\.?)\s*）/g;
+
+// 4) 英文作者在前： Author et al. (2022) / Author (n.d.)
+const citeLeadEn =
+  /[A-Z][A-Za-z.\s'\-]{0,40}(?:et al\.)?\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g;
+
+// 統一計數（避免重複相加，取四個規則命中的總和）
+const countMatches = (re) => (bodyText.match(re)?.length || 0);
+const hasCite =
+  countMatches(citeParenZh) +
+  countMatches(citeParenEn) +
+  countMatches(citeLeadZh) +
+  countMatches(citeLeadEn);
+
+addRow(
+  '內文引註採 作者-年份',
+  hasCite > 0,
+  hasCite ? `檢出 ${hasCite} 處（僅統計正文，不含參考文獻）` : '未檢出引註樣式',
+  '請使用（姓名，年份）或 姓名（年份）；三人以上可用「等」/「et al.」。英文可用 (n.d.)。'
+);
 
   // 直接引文長度
   const quotesRaw=[...(fullText.match(/「[^」]{1,200}」/g)||[]),...(fullText.match(/“[^”]{1,200}”/g)||[])];
