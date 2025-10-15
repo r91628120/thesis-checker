@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-15b';
+  const APP_VER = '2025-10-15c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1449,59 +1449,73 @@ for (const re of citePatterns) {
 
 // 把每個命中的「作者群 + 年份」變成可比對的 key（只留作者字母/中文字 + 年份/n.d./無日期）
 // 內文命中的作者-年份 → 統一成年份 key
+// —— 新增：把常見異體字/雜訊統一（作者名字用）
+function _canonAuthorName(s) {
+  return String(s || '')
+    // 全形空白 → 半形、移除零寬字元
+    .replace(/\u3000/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // 常見異體字統一（可自行擴充）
+    .replace(/臺/g, '台')
+    .replace(/里/g, '裡')   // 若需要也可反向，視你資料習慣
+    // 拿掉非中文字母（保留英文姓首字母），以及殘留標點
+    .replace(/[^\u4E00-\u9FFF A-Za-z]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// 內文命中的作者-年份 → 轉成「作者群key|年份key」
 function normCiteKey(s) {
-  const t = String(s || '').replace(/[（）()]/g,'').trim();
-  // 1) 取年份：YYYY / 無日期 / n.d. / 中文完整日期（YYYY年M月D日）
-  let year = (t.match(/(無日期|n\.?d\.?)/i)?.[0] || '')
-               .toLowerCase().replace(/\s+/g,'');
+  const t = String(s || '').replace(/[（）()]/g, '').trim();
+
+  // 1) 年份規一：YYYY / 無日期 / n.d. / 中文年月日
+  let year =
+    (t.match(/(無日期|n\.?d\.?)/i)?.[0] || '').toLowerCase().replace(/\s+/g, '');
   if (!year) {
     const mFull = t.match(/(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?/);
-    if (mFull) year = mFull[1];                // 取 4 位年份
-    else year = (t.match(/\b(19|20)\d{2}\b/)||['',''])[0];
+    year = mFull?.[1] || (t.match(/\b(19|20)\d{2}\b/) || ['',''])[0];
   }
-  // 同義詞彙一律收斂為 'nd'
-  year = /^(無日期|n\.?d\.?)$/i.test(year) ? 'nd' : String(year||'').toLowerCase();
+  year = /^(無日期|n\.?d\.?)$/i.test(year) ? 'nd' : String(year || '').toLowerCase();
 
-  // 2) 壓縮作者群（去掉 等/et al.，把 and/&/、/和 都視為分隔，英文取姓氏首字母）
+  // 2) 作者群規一：拿掉「等/et al.」、把 and/&/、/和 視為分隔，英文只取姓氏首字母
   let authorPart = t.split(/[,，]|\s+\d{4}|\s+n\.?d\.?|\s*無日期/i)[0] || '';
   authorPart = authorPart
     .replace(/等|et al\.?/gi, '')
     .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    .replace(/[^\u4e00-\u9fa5A-Za-z\s]/g, '')
     .split(/\s+/).filter(Boolean)
-    .map(w => w.replace(/^([A-Z])[A-Za-z']*$/,'$1').toLowerCase())
-    .slice(0,7).join('');
+    .map(w => {
+      const c = _canonAuthorName(w);
+      // 英文姓取首字母；中文全留
+      return /^[A-Za-z]+$/.test(c) ? c[0].toLowerCase() : c;
+    })
+    .join('');
 
   return authorPart + '|' + year;
 }
 
-// 參考文獻條目 → 轉成可與內文配對的 key
+// 參考文獻條目 → 轉成「作者群key|年份key」
 function normRefKeyForCite(ref) {
   const s = String(ref || '');
 
-  // 1) 先找 (無日期/n.d.) 或中文完整日期 → 年份；再退而求其次找 4 位年
-  let yearToken = (s.match(/（\s*(無日期)\s*）/)?.[1]) ||
-                  (s.match(/\(\s*(n\.?d\.?)\s*\)/i)?.[1]) || '';
-  let year = '';
+  // 年份優先取中文完整日期；再退 (YYYY)；再退純 4 位數
+  let year = (
+    s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
+    s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
+    s.match(/\b(19|20)\d{2}\b/)
+  )?.[1] || '';
 
-  if (yearToken) {
-    year = 'nd'; // 統一
-  } else {
-    const zhFull = s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/); // ← 支援到日
-    year = zhFull?.[1] || (s.match(/\(\s*((?:19|20)\d{2})\s*\)/)?.[1]) ||
-           (s.match(/\b(19|20)\d{2}\b/)?.[0]) || '';
-  }
-  year = String(year || '').toLowerCase();
+  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
 
-  // 2) 作者段（取到第一個句點/全形句點之前）
+  // 作者段：取第一個句點/全形句點前
   const head = s.split(/[。．]/)[0] || '';
   let authorPart = head
     .replace(/等|et al\.?/gi, '')
     .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    .replace(/[^\u4e00-\u9fa5A-Za-z\s]/g, '')
     .split(/\s+/).filter(Boolean)
-    .map(w => w.replace(/^([A-Z])[A-Za-z']*$/,'$1').toLowerCase())
-    .slice(0,7).join('');
+    .map(w => {
+      const c = _canonAuthorName(w);
+      return /^[A-Za-z]+$/.test(c) ? c[0].toLowerCase() : c;
+    })
+    .join('');
 
   return authorPart + '|' + year;
 }
