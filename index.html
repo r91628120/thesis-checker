@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-15a';
+  const APP_VER = '2025-10-15b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1680,9 +1680,34 @@ ${qs}`;
 
 /* ===== 工具 & 報告 ===== */
 function missingRange(okPages,total){const ok=new Set(okPages);const miss=[];for(let i=1;i<=total;i++){if(!ok.has(i))miss.push(i)}return miss.length?miss.join(', '):'—'}
+// 小工具：把 evidence 物件轉成好看的 HTML
+function renderEvidence(evd){
+  try{
+    if (evd == null) return '';
+    if (typeof evd === 'string') return evd;
+    if (typeof evd !== 'object') return String(evd);
+
+    const note = evd.note ? `<div>${_escapeHtml(evd.note)}</div>` : '';
+    const pretty = _escapeHtml(JSON.stringify(evd, null, 2));
+    return `${note}
+      <details style="margin-top:6px">
+        <summary class="mono" style="cursor:pointer">顯示完整 evidence JSON</summary>
+        <pre class="mono" style="white-space:pre-wrap;max-height:280px;overflow:auto">${pretty}</pre>
+      </details>`;
+  }catch(e){
+    return String(evd);
+  }
+}
+
+// ✅ 新版 addRow：支援物件 evidence、展開 JSON、避免 [object Object]
 function addRow(rule,pass,evidence,suggestion){
-  const tr=document.createElement('tr'); const badge=pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>';
-  tr.innerHTML=`<td><span class="num">${++_ruleCounter}</span>${rule}</td><td>${badge}</td><td>${evidence||''}</td><td>${suggestion||''}</td>`; tbody.appendChild(tr);
+  const tr=document.createElement('tr');
+  const badge=pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>';
+  const evdHtml = renderEvidence(evidence);
+  tr.innerHTML=`<td><span class="num">${++_ruleCounter}</span>${rule}</td><td>${badge}</td><td>${evdHtml}</td><td>${suggestion||''}</td>`;
+  tbody.appendChild(tr);
+
+  // 以下是原本的規則對應表（原封不動保留）
   const map={
     '頁數 4–10':{rule_id:'file.pages',category:'檔案規格',severity:'critical'},
     '首頁篇名需置中且落在距上緣 2 公分內':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
@@ -1704,9 +1729,18 @@ function addRow(rule,pass,evidence,suggestion){
     '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
     'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
   };
+
   const meta=map[rule]||{rule_id:'misc',category:'其他',severity:'minor'};
-  _rowsBuffer.push({rule_id:meta.rule_id,category:meta.category,severity:meta.severity,pass,evidence:typeof evidence==='string'?{note:evidence}:(evidence||null),suggestion:suggestion||null});
+  _rowsBuffer.push({
+    rule_id:meta.rule_id,
+    category:meta.category,
+    severity:meta.severity,
+    pass,
+    evidence:(typeof evidence==='string'?{note:evidence}:(evidence||null)),
+    suggestion:suggestion||null
+  });
 }
+
 function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
   const weight=x=>x.severity==='critical'?2:(x.severity==='major'?1:0.5);
   const max=passFailRows.reduce((a,x)=>a+weight(x),0)||1; const score=Math.round(passFailRows.reduce((a,x)=>a+(x.pass?weight(x):0),0)/max*100);
