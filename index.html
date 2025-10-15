@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-14e';
+  const APP_VER = '2025-10-15a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1538,12 +1538,88 @@ const unlinkedInText = Math.max(0, citeKeys.length - linked);
 // 反向：文獻在清單裡，但正文沒出現
 const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
 
-addRow(
-  '參考文獻與內文引註一致性',
-  unlinkedInText === 0 && reverseUnlinked <= 1,
-  `引註共 ${citeKeys.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
-  '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。'
-);
+// === 參考文獻與內文引註一致性（擴充：列出未對應清單 + 寫入 JSON） ===
+{
+  // 1) 先照舊計算統計
+  let linked = 0;
+  for (const k of citeKeys) {
+    if (refKeys.includes(k)) linked++;
+  }
+  const unlinkedInText = Math.max(0, citeKeys.length - linked);
+  const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
+
+  // 2) 產生「清單」
+  // 2-1 內文命中的引文裡，哪些沒有對到參考文獻
+  const unmatchedCitations = [];
+  for (const hit of citationHits) {
+    const k = normCiteKey(hit);
+    if (!refKeys.includes(k)) unmatchedCitations.push(hit);
+  }
+  // 去重；保留前 30 筆
+  const uniqUnmatchedCites = Array.from(new Set(unmatchedCitations)).slice(0, 30);
+
+  // 2-2 參考文獻清單裡，哪些沒有出現在內文（同時附上索引）
+  const unreferencedRefs = refEntries
+    .map((text, i) => ({ index: i + 1, text, key: refKeys[i] }))
+    .filter(x => !citeKeys.includes(x.key))
+    .slice(0, 50); // 最多列 50 筆
+
+  // 3) 是否通過（維持你原規則：內文→文獻要 0，文獻→內文允許 <=1）
+  const passConsistency = (unlinkedInText === 0 && reverseUnlinked <= 1);
+
+  // 4) 組出 evidence 物件（寫入 JSON）
+  const evidenceObj = {
+    note: `引註共 ${citeKeys.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
+    stats: {
+      total_citations: citeKeys.length,
+      linked,
+      unmatched_in_text: unlinkedInText,
+      unreferenced_refs: reverseUnlinked
+    },
+    unmatched_citations: uniqUnmatchedCites,   // 會放原始命中的樣式字串，如：（王小明，2021）
+    unreferenced_refs: unreferencedRefs        // 物件：{index, text}
+  };
+
+  // 5) 把 evidence 物件丟給 addRow（JSON 會帶到 #jsonPreview）
+  addRow(
+    '參考文獻與內文引註一致性',
+    passConsistency,
+    evidenceObj,
+    '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。'
+  );
+
+  // 6) 顯示一個「子行」：把未對應清單直覺列給老師/學生看（只在有項目時出現）
+  if (uniqUnmatchedCites.length || unreferencedRefs.length) {
+    const sub = document.createElement('tr');
+    const citeList = uniqUnmatchedCites
+      .slice(0, 10) // 畫面最多顯示 10 筆（完整清單在 JSON）
+      .map(s => `<li class="mono">${_escapeHtml(s)}</li>`).join('') || '<li class="mono">（無）</li>';
+
+    const refList = unreferencedRefs
+      .slice(0, 10)
+      .map(x => `<li class="mono">#${x.index} ${_escapeHtml(x.text)}</li>`).join('') || '<li class="mono">（無）</li>';
+
+    sub.innerHTML = `
+      <td></td>
+      <td colspan="3">
+        <div class="hint"><b>↳ 未對應引文／未被引用文獻</b></div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:6px">
+          <div style="min-width:280px">
+            <div class="hint">內文引文未對應到參考文獻（前 10 筆）：</div>
+            <ol style="margin:6px 0 0 20px">${citeList}</ol>
+          </div>
+          <div style="min-width:280px">
+            <div class="hint">參考文獻疑似未被引用（前 10 筆）：</div>
+            <ol style="margin:6px 0 0 20px">${refList}</ol>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:6px">
+          完整清單已寫入本次檢查 JSON（欄位：<code>unmatched_citations</code>、<code>unreferenced_refs</code>）。
+        </div>
+      </td>`;
+    tbody.appendChild(sub);
+  }
+}
 
   // 來源不可全為網路
   const nonAllWebPass = (A_total > 0) && (webCount < A_total);
