@@ -1,17 +1,143 @@
 {
-  "version": "v1.0",
-  "displayTitle": "高中職小論文格式自檢系統（v1.4 / 2025-10-17）",
-  "limits": {
-    "pages": { "min": 4, "max": 10 },
-    "fileSizeMB": 5,
-    "marginCM": 2.0,
-    "directQuote": { "maxChars": 50, "minCharsToCount": 10 }
+  "meta": {
+    "rules_version": "v1.4",
+    "updated_at": "2025-10-03T00:00:00+08:00",
+    "language": "zh-Hant",
+    "notes": "同步前端 v1.4：參考文獻採完整條目切分（含跨行網址合併），加入四層統計（總數/合格/不合格/網路），非純網路來源判定更精確；直接引文≥10字才列入檢查。"
   },
-  "sectionsOrder": ["前言", "文獻探討", "研究方法", "研究分析與結果", "研究結論與建議", "參考文獻"],
-  "reference": {
-    "minCount": 3,
-    "webMustHaveDateOrRetrieval": true,
-    "forbidAngleBrackets": true,
-    "blogNeedsTag": "［部落格文章］"
-  }
+  "params": {
+    "minPages": 4,
+    "maxPages": 10,
+    "maxSizeMB": 5,
+    "marginCM": 2.0,
+    "headerBandFactor": 1.0,
+    "footerBandFactor": 1.0,
+    "centerWidthPT": 100,
+    "quoteMaxChars": 50,
+    "quoteMinChars": 10
+  },
+  "rules": [
+    {
+      "rule_id": "file.pages",
+      "title": "頁數 4–10",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "小論文需介於 4–10 頁。"
+    },
+    {
+      "rule_id": "header.topmargin_firstpage",
+      "title": "首頁頁首置中且距上緣 ≥ 2 公分",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "首頁上緣 2 公分內需偵測到置中的篇名/標題。"
+    },
+    {
+      "rule_id": "footer.bottommargin_firstpage",
+      "title": "首頁頁碼置中且距下緣 ≥ 2 公分",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "首頁下緣 2 公分內需偵測到置中的頁碼。"
+    },
+    {
+      "rule_id": "filename.title_consistency",
+      "title": "檔案名稱 與 頁首篇名一致性（不符判定淘汰）",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "檔名與頁首偵測到的篇名需一致或高度相似。"
+    },
+    {
+      "rule_id": "footer.pagenum",
+      "title": "每頁需有置中頁碼（底端帶）",
+      "severity": "critical",
+      "check_kind": "auto"
+    },
+    {
+      "rule_id": "layout.margins",
+      "title": "四周邊界 ≥ 2 公分（正文區推估）",
+      "severity": "major",
+      "check_kind": "auto"
+    },
+    {
+      "rule_id": "file.coverpage",
+      "title": "不得有封面頁（4–10頁）",
+      "severity": "critical",
+      "check_kind": "auto"
+    },
+    {
+      "rule_id": "privacy.no_school_or_name",
+      "title": "不得含校名/姓名",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "避免可識別個資；參考文獻區段不計入此檢查。"
+    },
+    {
+      "rule_id": "structure.sections_order",
+      "title": "六大段落依序",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻"
+    },
+    {
+      "rule_id": "references.citation_style",
+      "title": "內文引註採 作者-年份",
+      "severity": "major",
+      "check_kind": "auto"
+    },
+    {
+      "rule_id": "quotes.limit",
+      "title": "直接引文 ≤ 50 字（不含標點與空白；中文引號需 ≥ 10 字才算）",
+      "severity": "major",
+      "check_kind": "auto",
+      "description": "中文「…」少於 10 字（不含標點與空白）不列為直接引文，以避免商品名/短詞被誤判。"
+    },
+    {
+      "rule_id": "references.citation_required",
+      "title": "引用原文需附出處（≤50字）",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "僅針對已列為直接引文（見 quotes.limit）之片段，檢查周邊是否出現作者-年份樣式。"
+    },
+    {
+      "rule_id": "references.count",
+      "title": "參考文獻 ≥ 3（顯示四層統計）",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "自「參考文獻」起切出**完整條目**（標題＋出版資訊＋換行網址會併入上一條；類別小標如「書籍類/期刊論文類/網路相關資源」不列入）。結果同時顯示：檢查總數量、合格數量、不合格數量、網路來源數量；並保留 A.總數／B.含年份／C.含網址/DOI 的舊統計以利對照。"
+    },
+    {
+      "rule_id": "figures.tables",
+      "title": "圖表需有標號/標題與來源",
+      "severity": "major",
+      "check_kind": "auto",
+      "description": "圖或表上方需有「圖/表＋編號＋標題」；下方需標示「資料來源：…」。若表內已有（作者，年代）引註，可不於表下再標。"
+    },
+    {
+      "rule_id": "references.consistency",
+      "title": "參考文獻與內文引註一致性",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "內文所有（作者，年份）需在參考文獻中能對應；未被引用的參考文獻應移除。"
+    },
+    {
+      "rule_id": "references.non_all_web",
+      "title": "參考文獻來源不可全為網路（顯示四層統計）",
+      "severity": "critical",
+      "check_kind": "auto",
+      "description": "期刊/書籍/學位論文/報紙（含電子報）/會議論文/法規/具 DOI 或學術平台（如 ScienceDirect/IEEE Xplore 等）→ 視為非網路，即使帶有網址亦然；YouTube/Facebook/部落格/一般網頁等 → 視為網路。只要不是「全部」為網路，即通過。結果同步顯示：檢查總數量、合格數量、不合格數量、網路來源數量。"
+    },
+    {
+      "rule_id": "style.font",
+      "title": "字體/字型規範（需人工或進階檢查）",
+      "severity": "major",
+      "check_kind": "manual",
+      "description": "建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體。可用進階檢查（Cloud Run API）取得實測字體/頁邊資訊。"
+    },
+    {
+      "rule_id": "external.duplicate_check",
+      "title": "校外發表/得獎檢索確認（人工/GPT 協助）",
+      "severity": "minor",
+      "check_kind": "manual",
+      "description": "請以篇名到 Google Scholar、歷屆競賽作品、臺灣中學生網站等檢索，彙整結果並判斷是否與校外發表/得獎重複或相似。"
+    }
+  ]
 }
