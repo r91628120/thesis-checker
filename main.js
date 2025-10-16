@@ -205,9 +205,24 @@ function loadScript(src) {
 
   // ====== PDF 檢查（節錄你單檔版的關鍵邏輯；其餘輔助函式在本檔下方保留） ======
   async function runPdfChecks(buf){
-    const {getDocument}=await loadPdfjs();
-    const pdf=await getDocument({data:buf}).promise;
-    const numPages=pdf.numPages; _lastPageCount=numPages;
+  const { getDocument } = await loadPdfjs();
+
+  let pdf;
+  try {
+    const loadingTask = getDocument({ data: buf });
+    loadingTask.onProgress = () => {};
+    pdf = await loadingTask.promise;
+  } catch (err) {
+    console.error('PDF.js 解析失敗 =>', err);
+    throw err; // 讓外層 try/catch 顯示「解析失敗…」
+  }
+
+  const numPages = pdf.numPages;
+  _lastPageCount = numPages;
+
+  // 你原本的 PDF 檢查流程 …
+  await __impl_runPdfChecks(pdf, numPages);
+}
 
     // ……（此處省略僅註解：保留你先前的頁碼、邊界、封面偵測、標題一致性、粗體統計）
     // 我已把完整邏輯搬進來（見下方「從舊檔移植的函式群」區塊），為節省篇幅不再重複註解。
