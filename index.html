@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-16a';
+  const APP_VER = '2025-10-15e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1492,32 +1492,37 @@ function normCiteKey(s) {
   return authorPart + '|' + year;
 }
 
-// 參考文獻條目 → 轉成「作者群key|年份key」
-ref) {
+// === 作者-年份對齊鍵：參考文獻（只取「第一作者」＋年份） ===
+function normRefKeyForCite(ref) {
   const s = String(ref || '');
 
-  // 年份優先取中文完整日期；再退 (YYYY)；再退純 4 位數
-  let year = (
-    s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
-    s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
-    s.match(/\b(19|20)\d{2}\b/)
-  )?.[1] || '';
-
+  // 1) 年份：優先取（YYYY年M月D日），再退 (YYYY / n.d.)，最後退裸 4 碼年份
+  let year =
+    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
+     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
+     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
   year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
 
-  // 作者段：取第一個句點/全形句點前
+  // 2) 取「句點（。或．）之前」的作者段；去掉『等／et al.』與連接詞（、/和/and/&）
   const head = s.split(/[。．]/)[0] || '';
-  let authorPart = head
+  const firstAuthorToken = head
+    // 去除「等 / et al.」
     .replace(/等|et al\.?/gi, '')
+    // 把連接符號視為分隔
     .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    .split(/\s+/).filter(Boolean)
-    .map(w => {
-      const c = _canonAuthorName(w);
-      return /^[A-Za-z]+$/.test(c) ? c[0].toLowerCase() : c;
-    })
-    .join('');
+    // 拿掉雜訊（保留中文字與英文字母）
+    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
+    .trim()
+    // 只取「第一個作者」
+    .split(/\s+/)
+    .filter(Boolean)[0] || '';
 
-  return authorPart + '|' + year;
+  // 中文保留全名；英文只取姓氏首字母，避免「Zhang Wei」與「Zhang San」不必要的分歧
+  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
+    ? firstAuthorToken[0].toLowerCase()
+    : firstAuthorToken;
+
+  return authorKey + '|' + year;
 }
 
 const citeKeys = citationHits.map(normCiteKey);
