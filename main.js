@@ -6,11 +6,13 @@
  * - 新增：rules.json 預載入（預留將來規則門檻外部化）
  */
 
-(() => {
+window.addEventListener('DOMContentLoaded', () => {
   "use strict";
+  ...
+});
 
   // ====== 版本與規則設定 ======
-  const APP_VER = 'v1.4 / 2025-10-17';
+  const APP_VER = 'v1.4 / 2025-10-16g';
 
   // 若你想用 querystring 逼 cache-bust，可開啟（目前不強制 redirect）
   // (function () {
