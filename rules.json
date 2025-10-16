@@ -1,0 +1,17 @@
+{
+  "version": "v1.0",
+  "displayTitle": "高中職小論文格式自檢系統（v1.4 / 2025-10-17）",
+  "limits": {
+    "pages": { "min": 4, "max": 10 },
+    "fileSizeMB": 5,
+    "marginCM": 2.0,
+    "directQuote": { "maxChars": 50, "minCharsToCount": 10 }
+  },
+  "sectionsOrder": ["前言", "文獻探討", "研究方法", "研究分析與結果", "研究結論與建議", "參考文獻"],
+  "reference": {
+    "minCount": 3,
+    "webMustHaveDateOrRetrieval": true,
+    "forbidAngleBrackets": true,
+    "blogNeedsTag": "［部落格文章］"
+  }
+}
