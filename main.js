@@ -8,8 +8,11 @@
 
 window.addEventListener('DOMContentLoaded', () => {
   "use strict";
-  ...
-});
+  
+  // 所有初始化邏輯放這裡（你的程式已在這裡）
+  
+});  // ✅ 結尾只要這樣
+
 
   // ====== 版本與規則設定 ======
   const APP_VER = 'v1.4 / 2025-10-16g';
@@ -23,7 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
   //       location.replace(url.toString());
   //     }
   //   } catch (e) {}
-  // })();
+  // });
 
   // ====== PDF.js 動態載入（ESM from CDN） ======
   let _pdfjs_getDocument = null;
