@@ -25,14 +25,50 @@
 
   // ====== PDF.js 動態載入（ESM from CDN） ======
   let _pdfjs_getDocument = null;
-  async function loadPdfjs() {
-    if (_pdfjs_getDocument) return { getDocument: _pdfjs_getDocument };
+
+// 先嘗試 UMD（<script>），如果失敗再 fallback 到 ESM 動態 import
+async function loadPdfjs() {
+  if (_pdfjs_getDocument) return { getDocument: _pdfjs_getDocument };
+
+  // ① UMD 版（最穩，跨網域限制最少）
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js');
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
+      _pdfjs_getDocument = window.pdfjsLib.getDocument;
+      return { getDocument: _pdfjs_getDocument };
+    }
+  } catch (e) {
+    console.warn('[pdf.js] UMD 載入失敗，嘗試 ESM。', e);
+  }
+
+  // ② ESM 版（若環境允許會較精簡）
+  try {
     const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
     const mod = await import(base + "pdf.min.mjs");
-    mod.GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
+    // ESM 一般不需要再手動指定 workerSrc，但若仍錯，可補上以下一行：
+    // mod.GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
     _pdfjs_getDocument = mod.getDocument;
     return { getDocument: _pdfjs_getDocument };
+  } catch (e) {
+    console.error('[pdf.js] ESM 載入也失敗：', e);
+    throw e;
   }
+}
+
+// 動態載入 UMD script
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.onload = () => resolve();
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 
   // ====== 預載入 rules.json（目前先存起來，未強制引用） ======
   window.__RULES_CFG = null;
