@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17d';
+  const APP_VER = '2025-10-17e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1492,61 +1492,30 @@ function normCiteKey(t) {
   return authorKey + '|' + year;
 }
 
-// 參考文獻 → 只取「第一作者」＋「年份」做鍵值；忽略作者段中的非年份括號（如：檢索日期）
+// 參考文獻 → 作者-年份對齊鍵（只取「第一作者」＋年份）；先去掉作者段落中的括號內容
 function normRefKeyForCite(ref) {
   const s = String(ref || '');
 
+  // 1) 取年份：優先（YYYY年M月D日），再退 (YYYY / n.d.)，再退裸 4 碼
   let year =
     (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
      s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
      s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
   year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
 
-  const head = (s.split(/[。．]/)[0] || '');
-  const beforeParen = head.split('（')[0].split('(')[0];
-  const cleaned = beforeParen.replace(/[（(].*?[)）]/g, '');
+  // 2) 取作者段（句點之前），並先把括號內的說明（例：檢索日期…）整段拿掉
+  const head = (s.split(/[。．]/)[0] || '').replace(/[（(].*?[)）]/g, '');
 
-  const firstAuthorToken = cleaned
-    .replace(/等|et al\.?/gi, '')
-    .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)[0] || '';
-
-  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
-    ? firstAuthorToken[0].toLowerCase()
-    : firstAuthorToken;
-
-  return authorKey + '|' + year;
-}
-
-// === 作者-年份對齊鍵：參考文獻（只取「第一作者」＋年份） ===
-function normRefKeyForCite(ref) {
-  const s = String(ref || '');
-
-  // 1) 年份：優先取（YYYY年M月D日），再退 (YYYY / n.d.)，最後退裸 4 碼年份
-  let year =
-    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
-     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
-     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
-  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
-
-  // 2) 取「句點（。或．）之前」的作者段；去掉『等／et al.』與連接詞（、/和/and/&）
-  const head = s.split(/[。．]/)[0] || '';
+  // 3) 只保留第一個作者；去掉「等 / et al.」與連接詞
   const firstAuthorToken = head
-    // 去除「等 / et al.」
     .replace(/等|et al\.?/gi, '')
-    // 把連接符號視為分隔
     .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    // 拿掉雜訊（保留中文字與英文字母）
     .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
     .trim()
-    // 只取「第一個作者」
     .split(/\s+/)
     .filter(Boolean)[0] || '';
 
-  // 中文保留全名；英文只取姓氏首字母，避免「Zhang Wei」與「Zhang San」不必要的分歧
+  // 中文保留全名；英文只取姓氏首字母
   const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
     ? firstAuthorToken[0].toLowerCase()
     : firstAuthorToken;
@@ -1555,39 +1524,6 @@ function normRefKeyForCite(ref) {
 }
 
 const citeKeys = citationHits.map(normCiteKey);
-
-// === 作者-年份對齊鍵：參考文獻（只取「第一作者」＋年份） ===
-function normRefKeyForCite(ref) {
-  const s = String(ref || '');
-
-  // 1) 年份：優先取（YYYY年M月D日），再退 (YYYY / n.d.)，最後退裸 4 碼年份
-  let year =
-    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
-     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
-     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
-  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
-
-  // 2) 取「句點（。或．）之前」的作者段；去掉『等／et al.』與連接詞（、/和/and/&）
-  const head = s.split(/[。．]/)[0] || '';
-  const firstAuthorToken = head
-    // 去除「等 / et al.」
-    .replace(/等|et al\.?/gi, '')
-    // 把連接符號視為分隔
-    .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    // 拿掉雜訊（保留中文字與英文字母）
-    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
-    .trim()
-    // 只取「第一個作者」
-    .split(/\s+/)
-    .filter(Boolean)[0] || '';
-
-  // 中文保留全名；英文只取姓氏首字母，避免「Zhang Wei」與「Zhang San」不必要的分歧
-  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
-    ? firstAuthorToken[0].toLowerCase()
-    : firstAuthorToken;
-
-  return authorKey + '|' + year;
-}
 
 const refKeys = refEntries.map(normRefKeyForCite);
 
