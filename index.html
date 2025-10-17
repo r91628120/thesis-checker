@@ -8,7 +8,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17i';
+  const APP_VER = '2025-10-17j';
   (function () {
     try {
       const url = new URL(location.href);
@@ -197,8 +197,10 @@ startBtn.addEventListener('click',async()=>{
     resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='完成檢查。';
     buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
     if(ENABLE_COUNTER){await bumpCounterEveryTime();await fetchCounter();}
-  }catch(e){console.error(e);statusEl.textContent='解析失敗：${e?.message||'請確認檔案是否有效。'}
-});
+  }catch(e){
+  console.error(e);
+  statusEl.textContent = `解析失敗：${e?.message || '請確認檔案是否有效。'}`;
+}
 
 /* ===== 進階字體檢查 ===== */
 fontCheckBtn.addEventListener('click',async()=>{
@@ -255,6 +257,7 @@ async function runPdfChecks(buf){
   const pdfjsLib = await loadPdfjs();                 // ← 先確保載好 pdf.js 與 worker
   const loadingTask = pdfjsLib.getDocument({ data: buf });
   const pdf = await loadingTask.promise;              // 若這裡 throw，八成是 worker 沒設好
+  const numPages = pdf.numPages;
   _lastPageCount = pdf.numPages;
 
   // ===== PDF 粗體偵測 =====
