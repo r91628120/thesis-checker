@@ -4,10 +4,11 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17h';
+  const APP_VER = '2025-10-17i';
   (function () {
     try {
       const url = new URL(location.href);
@@ -196,7 +197,7 @@ startBtn.addEventListener('click',async()=>{
     resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='完成檢查。';
     buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
     if(ENABLE_COUNTER){await bumpCounterEveryTime();await fetchCounter();}
-  }catch(e){console.error(e);statusEl.textContent='解析失敗：請確認檔案是否有效。'}
+  }catch(e){console.error(e);statusEl.textContent='解析失敗：${e?.message||'請確認檔案是否有效。'}
 });
 
 /* ===== 進階字體檢查 ===== */
@@ -238,10 +239,24 @@ function buildEvidenceString(data){
 }
 
 /* ===== PDF 檢查 ===== */
+async function loadPdfjs(){
+  if (window.pdfjsLib) return window.pdfjsLib;
+  // 版本號可維持你目前用的，下面給的是穩定可用的 4.7.76
+  const mod = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs');
+  const pdfjsLib = mod?.default ?? mod;
+  // 一定要設定 workerSrc，否則 getDocument() 會 throw
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';
+  window.pdfjsLib = pdfjsLib;
+  return pdfjsLib;
+}
+
 async function runPdfChecks(buf){
-  const {getDocument}=await window.loadPdfjs(); const pdf=await getDocument({data:buf}).promise;
-  const numPages=pdf.numPages; _lastPageCount=numPages;
- 
+  const pdfjsLib = await loadPdfjs();                 // ← 先確保載好 pdf.js 與 worker
+  const loadingTask = pdfjsLib.getDocument({ data: buf });
+  const pdf = await loadingTask.promise;              // 若這裡 throw，八成是 worker 沒設好
+  _lastPageCount = pdf.numPages;
+
   // ===== PDF 粗體偵測 =====
   let boldWordCount = 0;
   let boldFonts = new Set();
