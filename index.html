@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17f';
+  const APP_VER = '2025-10-17g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1450,77 +1450,75 @@ for (const re of citePatterns) {
 // 把每個命中的「作者群 + 年份」變成可比對的 key（只留作者字母/中文字 + 年份/n.d./無日期）
 // 內文命中的作者-年份 → 統一成年份 key
 // —— 新增：把常見異體字/雜訊統一（作者名字用）
-function _canonAuthorName(s) {
+// 更強的零寬字 / 雜訊清理
+function _stripZW(s) {
   return String(s || '')
-    // 全形空白 → 半形、移除零寬字元
-    .replace(/\u3000/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '')
-    // 常見異體字統一（可自行擴充）
-    .replace(/臺/g, '台')
-    .replace(/里/g, '裡')   // 若需要也可反向，視你資料習慣
-    // 拿掉非中文字母（保留英文姓首字母），以及殘留標點
-    .replace(/[^\u4E00-\u9FFF A-Za-z]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // 零寬字
+    .replace(/\u00A0/g, ' ')               // 不換行空白 → 一般空白
     .trim();
 }
 
-// === 作者-年份對齊鍵：內文引註（只取「第一作者」＋年份） ===
-function normCiteKey(t) {
-  const s = String(t || '');
+// 作者正規化：清除標點、把全形空白/點號去掉，僅保留中英數
+function _canonAuthorName(raw) {
+  if (!raw) return '';
+  let s = _stripZW(raw);
 
-  // 1) 年份：先抓（YYYY年M月D日），再退 (YYYY / n.d.)，再退裸 4 碼
-  let year =
-    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
-     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
-     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
-  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
+  // 常見全形括號/點號改成空白，避免被當作作者字的一部分
+  s = s.replace(/[《》〈〉「」『』【】\[\]（）()，、．。・・‧•·]/g, ' ');
 
-  // 2) 只取「第一作者」
-  const head = s.split(/[。．]/)[0] || '';
-  const firstAuthorToken = head
-    .replace(/等|et al\.?/gi, '')                       // 去掉「等/et al.」
-    .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')         // 連接詞視為分隔
-    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')           // 雜訊
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)[0] || '';
-
-  // 中文保留全名；英文只取姓氏首字母
-  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
-    ? firstAuthorToken[0].toLowerCase()
-    : firstAuthorToken;
-
-  return authorKey + '|' + year;
+  // 只保留：漢字、字母、數字（合併多重空白）
+  s = s.replace(/[^\p{sc=Han}\p{Alphabetic}\p{Number}]+/gu, ' ')
+       .replace(/\s+/g, ' ')
+       .trim()
+       .toLowerCase();
+  return s;
 }
 
-// 參考文獻 → 作者-年份對齊鍵（只取「第一作者」＋年份）；先去掉作者段落中的括號內容
-function normRefKeyForCite(ref) {
-  const s = String(ref || '');
+// 生成「引註」的比對 key：作者(第一個) + 年份(四位)
+function normCiteKey(text) {
+  const s = _stripZW(text);
 
-  // 1) 取年份：優先（YYYY年M月D日），再退 (YYYY / n.d.)，再退裸 4 碼
-  let year =
-    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
-     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
-     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
-  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
+  // 取（作者，年份）內文
+  const m = s.match(/（([^，,]+)[，,]\s*([12]\d{3})\s*）/); // 抓第一個作者 & 4位年
+  if (!m) return null;
 
-  // 2) 取作者段（句點之前），並先把括號內的說明（例：檢索日期…）整段拿掉
-  const head = (s.split(/[。．]/)[0] || '').replace(/[（(].*?[)）]/g, '');
+  const authorRaw = m[1];
+  const year = m[2];
 
-  // 3) 只保留第一個作者；去掉「等 / et al.」與連接詞
-  const firstAuthorToken = head
-    .replace(/等|et al\.?/gi, '')
-    .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
-    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)[0] || '';
+  const author = _canonAuthorName(authorRaw);
+  if (!author || !year) return null;
 
-  // 中文保留全名；英文只取姓氏首字母
-  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
-    ? firstAuthorToken[0].toLowerCase()
-    : firstAuthorToken;
+  // 英文作者取首字母；中文機關/中文名取全名
+  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author;
+  return `${authorKey}#${year}`;
+}
 
-  return authorKey + '|' + year;
+// 生成「參考文獻項目」的比對 key：第一作者(或機構) + 年份(四位)
+function normRefKeyForCite(refLine) {
+  const s = _stripZW(refLine);
+
+  // 取第一個作者/機構（句首到第一個括號前）
+  const mAuthor = s.match(/^([^（(]+?)\s*（/);
+  if (!mAuthor) return null;
+  const authorRaw = mAuthor[1];
+
+  // 取括號內年份（允許有年/月/日）
+  const mYear = s.match(/（\s*(無日期|n\.?d\.?|([12]\d{3})(?:年\d{1,2}月\d{1,2}日)?)\s*）/i);
+  let year = '';
+  if (mYear) {
+    if (/無日期|n\.?d\.?/i.test(mYear[1])) year = 'nd';
+    else year = (mYear[2] || '').slice(0, 4);
+  }
+  if (!year) {
+    // 後備：抓四位數年
+    const y2 = s.match(/([12]\d{3})/);
+    year = y2 ? y2[1] : '';
+  }
+  if (!year) return null;
+
+  const author = _canonAuthorName(authorRaw);
+  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author;
+  return `${authorKey}#${year}`;
 }
 
 const citeKeys = citationHits.map(normCiteKey);
