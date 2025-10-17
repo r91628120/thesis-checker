@@ -4,11 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>高中職小論文格式自檢系統</title>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17j';
+  const APP_VER = '2025-10-17g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -197,10 +196,8 @@ startBtn.addEventListener('click',async()=>{
     resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='完成檢查。';
     buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
     if(ENABLE_COUNTER){await bumpCounterEveryTime();await fetchCounter();}
-  }catch(e){
-  console.error(e);
-  statusEl.textContent = `解析失敗：${e?.message || '請確認檔案是否有效。'}`;
-}
+  }catch(e){console.error(e);statusEl.textContent='解析失敗：請確認檔案是否有效。'}
+});
 
 /* ===== 進階字體檢查 ===== */
 fontCheckBtn.addEventListener('click',async()=>{
@@ -241,25 +238,10 @@ function buildEvidenceString(data){
 }
 
 /* ===== PDF 檢查 ===== */
-async function loadPdfjs(){
-  if (window.pdfjsLib) return window.pdfjsLib;
-  // 版本號可維持你目前用的，下面給的是穩定可用的 4.7.76
-  const mod = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs');
-  const pdfjsLib = mod?.default ?? mod;
-  // 一定要設定 workerSrc，否則 getDocument() 會 throw
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';
-  window.pdfjsLib = pdfjsLib;
-  return pdfjsLib;
-}
-
 async function runPdfChecks(buf){
-  const pdfjsLib = await loadPdfjs();                 // ← 先確保載好 pdf.js 與 worker
-  const loadingTask = pdfjsLib.getDocument({ data: buf });
-  const pdf = await loadingTask.promise;              // 若這裡 throw，八成是 worker 沒設好
-  const numPages = pdf.numPages;
-  _lastPageCount = pdf.numPages;
-
+  const {getDocument}=await window.loadPdfjs(); const pdf=await getDocument({data:buf}).promise;
+  const numPages=pdf.numPages; _lastPageCount=numPages;
+ 
   // ===== PDF 粗體偵測 =====
   let boldWordCount = 0;
   let boldFonts = new Set();
@@ -1492,18 +1474,6 @@ function _canonAuthorName(raw) {
   return s;
 }
 
-// 只取第一作者；會去掉「等 / et al.」並以 、、和、,&、, 等做切分
-function _firstAuthor(raw){
-  if (!raw) return '';
-  let s = String(raw)
-    .replace(/\bet\s*al\.?/i, '')   // 英文 et al.
-    .replace(/等$/, '');            // 中文 等（在尾端）
-  // 以常見分隔符切開，取第一段
-  s = s.split(/、|和|,|&/)[0] || s;
-  return s.trim();
-}
-
-
 // 生成「引註」的比對 key：作者(第一個) + 年份(四位)
 function normCiteKey(text) {
   const s = _stripZW(text);
@@ -1524,20 +1494,30 @@ function normCiteKey(text) {
 }
 
 // 生成「參考文獻項目」的比對 key：第一作者(或機構) + 年份(四位)
-function normCiteKey(text) {
-  const s = _stripZW(text);
-  // 抓「（作者，年份）」這種
-  const m = s.match(/（([^，,]+)[，,]\s*([12]\d{3}|n\.?d\.?|無日期)\s*）/i);
-  if (!m) return null;
+function normRefKeyForCite(refLine) {
+  const s = _stripZW(refLine);
 
-  const authorRaw = _firstAuthor(m[1]);           // ← 只取第一作者、去掉「等/et al.」
-  let year = m[2];
-  if (/n\.?d\.?|無日期/i.test(year)) year = 'nd'; // 無日期統一成 nd
+  // 取第一個作者/機構（句首到第一個括號前）
+  const mAuthor = s.match(/^([^（(]+?)\s*（/);
+  if (!mAuthor) return null;
+  const authorRaw = mAuthor[1];
+
+  // 取括號內年份（允許有年/月/日）
+  const mYear = s.match(/（\s*(無日期|n\.?d\.?|([12]\d{3})(?:年\d{1,2}月\d{1,2}日)?)\s*）/i);
+  let year = '';
+  if (mYear) {
+    if (/無日期|n\.?d\.?/i.test(mYear[1])) year = 'nd';
+    else year = (mYear[2] || '').slice(0, 4);
+  }
+  if (!year) {
+    // 後備：抓四位數年
+    const y2 = s.match(/([12]\d{3})/);
+    year = y2 ? y2[1] : '';
+  }
+  if (!year) return null;
 
   const author = _canonAuthorName(authorRaw);
-  if (!author || !year) return null;
-
-  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author; // 英文取首字母、中文取全名
+  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author;
   return `${authorKey}#${year}`;
 }
 
