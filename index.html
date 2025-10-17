@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-16g';
+  const APP_VER = '2025-10-17a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1476,7 +1476,7 @@ function normCiteKey(s) {
   }
   year = /^(無日期|n\.?d\.?)$/i.test(year) ? 'nd' : String(year || '').toLowerCase();
 
-  // 2) 作者群規一：拿掉「等/et al.」、把 and/&/、/和 視為分隔，英文只取姓氏首字母
+  // 2) 作者群規一：拿掉「等/et al.」，把 and/&/、/和 視為分隔；英文取姓氏首字母
   let authorPart = t.split(/[,，]|\s+\d{4}|\s+n\.?d\.?|\s*無日期/i)[0] || '';
   authorPart = authorPart
     .replace(/等|et al\.?/gi, '')
@@ -1484,12 +1484,43 @@ function normCiteKey(s) {
     .split(/\s+/).filter(Boolean)
     .map(w => {
       const c = _canonAuthorName(w);
-      // 英文姓取首字母；中文全留
       return /^[A-Za-z]+$/.test(c) ? c[0].toLowerCase() : c;
     })
     .join('');
 
   return authorPart + '|' + year;
+}
+
+// 參考文獻 → 只取「第一作者」＋「年份」做鍵值；忽略作者段中的非年份括號（如：檢索日期）
+function normRefKeyForCite(ref) {
+  const s = String(ref || '');
+
+  // 1) 年份：優先取（YYYY年M月D日），或 (YYYY / n.d.)，最後退裸 4 碼
+  let year =
+    (s.match(/（\s*(\d{4})\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?\s*）/) ||
+     s.match(/\(\s*((?:19|20)\d{2}|n\.?d\.)\s*\)/i) ||
+     s.match(/\b(19|20)\d{2}\b/))?.[1] || '';
+  year = /^(n\.?d\.?)$/i.test(year) ? 'nd' : String(year).toLowerCase();
+
+  // 2) 作者段：只拿「第一句號前」→ 再「第一個括號前」→ 移除殘餘的括號內容
+  const head = (s.split(/[。．]/)[0] || '');
+  const beforeParen = head.split('（')[0].split('(')[0]; // ← 關鍵：擋下「（檢索日期…）」之類
+  const cleaned = beforeParen.replace(/[（(].*?[)）]/g, ''); // 仍然保險刪掉殘留的括號片段
+
+  // 3) 去掉雜訊、僅取第一作者；中文保留全名，英文取姓氏首字母
+  const firstAuthorToken = cleaned
+    .replace(/等|et al\.?/gi, '')
+    .replace(/\s+and\s+|\s*&\s*|、|和|與/g, ' ')
+    .replace(/[^\u4e00-\u9fffA-Za-z\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)[0] || '';
+
+  const authorKey = /^[A-Za-z]+$/.test(firstAuthorToken)
+    ? firstAuthorToken[0].toLowerCase()
+    : firstAuthorToken;
+
+  return authorKey + '|' + year;
 }
 
 // === 作者-年份對齊鍵：參考文獻（只取「第一作者」＋年份） ===
