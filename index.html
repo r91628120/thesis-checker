@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17g';
+  const APP_VER = '2025-10-17h';
   (function () {
     try {
       const url = new URL(location.href);
@@ -59,7 +59,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <h1>高中職小論文格式自檢系統</h1>
     <p>支援 PDF / DOCX；解析僅在瀏覽器記憶體中，完成即釋放，不留存。</p>
     <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
-    <div class="hint" style="margin-top:8px">© 2025 CTVS Library · r91628120@ctvs.ptc.edu.tw</div>
+    <div class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</div>
   </header>
 
   <section class="card">
@@ -1624,7 +1624,18 @@ const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
     `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}`,
     `（檢查總數量：${A_total}｜合格：${qualifiedCount}｜不合格：${unqualifiedCount}）`
   ].join('｜');
-  addRow('參考文獻來源不可全為網路', nonAllWebPass, evidence16, '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。');
+  addRow(
+  '參考文獻來源不可全為網路',
+   nonAllWebPass,
+   evidence16,
+   nonAllWebPass
+    ? '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。'
+    : `至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。
+       <div class="hint" style="margin-top:4px;">
+         💡 <b>說明：</b>請至少包含 1 筆書籍、期刊、學位論文、報紙或法規等非網路來源。
+         若全為網站、新聞或部落格等網路資源，將不符合比賽規定。
+       </div>`
+);
 
   // 字體 mirror
   syncBasicFontRuleMirror();
