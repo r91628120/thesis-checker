@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17i';
+  const APP_VER = '2025-10-17j';
   (function () {
     try {
       const url = new URL(location.href);
@@ -223,17 +223,44 @@ fontCheckBtn.addEventListener('click',async()=>{
     }
   }catch(e){console.error(e);statusEl.textContent='Cloud Run 檢查失敗。'}
 });
-async function fetchCloudRun(fileBlob,nameForServer){
-  const formData=new FormData(); formData.append("file",fileBlob,nameForServer||"upload.pdf");
-  try{
-    const res=await fetch(CLOUD_RUN_ENDPOINT,{method:"POST",body:formData,headers:{"Cache-Control":"no-cache"}});
-    if(!res.ok){const t=await res.text().catch(()=> "");throw new Error(`API ${res.status} ${res.statusText} ${t}`)}
+async function fetchCloudRun(fileBlob, nameForServer) {
+  const formData = new FormData();
+  formData.append("file", fileBlob, nameForServer || "upload.pdf");
+
+  // 加入破壞快取參數，避免命中舊的預檢/錯誤回應
+  const url = CLOUD_RUN_ENDPOINT + "?v=" + Date.now();
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      mode: "cors",        // 明確指定 CORS
+      cache: "no-store",   // 禁止使用/寫入快取
+      body: formData
+      // 👇 使用 FormData 時，瀏覽器會自動帶正確的 Content-Type（含 boundary），不要手動設定
+      // headers: { "Cache-Control": "no-cache" }  // ←不需要了
+    });
+
+    if (!res.ok) {
+      // 讀文字有助於你在畫面上看到 Cloud Run 返回的具體錯誤
+      const t = await res.text().catch(() => "");
+      throw new Error(`API ${res.status} ${res.statusText} ${t}`);
+    }
+
     return await res.json();
-  }catch(err){
-    console.error("Cloud Run 失敗：",err);
-    addRow('Cloud Run 字體字型檢查',false,'CORS/快取問題：請確認 OPTIONS 與 Access-Control-Allow-Origin 設定。','請檢查 Cloud Run CORS 與公開存取設定。');return null;
+
+  } catch (err) {
+    console.error("Cloud Run 失敗：", err);
+    // 在結果表裡加一列提示（保留你原本的訊息）
+    addRow(
+      "Cloud Run 字體字型檢查",
+      false,
+      "CORS/快取問題：請確認 OPTIONS 與 Access-Control-Allow-Origin 設定。",
+      "請檢查 Cloud Run CORS 與公開存取設定。"
+    );
+    return null;
   }
 }
+
 function normalizeApiResult(data){const pass=typeof data.pass==='boolean'?data.pass:(data.summary?.pass??data.ok??false);const suggestion=data.suggestion||data.summary?.suggestion||'';return {pass,suggestion}}
 function buildEvidenceString(data){
   try{const parts=[]; if(data.summary?.pages)parts.push(`頁數：${data.summary.pages}`);
