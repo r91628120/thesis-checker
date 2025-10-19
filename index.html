@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-19f';
+  const APP_VER = '2025-10-19g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -134,13 +134,14 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 
 <script>
 /* ===== 設定 ===== */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz1Dja3ZZHMVPvaRTdCJpwkS0kc84f3yZhOUJYnURX6OR0jawy4qmMZR1ONJg6OpuD1/exec";
+// 這裡一定要貼「部署 > 管理部署 > 網頁應用程式 > 網址」那個 /exec
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzq7gSGVD8LgxuAmCVLCRIreKewW1xN9x91A1jR9eNBR3MpI1w5mZB8x2UtZrI_X5EI/exec";
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
-// ⬇️ 新增：頁面一載入就先抓目前人次
-if (ENABLE_COUNTER) fetchCounter();
+// ⚠️ 先不要在這裡呼叫 fetchCounter()，改到 DOM 解析完成後再叫（見下）
+</script>
 
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
@@ -148,6 +149,21 @@ const startBtn=document.getElementById('start'),clearBtn=document.getElementById
 const statusEl=document.getElementById('status'),resultCard=document.getElementById('resultCard'),tbody=document.getElementById('tbody');
 const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.getElementById('copyJson'),downloadJsonBtn=document.getElementById('downloadJson');
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
+
+// ✅ 等 DOM 解析完成再抓人次；不阻塞 UI
+(function initCounter() {
+  if (!ENABLE_COUNTER) return;
+
+  // 盡量等瀏覽器空檔做（更不影響使用者點選檔案）
+  const run = () => fetchCounter().catch(() => {});
+  if (window.requestIdleCallback) {
+    requestIdleCallback(run, { timeout: 1500 });
+  } else {
+    setTimeout(run, 0);
+  }
+})();
+
+// 「同意上傳政策」勾選後你原本也會再叫 fetchCounter() —— 保留即可
 
 /* ===== 狀態 ===== */
 let arrayBuffer=null, fileName=null, fileBase=null, fileExt=null, lastSummaryJSON=null, _lastPageCount=0;
