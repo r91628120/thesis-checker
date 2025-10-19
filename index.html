@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17k';
+  const APP_VER = '2025-10-19a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -250,14 +250,18 @@ async function fetchCloudRun(fileBlob, nameForServer) {
 
   } catch (err) {
     console.error("Cloud Run 失敗：", err);
-    // 在結果表裡加一列提示（保留你原本的訊息）
+
+    const more =
+      (err && err.message ? String(err.message).slice(0, 400) : '') ||
+      '（無其他錯誤訊息）';
+
     addRow(
       "Cloud Run 字體字型檢查",
       false,
-      "CORS/快取問題：請確認 OPTIONS 與 Access-Control-Allow-Origin 設定。",
+      `CORS/快取問題：請確認 OPTIONS 與 Access-Control-Allow-Origin 設定。｜details: ${more}`,
       "請檢查 Cloud Run CORS 與公開存取設定。"
-    );
-    return null;
+  );
+  return null;
   }
 }
 
