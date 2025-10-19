@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-17h';
+  const APP_VER = '2025-10-17i';
   (function () {
     try {
       const url = new URL(location.href);
@@ -108,6 +108,13 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <li>字體/字型規範（可用進階檢查）。</li>
       <li>校外發表/得獎：外部檢索助手 + GPT 提示。</li>
     </ol>
+    <ul class="hint" style="margin-top:8px">
+      <li><b>情境加值檢查（結果頁可能出現）：</b></li>
+      <li>・粗體樣式檢查（PDF/DOCX）— 協助你確認書名、期刊名、卷期等是否有使用粗體。</li>
+      <li>・頁數 4–10（DOCX）— 若上傳 DOCX，因無法準確估頁，會顯示替代提示（建議匯出 PDF 再檢查）。</li>
+      <li>・Cloud Run 字體字型檢查（進階）— 你按下「字體字型進階檢查」時才會新增一列並同步至「字體/字型規範」。</li>
+    </ul>
+
     <p class="hint">※ 本系統為輔助工具，仍需老師覆核。</p>
   </section>
 
