@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-19b';
+  const APP_VER = '2025-10-19c';
   (function () {
     try {
       const url = new URL(location.href);
@@ -207,61 +207,82 @@ startBtn.addEventListener('click',async()=>{
 });
 
 /* ===== 進階字體檢查 ===== */
-fontCheckBtn.addEventListener('click',async()=>{
-  if(!arrayBuffer||fileExt!=='pdf'){alert('請先選擇 PDF 檔。');return;}
-  try{
-    statusEl.textContent='上傳至 Cloud Run 進行字體檢查…';
-    const pdfBlob=new Blob([arrayBuffer],{type:"application/pdf"});
-    const data=await fetchCloudRun(pdfBlob,fileName||'upload.pdf');
-    if(data){
-      const {pass,suggestion}=normalizeApiResult(data); const ev=buildEvidenceString(data);
-      _fontCheckMirror={pass:Boolean(pass),evidence:ev,suggestion:suggestion||''};
-      addRow('Cloud Run 字體字型檢查',!!pass,ev,suggestion||'請依規範修正字體。');
-      syncBasicFontRuleMirror();
-      buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
-      resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='Cloud Run 檢查完成。';
-    }
-  }catch(e){console.error(e);statusEl.textContent='Cloud Run 檢查失敗。'}
-});
-async function fetchCloudRun(fileBlob, nameForServer) {
-  const formData = new FormData();
-  formData.append("file", fileBlob, nameForServer || "upload.pdf");
+fontCheckBtn.addEventListener('click', async () => {
+  // 1) 優先用 <input type=file> 的 File 物件（最可靠）
+  const picked = document.querySelector('#file')?.files?.[0];
 
-  // 加入破壞快取參數，避免命中舊的預檢/錯誤回應
+  // 2) 退而求其次：用記憶體中的 arrayBuffer 轉 Blob
+  const fallbackBlob = arrayBuffer
+    ? new Blob([arrayBuffer], { type: "application/pdf" })
+    : null;
+
+  // 3) 取得要送出的檔案與檔名
+  const fileForUpload = picked || fallbackBlob;
+  const nameForServer = picked?.name || fileName || "upload.pdf";
+
+  if (!fileForUpload || fileExt !== 'pdf') {
+    alert('請先選擇一個 PDF 檔再進行字體檢查。');
+    return;
+  }
+
+  // 小小除錯：在 Console 看看實際送出的大小
+  console.log('[CloudRun] going to upload:',
+              fileForUpload, 'size =', fileForUpload.size);
+
+  try {
+    statusEl.textContent = '上傳至 Cloud Run 進行字體檢查…';
+    const data = await fetchCloudRun(fileForUpload, nameForServer);
+    if (data) {
+      const { pass, suggestion } = normalizeApiResult(data);
+      const ev = buildEvidenceString(data);
+      _fontCheckMirror = { pass: Boolean(pass), evidence: ev, suggestion: suggestion || '' };
+      addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
+      syncBasicFontRuleMirror();
+      buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
+      resultCard.style.display = 'block';
+      fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
+      statusEl.textContent = 'Cloud Run 檢查完成。';
+    }
+  } catch (e) {
+    console.error(e);
+    statusEl.textContent = 'Cloud Run 檢查失敗。';
+  }
+});
+
+async function fetchCloudRun(fileOrBlob, nameForServer) {
+  const formData = new FormData();
+  // 用欄位名 "file"（後端已支援），並保留原始檔名
+  formData.append("file", fileOrBlob, nameForServer || "upload.pdf");
+
+  // 破壞快取，避免命中舊的預檢/錯誤回應
   const url = CLOUD_RUN_ENDPOINT + "?v=" + Date.now();
 
   try {
     const res = await fetch(url, {
       method: "POST",
-      mode: "cors",        // 明確指定 CORS
-      cache: "no-store",   // 禁止使用/寫入快取
-      body: formData
-      // 👇 使用 FormData 時，瀏覽器會自動帶正確的 Content-Type（含 boundary），不要手動設定
-      // headers: { "Cache-Control": "no-cache" }  // ←不需要了
+      mode: "cors",
+      cache: "no-store",
+      body: formData,
+      // 注意：使用 FormData 時不要自己設 Content-Type，瀏覽器會帶 boundary
     });
 
     if (!res.ok) {
-      // 讀文字有助於你在畫面上看到 Cloud Run 返回的具體錯誤
       const t = await res.text().catch(() => "");
       throw new Error(`API ${res.status} ${res.statusText} ${t}`);
     }
-
     return await res.json();
 
   } catch (err) {
     console.error("Cloud Run 失敗：", err);
 
-    const more =
-      (err && err.message ? String(err.message).slice(0, 400) : '') ||
-      '（無其他錯誤訊息）';
-
+    const msg = (err && err.message ? String(err.message).slice(0, 400) : '');
     addRow(
       "Cloud Run 字體字型檢查",
       false,
-      `CORS/快取問題：請確認 OPTIONS 與 Access-Control-Allow-Origin 設定。｜details: ${more}`,
-      "請檢查 Cloud Run CORS 與公開存取設定。"
-  );
-  return null;
+      `CORS/快取或資料問題：details: ${msg || '（無更多訊息）'}`,
+      "請檢查 Cloud Run 是否允許匿名、已開 CORS，且前端確實送出檔案。"
+    );
+    return null;
   }
 }
 
