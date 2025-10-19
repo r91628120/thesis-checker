@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-19d';
+  const APP_VER = '2025-10-19e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -138,6 +138,9 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeFYEExTAvXu2L
 const ENABLE_COUNTER = true;
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
+
+// ⬇️ 新增：頁面一載入就先抓目前人次
+if (ENABLE_COUNTER) fetchCounter();
 
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
@@ -1845,21 +1848,22 @@ downloadHtmlBtn.addEventListener('click',()=>{
 copyBtn.addEventListener('click',async()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON,null,2));alert('已複製檢查摘要 JSON，前往 AI助手 後直接貼上即可。')});
 downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}const blob=new Blob([JSON.stringify(lastSummaryJSON,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download((lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json');a.click();URL.revokeObjectURL(a.href);});
 
-/* ===== GAS 計數 ===== */
 /* ===== GAS 計數（GET 版） ===== */
 async function bumpCounterEveryTime(){
+  if (!ENABLE_COUNTER) return;
   try{
-    const res = await fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Cache-Control':'no-cache'},
-      body: JSON.stringify({ action: 'increment' })
-    });
+    // 改用 GET：避免預檢（OPTIONS）
+    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') +
+                'action=increment&ts=' + Date.now();
+    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
     console.log('counter increment', res.status);
-  }catch(e){ console.warn('counter increment failed', e); }
+  }catch(e){
+    console.warn('counter increment failed', e);
+  }
 }
 
-
 async function fetchCounter(){
+  if (!ENABLE_COUNTER) return;
   try{
     const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') +
                 'action=get&site=essayguard&ts=' + Date.now();
