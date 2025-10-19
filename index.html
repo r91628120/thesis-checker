@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-19g';
+  const APP_VER = '2025-10-19h';
   (function () {
     try {
       const url = new URL(location.href);
@@ -142,7 +142,7 @@ const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
 // ⚠️ 先不要在這裡呼叫 fetchCounter()，改到 DOM 解析完成後再叫（見下）
 </script>
-
+<script>
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
 const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
