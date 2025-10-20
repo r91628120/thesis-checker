@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20f';
+  const APP_VER = '2025-10-20g';
   (function () {
     try {
       const url = new URL(location.href);
@@ -40,6 +40,25 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 .filetag{font-size:13px;color:#374151;margin:6px 0 0}.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
 .extsearch{background:#f9fafb;border:1px dashed #e5e7eb;border-radius:10px;padding:10px;margin-top:6px}.extsearch ul{margin:6px 0 0 18px;padding:0}.extsearch li{margin:4px 0}
 </style>
+
+/* 單獨 GPT 檢查按鈕（淡粉紅） */
+.btn-gpt{
+  background:#f8c8dc;       /* 淡粉紅 */
+  color:#333;
+  border:1px solid #f5a6c4;
+  border-radius:10px;
+  padding:.7rem 1.1rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s;
+}
+.btn-gpt:hover{ background:#f5a6c4; }
+.btn-gpt:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* 右側的小三角解說 */
+.gpt-inline-desc{ display:inline-block; margin-left:8px; font-size:13px; }
+.gpt-inline-desc summary{ cursor:pointer; color:#c2185b; font-weight:600; }
+.gpt-inline-desc ul{ margin:6px 0 0 20px; color:#555; }
 
 <!-- pdf.js (ESM) -->
 <script type="module">
@@ -97,6 +116,16 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <button id="start" class="primary" disabled>開始檢查</button>
       <button id="clear" disabled>清除</button>
       <button id="fontCheckBtn" disabled>字體字型進階檢查</button>
+      <button id="gptCheckBtn" class="btn-gpt" disabled>單獨 GPT 檢查 PDF 檔案</button>
+      <details class="gpt-inline-desc">
+        <summary>了解此功能</summary>
+        <ul>
+          <li>由 GPT 直接解析 PDF（不走前端解析），快速產出「含頁碼」的錯誤清單。</li>
+          <li>可檢查：格式、錯字、文獻與圖表來源；報告支援頁碼標註。</li>
+          <li>為保隱私，檢查完成後將自動刪除暫存檔，不會永久保存。</li>
+        </ul>
+      </details>
+
       <span id="status" class="hint" role="status" aria-live="polite"></span>
     </div>
   </section>
@@ -157,7 +186,11 @@ const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 <script>
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
-const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
+const startBtn=document.getElementById('start'),
+      clearBtn=document.getElementById('clear'),
+      fontCheckBtn=document.getElementById('fontCheckBtn'),
+      gptCheckBtn=document.getElementById('gptCheckBtn');
+
 const statusEl=document.getElementById('status'),resultCard=document.getElementById('resultCard'),tbody=document.getElementById('tbody');
 const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.getElementById('copyJson'),downloadJsonBtn=document.getElementById('downloadJson');
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
@@ -208,8 +241,17 @@ const MARGIN_PT = CM_TO_PT(RULES.marginCM);
 
 
 /* ===== 可用性 ===== */
-function setUploadEnabled(ok){fileInput.disabled=!ok;const has=!!arrayBuffer;startBtn.disabled=!ok||!has;clearBtn.disabled=!ok||!has;fontCheckBtn.disabled=!ok||!has||fileExt!=='pdf'}
-consent.addEventListener('change',()=>{setUploadEnabled(consent.checked);
+function setUploadEnabled(ok){
+  fileInput.disabled=!ok;
+  const has=!!arrayBuffer;
+  startBtn.disabled = !ok || !has;
+  clearBtn.disabled = !ok || !has;
+  fontCheckBtn.disabled = !ok || !has || fileExt!=='pdf';
+  if (window.gptCheckBtn) {
+    gptCheckBtn.disabled = !ok || !has || fileExt!=='pdf';
+  }
+}
+
 // 再去抓人次（避免初始化鎖死 fileInput）
 if (ENABLE_COUNTER) fetchCounter();
 statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
@@ -228,7 +270,10 @@ async function handleFile(f){
   fileName=f.name;fileBase=baseName(f.name);fileExt=ext;arrayBuffer=await f.arrayBuffer();
   statusEl.textContent=`已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;setUploadEnabled(consent.checked);
 }
-clearBtn.addEventListener('click',()=>{fileInput.value='';arrayBuffer=null;fileName=fileBase=fileExt=null;startBtn.disabled=clearBtn.disabled=fontCheckBtn.disabled=true;resultCard.style.display='none';tbody.innerHTML='';fileTagEl.textContent='';statusEl.textContent='已清除。';jsonPreview.textContent='';lastSummaryJSON=null;_rowsBuffer.length=0;_fontCheckMirror=null;});
+clearBtn.addEventListener('click',()=>{fileInput.value='';arrayBuffer=null;fileName=fileBase=fileExt=null;startBtn.disabled = true;
+clearBtn.disabled = true;
+fontCheckBtn.disabled = true;
+if (window.gptCheckBtn) gptCheckBtn.disabled = true;resultCard.style.display='none';tbody.innerHTML='';fileTagEl.textContent='';statusEl.textContent='已清除。';jsonPreview.textContent='';lastSummaryJSON=null;_rowsBuffer.length=0;_fontCheckMirror=null;});
 
 /* ===== 主流程 ===== */
 startBtn.addEventListener('click',async()=>{
@@ -259,6 +304,18 @@ fontCheckBtn.addEventListener('click', async () => {
     alert('請先選擇一個 PDF 檔再進行字體檢查。');
     return;
   }
+
+/* ===== 單獨 GPT 檢查（導向外部/獨立頁） ===== */
+gptCheckBtn?.addEventListener('click', ()=>{
+  // 預設導向一個你之後會放的頁面（可改成你的實際路由）
+  // 例：後端有自己的 UI：/gpt/pdf-check-ui   或  靜態頁：gpt-check.html
+  const target = 'gpt-check.html';
+  window.open(target, '_blank', 'noopener');
+
+  // 若你未來要把目前已選的檔名帶過去，也可在 querystring 帶 name 方便顯示：
+  // window.open(target + '?name=' + encodeURIComponent(fileName || ''), '_blank', 'noopener');
+});
+
 
   // 小小除錯：在 Console 看看實際送出的大小
   console.log('[CloudRun] going to upload:',
