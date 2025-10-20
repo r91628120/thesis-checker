@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20d';
+  const APP_VER = '2025-10-20e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -166,13 +166,17 @@ const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.get
 (function initCounter() {
   if (!ENABLE_COUNTER) return;
 
-  // 盡量等瀏覽器空檔做（更不影響使用者點選檔案）
-  const run = () => fetchCounter().catch(() => {});
-  if (window.requestIdleCallback) {
-    requestIdleCallback(run, { timeout: 1500 });
-  } else {
-    setTimeout(run, 0);
-  }
+  // 延遲 0.5 秒執行以避免阻塞
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(async () => {
+      try {
+        await fetchCounter();
+      } catch (err) {
+        console.error('讀取人次失敗', err);
+        if (counterEl) counterEl.textContent = '—';
+      }
+    }, 500);
+  });
 })();
 
 // 「同意上傳政策」勾選後你原本也會再叫 fetchCounter() —— 保留即可
@@ -1890,20 +1894,16 @@ async function bumpCounterEveryTime(){
   }
 }
 
-async function fetchCounter(){
+async function fetchCounter() {
   if (!ENABLE_COUNTER) return;
-  try{
-    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?')?'&':'?') +
-                'action=get&site=essayguard&ts=' + Date.now();
-    const res = await fetch(url, { headers:{ 'Accept':'application/json','Cache-Control':'no-cache' }});
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    console.log('counter get ok', data);
-    if (counterEl) counterEl.textContent =
-      (typeof data.count === 'number') ? data.count.toLocaleString() : '0';
-  }catch(e){
+  try {
+    const url = GAS_WEB_APP_URL + '?action=get&site=essayguard&ts=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    counterEl.textContent = data.count ?? '0';
+  } catch (e) {
     console.warn('counter get failed', e);
-    if (counterEl) counterEl.textContent = '0';
+    counterEl.textContent = '0';
   }
 }
 
