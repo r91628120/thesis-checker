@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20g';
+  const APP_VER = '2025-10-20f';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1950,10 +1950,6 @@ document.addEventListener('click', (ev) => {
     .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
     .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
 });
-
-/* 累積人次淡入 */
-#counter{transition:opacity .6s ease}
-#counter.is-fading{opacity:0}
 
 </script>
 </body>
