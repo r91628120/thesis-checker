@@ -176,7 +176,7 @@
     </section>
 
     <footer>
-      <a class="back" href="index.html" id="backBtn">← 返回首頁（<span id="countdown">5</span> 秒）</a>
+      <a class="back" href="index.html" id="backBtn">← 返回首頁</a>
       <div class="ver">© 2025 高中職小論文老師助手 GPT 安全文件</div>
     </footer>
   </div>
@@ -185,19 +185,6 @@
   <button id="topBtn" title="回到頁首">↑</button>
 
   <script>
-    // 自動返回首頁倒數
-    let seconds = 5;
-    const countdown = document.getElementById('countdown');
-    const backBtn = document.getElementById('backBtn');
-    const timer = setInterval(() => {
-      seconds--;
-      countdown.textContent = seconds;
-      if (seconds <= 0) {
-        clearInterval(timer);
-        window.location.href = "index.html";
-      }
-    }, 1000);
-
     // 回到頁首按鈕
     const topBtn = document.getElementById("topBtn");
     window.addEventListener("scroll", () => {
