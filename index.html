@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20f';
+  const APP_VER = '2025-10-20e';
   (function () {
     try {
       const url = new URL(location.href);
@@ -59,11 +59,6 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <h1>高中職小論文格式自檢系統</h1>
     <p>支援 PDF / DOCX；解析僅在瀏覽器記憶體中，完成即釋放，不留存。</p>
     <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
-    <div class="hint" id="verInfo" style="margin-top:6px">
-  版本資訊：<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span>
-  （規則集 v1.4｜最後更新：<script>document.write(new Date().toISOString().slice(0,10))</script>）
-    </div>
-
     <div class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</div>
     <!-- 📘 系統介紹導覽區 -->
 <div style="background:#e8f1fd;border-radius:10px;padding:16px;margin-top:16px;text-align:center;">
@@ -1888,24 +1883,11 @@ downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未
 /* ===== GAS 計數（GET 版） ===== */
 async function bumpCounterEveryTime(){
   if (!ENABLE_COUNTER) return;
-
-  // 讀取上次遞增時間（localStorage）
-  const now = Date.now();
-  const last = Number(localStorage.getItem(COUNTER_COOLDOWN_KEY) || 0);
-
-  // 冷卻未到 → 直接跳過，不送 request
-  if (now - last < COUNTER_COOLDOWN_MS) {
-    console.log('counter increment skipped (cooldown)');
-    return;
-  }
-
   try{
+    // 改用 GET：避免預檢（OPTIONS）
     const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') +
-                'action=increment&ts=' + now;
+                'action=increment&ts=' + Date.now();
     const res = await fetch(url, { method: 'GET', cache: 'no-store' });
-    if (res.ok){
-      localStorage.setItem(COUNTER_COOLDOWN_KEY, String(now)); // 成功才記錄時間
-    }
     console.log('counter increment', res.status);
   }catch(e){
     console.warn('counter increment failed', e);
@@ -1918,25 +1900,12 @@ async function fetchCounter() {
     const url = GAS_WEB_APP_URL + '?action=get&site=essayguard&ts=' + Date.now();
     const res = await fetch(url, { cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
-  if (counterEl){
-    counterEl.classList.add('is-fading');     // 先淡出
-  // 等 100ms 讓 opacity=0 生效，再換數字並淡入
-    setTimeout(()=>{
-      counterEl.textContent = (data.count ?? '0');
-      requestAnimationFrame(()=> counterEl.classList.remove('is-fading')); // 淡入
-    }, 100);
-  }
-
+    counterEl.textContent = data.count ?? '0';
   } catch (e) {
     console.warn('counter get failed', e);
     counterEl.textContent = '0';
   }
 }
-
-// 人次遞增的冷卻時間（毫秒）；例如 60 秒內只遞增一次
-const COUNTER_COOLDOWN_MS = 60_000;
-const COUNTER_COOLDOWN_KEY = 'essayguard_last_inc';
-
 
 /* ===== 快取清理（避免 SW 舊檔） ===== */
 (async () => {
