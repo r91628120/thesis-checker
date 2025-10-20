@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20c';
+  const APP_VER = '2025-10-20d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1951,81 +1951,6 @@ document.addEventListener('click', (ev) => {
     .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
 });
 
-<!-- === GAS 自檢人次 JSONP 讀取/遞增 === -->
-<script>
-// 1) 你的正式部署網址（/exec）
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzq7gSGVD8LgxuAmCVLCRIreKewW1xN9x91A1jR9eNBR3MpI1w5mZB8x2UtZrI_X5EI/exec";
-
-// 2) 通用 JSONP 工具
-function jsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cb = 'cb_' + Math.random().toString(36).slice(2);
-    const sep = url.includes('?') ? '&' : '?';
-    const s = document.createElement('script');
-    s.src = url + sep + 'callback=' + cb;
-    s.async = true;
-
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error('JSONP timeout'));
-    }, 8000);
-
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[cb];
-      s.remove();
-    }
-
-    window[cb] = (data) => {
-      cleanup();
-      resolve(data);
-    };
-    s.onerror = () => {
-      cleanup();
-      reject(new Error('JSONP load error'));
-    };
-    document.head.appendChild(s);
-  });
-}
-
-// 3) UI 目標（你的頁面中「目前累積小論文格式自檢人次」的數字部分）
-const counterEl = document.querySelector('#counter-text'); // 若你的 id 不同，請換掉這個
-
-// 4) 讀取人次
-async function loadCounter() {
-  try {
-    if (counterEl) counterEl.textContent = '載入中…';
-    const { ok, count } = await jsonp(`${GAS_WEB_APP_URL}?action=get&ts=${Date.now()}`);
-    if (ok) {
-      if (counterEl) counterEl.textContent = count;
-    } else {
-      if (counterEl) counterEl.textContent = '—';
-      console.warn('GAS 回傳錯誤', { ok, count });
-    }
-  } catch (err) {
-    if (counterEl) counterEl.textContent = '—';
-    console.error('讀取人次失敗', err);
-  }
-}
-
-// 5) 遞增人次
-async function incrementCounter() {
-  try {
-    const { ok, count } = await jsonp(`${GAS_WEB_APP_URL}?action=increment&ts=${Date.now()}`);
-    if (ok && counterEl) counterEl.textContent = count;
-  } catch (err) {
-    console.warn('遞增人次失敗（不影響使用）', err);
-  }
-}
-
-// 6) 頁面載入時執行（不阻塞選擇檔案）
-window.addEventListener('DOMContentLoaded', loadCounter);
-
-// 7) 你原本在「完成檢查」或「按下開始檢查成功」後，加上：
-/*
-  incrementCounter();
-*/
 </script>
-<!-- === JSONP 功能結束 === -->
 </body>
 </html>
