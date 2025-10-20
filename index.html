@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-19h';
+  const APP_VER = '2025-10-20a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -60,6 +60,18 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <p>支援 PDF / DOCX；解析僅在瀏覽器記憶體中，完成即釋放，不留存。</p>
     <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
     <div class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</div>
+    <!-- 📘 系統介紹導覽區 -->
+<div style="background:#e8f1fd;border-radius:10px;padding:16px;margin-top:16px;text-align:center;">
+  <p style="margin:0;font-size:15px;color:#1e3a8a;">
+    想了解系統判定方式與 AI 小助手使用教學嗎？<br/>
+    <a href="about.html" style="color:#2563eb;font-weight:600;text-decoration:none;">
+      📘 點我前往「系統介紹與 AI 說明」
+    </a>
+    <a href="manual.pdf" style="display:inline-block;margin-top:6px;color:#1e40af;text-decoration:none;">📄 下載操作與判定說明書（PDF）</a>
+  </p>
+</div>
+
+
   </header>
 
   <section class="card">

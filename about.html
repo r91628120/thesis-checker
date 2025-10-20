@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>高中職小論文格式自檢系統－系統介紹與 AI 助手說明</title>
+<style>
+:root{
+  --bg:#f7f7fb;
+  --card:#fff;
+  --ink:#111827;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --border:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;}
+.wrap{max-width:900px;margin:auto;padding:32px;}
+h1{font-size:clamp(22px,4vw,28px);margin-bottom:8px;color:var(--accent);}
+h2{margin-top:32px;color:var(--accent);}
+p{line-height:1.8;}
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:24px;margin-top:20px;}
+a.button{
+  display:inline-block;padding:10px 18px;margin-top:10px;
+  background:var(--accent);color:#fff;text-decoration:none;
+  border-radius:6px;font-size:15px;
+}
+a.button:hover{opacity:0.85;}
+footer{margin-top:40px;text-align:center;color:var(--muted);font-size:14px;}
+hr{border:none;border-top:1px solid var(--border);margin:40px 0;}
+ul,ol{line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>📘 高中職小論文格式自檢系統</h1>
+  <p>本系統為全國高中職學生設計的線上格式檢查平台，能自動檢查PDF與Word檔案是否符合教育部小論文撰寫規範。由佳冬高農團隊與ChatGPT AI教學輔助系統共同開發，協助學生在繳交前完成自我檢查與修正。</p>
+
+  <div class="card">
+    <h2>🎯 系統特色</h2>
+    <ul>
+      <li>自動檢查頁數、邊界、字型、段落與參考文獻格式。</li>
+      <li>支援 APA7（高中職簡化版）引註與參考文獻規範。</li>
+      <li>提供「字體字型進階檢查」功能。</li>
+      <li>整合 AI 小助手（ChatGPT）可解釋格式錯誤與給予修正建議。</li>
+      <li>不需登入、不上傳、不儲存個資，安全保密。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🪶 使用步驟</h2>
+    <ol>
+      <li>開啟主頁 <b>index.html</b>。</li>
+      <li>勾選「我已閱讀並同意」後，上傳PDF或Word檔。</li>
+      <li>點選「開始檢查」即可顯示結果。</li>
+      <li>若需AI輔助，點選結果頁的「AI小助手」按鈕。</li>
+      <li>若需確認字型，使用「字體字型進階檢查」。</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>📚 系統檢查項目</h2>
+    <ul>
+      <li>頁數與檔案大小是否合格（4–10頁、≤5MB）。</li>
+      <li>頁首與頁碼位置正確（上方檔名、底部置中頁碼）。</li>
+      <li>四邊距離為2公分（允許±0.2公分）。</li>
+      <li>字型為新細明體與Times New Roman、12號字。</li>
+      <li>包含六大章節：前言、文獻探討、研究方法、結果、結論、參考文獻。</li>
+      <li>內文引註格式正確（作者，年份）。</li>
+      <li>參考文獻格式完整（作者、年份、書名、出版地、出版社／網址）。</li>
+      <li>不含姓名、學校、班級等個資。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>💡 系統判定說明</h2>
+    <p>系統僅檢查格式是否符合規範，不評估內容優劣。  
+    每項檢查會顯示 <b>✅ 通過</b> 或 <b>❌ 未通過</b>，並附上修正建議。</p>
+  </div>
+
+  <hr/>
+
+  <h2>🤖 AI 小助手（ChatGPT）說明</h2>
+  <p>AI 小助手是本系統延伸的學習輔助功能，可根據檢查結果提供自然語言解釋與修改建議，幫助學生理解規範、教師教學示範。</p>
+
+  <div class="card">
+    <h3>🧠 AI 小助手的功能</h3>
+    <ul>
+      <li>自動解釋每項格式錯誤的原因與正確寫法。</li>
+      <li>提供APA格式、引註、標點及排版的具體示例。</li>
+      <li>協助學生完成「自檢→理解→修正→再檢」的學習循環。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>🪶 使用方式</h3>
+    <ol>
+      <li>完成格式檢查後，點擊結果頁的「AI 小助手」按鈕。</li>
+      <li>系統會自動複製檢查摘要並開啟 ChatGPT。</li>
+      <li>將摘要貼入對話框，AI 即會逐項說明錯誤與修正建議。</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>🎓 教師應用建議</h3>
+    <ul>
+      <li>課堂示範：「格式檢查 → AI解釋 → 修正 → 再檢查」。</li>
+      <li>引導學生根據AI建議修正後，再提交正式版本。</li>
+      <li>作為學術倫理與研究方法課的延伸教材。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>🔒 注意事項</h3>
+    <ul>
+      <li>AI 只分析檢查摘要，請勿貼上完整論文或個人資料。</li>
+      <li>若學校有自建 AI 助手，可改為校內連結版本。</li>
+      <li>AI 建議僅供參考，最終仍以教師指導為準。</li>
+    </ul>
+  </div>
+
+  <hr/>
+
+  <div class="card">
+    <h2>📄 下載操作與判定說明書</h2>
+    <p>完整的操作步驟與規範判定可下載下列文件（PDF版本），方便列印或教學使用。</p>
+    <a href="manual.pdf" class="button" download>📘 下載操作與判定說明書（PDF）</a>
+  </div>
+
+  <a href="index.html" class="button" style="background:#6b7280;margin-top:30px;">← 返回系統主頁</a>
+
+  <footer>
+    <p>佳冬高農圖書館團隊 × ChatGPT AI 教學輔助系統　|　版本 v2025-10</p>
+  </footer>
+
+</div>
+</body>
+</html>
