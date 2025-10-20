@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>高中職小論文老師助手 GPT｜單獨模式安全說明</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #fff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #e5e7eb;
+      --pink: #f8c8dc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: auto;
+      padding: 32px 20px 100px;
+    }
+    header h1 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 4vw, 30px);
+      color: var(--accent);
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-top: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.04);
+    }
+    h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
+      color: var(--accent);
+    }
+    ul { margin: 6px 0 6px 20px; padding: 0; }
+    li { margin-bottom: 4px; }
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+    .ver {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: 14px;
+      position: relative;
+    }
+    a.back {
+      display: inline-block;
+      margin-top: 24px;
+      text-decoration: none;
+      background: var(--pink);
+      color: #333;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #f5a6c4;
+      transition: background .2s;
+    }
+    a.back:hover { background: #f5a6c4; }
+
+    /* 回到頁首按鈕 */
+    #topBtn {
+      position: fixed;
+      bottom: 30px;
+      right: 25px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background .2s;
+    }
+    #topBtn:hover { background: #1e4fd4; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>高中職小論文老師助手 GPT｜單獨模式安全說明</h1>
+      <p>版本 v1.0｜2025 年 10 月</p>
+    </header>
+
+    <section>
+      <h2>📘 一、說明目的</h2>
+      <p>
+        本文件說明「高中職小論文老師助手 GPT」在單獨運作模式下，
+        如何處理使用者上傳的 PDF 小論文檔案、暫存機制與刪除流程。
+        其目的為確保資料安全、符合隱私規範，並提供比賽與教學環境的技術依據。
+      </p>
+    </section>
+
+    <section>
+      <h2>🔒 二、資料處理機制</h2>
+      <ol>
+        <li>當使用者上傳 PDF 檔時，系統僅在本次對話工作區（/mnt/data/）建立暫存副本，用於文字與格式解析。</li>
+        <li>該檔案不會被上傳至外部伺服器、雲端或資料庫，僅用於當次分析。</li>
+        <li>當使用者結束對話或明確要求刪除時，暫存檔案即刻移除。</li>
+        <li>檔案內容不會被保存、記錄或用於模型訓練。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>🧩 三、自動刪除模式</h2>
+      <p>
+        本 GPT 已預設為<strong>自動刪除模式</strong>：
+      </p>
+      <ul>
+        <li>在解析完成後立即清除暫存區中的 PDF 檔案。</li>
+        <li>系統於報告結尾顯示「🗑️ 檔案已刪除」作為確認。</li>
+        <li>刪除後 GPT 無法再開啟或讀取該檔案。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>⚙️ 四、隱私與安全設計</h2>
+      <ul>
+        <li>本 GPT 不會永久保存使用者檔案或內容。</li>
+        <li>所有資料僅存在於短期暫存記憶體中。</li>
+        <li>無法訪問個人電腦、雲端或任何外部資料來源。</li>
+        <li>所有操作皆在使用者主動授權與上傳後執行。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>🧠 五、適用範圍</h2>
+      <ul>
+        <li>單獨使用 GPT 進行小論文格式檢查。</li>
+        <li>不經前端系統、直接上傳 PDF 分析。</li>
+        <li>學校、教師或學生使用以自檢、教學、比賽準備為目的之場合。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>✅ 六、聲明</h2>
+      <p>
+        使用者對其上傳之文件保有完整著作權與資料所有權。
+        「高中職小論文老師助手 GPT」僅作為技術輔助工具，
+        不會保存、散布或提供任何上傳資料給第三方。
+      </p>
+    </section>
+
+    <section>
+      <h2>📅 發布日期</h2>
+      <p>2025 年 10 月</p>
+    </section>
+
+    <footer>
+      <a class="back" href="index.html" id="backBtn">← 返回首頁（<span id="countdown">5</span> 秒）</a>
+      <div class="ver">© 2025 高中職小論文老師助手 GPT 安全文件</div>
+    </footer>
+  </div>
+
+  <!-- 回到頂端按鈕 -->
+  <button id="topBtn" title="回到頁首">↑</button>
+
+  <script>
+    // 自動返回首頁倒數
+    let seconds = 5;
+    const countdown = document.getElementById('countdown');
+    const backBtn = document.getElementById('backBtn');
+    const timer = setInterval(() => {
+      seconds--;
+      countdown.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = "index.html";
+      }
+    }, 1000);
+
+    // 回到頁首按鈕
+    const topBtn = document.getElementById("topBtn");
+    window.addEventListener("scroll", () => {
+      topBtn.style.display = (document.documentElement.scrollTop > 300) ? "block" : "none";
+    });
+    topBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  </script>
+</body>
+</html>
