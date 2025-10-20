@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-20g';
+  const APP_VER = '2025-10-20h';
   (function () {
     try {
       const url = new URL(location.href);
@@ -39,7 +39,6 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
 .filetag{font-size:13px;color:#374151;margin:6px 0 0}.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
 .extsearch{background:#f9fafb;border:1px dashed #e5e7eb;border-radius:10px;padding:10px;margin-top:6px}.extsearch ul{margin:6px 0 0 18px;padding:0}.extsearch li{margin:4px 0}
-</style>
 
 /* 單獨 GPT 檢查按鈕（淡粉紅） */
 .btn-gpt{
@@ -59,6 +58,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 .gpt-inline-desc{ display:inline-block; margin-left:8px; font-size:13px; }
 .gpt-inline-desc summary{ cursor:pointer; color:#c2185b; font-weight:600; }
 .gpt-inline-desc ul{ margin:6px 0 0 20px; color:#555; }
+</style>
 
 <!-- pdf.js (ESM) -->
 <script type="module">
@@ -186,14 +186,11 @@ const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 <script>
 /* ===== UI 變數 ===== */
 const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
-const startBtn=document.getElementById('start'),
-      clearBtn=document.getElementById('clear'),
-      fontCheckBtn=document.getElementById('fontCheckBtn'),
-      gptCheckBtn=document.getElementById('gptCheckBtn');
-
+const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
 const statusEl=document.getElementById('status'),resultCard=document.getElementById('resultCard'),tbody=document.getElementById('tbody');
 const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.getElementById('copyJson'),downloadJsonBtn=document.getElementById('downloadJson');
 const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
+
 
 // ✅ 等 DOM 解析完成再抓人次；不阻塞 UI
 (function initCounter() {
@@ -254,9 +251,10 @@ function setUploadEnabled(ok){
 
 // 再去抓人次（避免初始化鎖死 fileInput）
 if (ENABLE_COUNTER) fetchCounter();
-statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。'});
+statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。';
 // 可用性：頁面載入後先同步一次
 setUploadEnabled(consent.checked);
+
 
 /* DnD */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
@@ -304,18 +302,6 @@ fontCheckBtn.addEventListener('click', async () => {
     alert('請先選擇一個 PDF 檔再進行字體檢查。');
     return;
   }
-
-/* ===== 單獨 GPT 檢查（導向外部/獨立頁） ===== */
-gptCheckBtn?.addEventListener('click', ()=>{
-  // 預設導向一個你之後會放的頁面（可改成你的實際路由）
-  // 例：後端有自己的 UI：/gpt/pdf-check-ui   或  靜態頁：gpt-check.html
-  const target = 'gpt-check.html';
-  window.open(target, '_blank', 'noopener');
-
-  // 若你未來要把目前已選的檔名帶過去，也可在 querystring 帶 name 方便顯示：
-  // window.open(target + '?name=' + encodeURIComponent(fileName || ''), '_blank', 'noopener');
-});
-
 
   // 小小除錯：在 Console 看看實際送出的大小
   console.log('[CloudRun] going to upload:',
@@ -2006,6 +1992,17 @@ document.addEventListener('click', (ev) => {
   navigator.clipboard.writeText(txt)
     .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
     .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
+});
+
+/* ===== 單獨 GPT 檢查（導向外部/獨立頁） ===== */
+gptCheckBtn?.addEventListener('click', ()=>{
+  // 預設導向一個你之後會放的頁面（可改成你的實際路由）
+  // 例：後端有自己的 UI：/gpt/pdf-check-ui   或  靜態頁：gpt-check.html
+  const target = 'gpt-check.html';
+  window.open(target, '_blank', 'noopener');
+
+  // 若你未來要把目前已選的檔名帶過去，也可在 querystring 帶 name 方便顯示：
+  // window.open(target + '?name=' + encodeURIComponent(fileName || ''), '_blank', 'noopener');
 });
 
 </script>
