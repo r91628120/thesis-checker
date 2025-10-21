@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-21c';
+  const APP_VER = '2025-10-21d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -119,13 +119,20 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <button id="start" class="primary" disabled>開始檢查</button>
       <button id="clear" disabled>清除</button>
       <button id="fontCheckBtn" disabled>字體字型進階檢查</button>
-      <button id="gptCheckBtn" class="btn-gpt" disabled>單獨 GPT 檢查 PDF 檔案</button>
+      <a id="gptCheckBtn"
+         class="btn-gpt"
+         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong"
+         target="_blank"
+         rel="noopener noreferrer">
+         單獨 GPT 檢查 PDF 檔案
+      </a>
+
       <details class="gpt-inline-desc">
         <summary>了解此功能</summary>
         <ul>
-          <li>由 GPT 直接解析 PDF（不走前端解析），快速產出「含頁碼」的錯誤清單。</li>
-          <li>可檢查：格式、錯字、文獻與圖表來源；報告支援頁碼標註。</li>
-          <li>為保隱私，檢查完成後將自動刪除暫存檔，不會永久保存。</li>
+          <li>由 GPT 直接解析 PDF（不經前端解析），快速產出「含頁碼」錯誤清單。</li>
+          <li>可檢查：格式、錯字、文獻、圖表來源，報告支援頁碼標註。</li>
+          <li>為保隱私，系統完成後會自動刪除暫存檔，不會永久保存。</li>
         </ul>
       </details>
 
@@ -2000,12 +2007,6 @@ document.addEventListener('click', (ev) => {
   navigator.clipboard.writeText(txt)
     .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
     .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
-});
-
-/* ===== 單獨 GPT 檢查（導向外部/獨立頁） ===== */
-window.gptCheckBtn?.addEventListener('click', () => {
-  const target = 'https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong';
-  window.open(target, '_blank', 'noopener');
 });
 
 </script>
