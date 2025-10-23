@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-23b';
+  const APP_VER = '2025-10-23a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1311,7 +1311,7 @@ function runTextRules(pageTexts){
     /[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){1,6}\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g;
 
   // 統一計數（避免重複相加）
-  const countMatches = (re) => (bodyTextN.match(re)?.length || 0);
+  const countMatches = (re) => (bodyText.match(re)?.length || 0);
   const hasCite =
     countMatches(citeParenZhSingle) +
     countMatches(citeParenZhMulti)  +
@@ -1587,32 +1587,6 @@ jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
   // 一致性
   // === 參考文獻與內文引註一致性（升級版） ===
 // 1) 收集「正文中的」各式引註
-
-  // 先把正文做「行內清洗」：去掉零寬字、把括號內的換行收回
-  function _stripZW(s){
-    return String(s || '')
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')   // 零寬字
-      .replace(/\u00A0/g, ' ');                // 不換行空白 → 一般空白
-  }
-
-  // 把「括號內」的換行收回（避免（黃\n莉貽，2017）這種被切行）
-  function _collapseNewlineInsideParens(s){
-    return String(s || '').replace(/（[^）]{0,120}）/g, seg => seg.replace(/\n+/g, ''));
-  }
-
-  // 把 CJK 之間的多餘空白收掉（黃　莉　貽 → 黃莉貽）
-  function _collapseCjkGaps(s){
-    return String(s || '')
-      .replace(/([\u4E00-\u9FFF])\s+([\u4E00-\u9FFF])/g, '$1$2');
-  }
-
-  // 產生「清洗過的正文」
-  const bodyTextN = _collapseCjkGaps(
-                      _collapseNewlineInsideParens(
-                        _stripZW(bodyText)
-                      )
-                    );
-
 const citePatterns = [
   // 中文：括號內單/多作者、或含「等/無日期/n.d.」
   /（[^\n()，]{1,20}(?:、|和)[^\n()，]{1,20}(?:(?:、|和)[^\n()，]{1,20}){0,6}，\s*(\d{4}|無日期|n\.?d\.?)）/g, // 多作者
@@ -1626,7 +1600,7 @@ const citePatterns = [
 
 const citationHits = [];
 for (const re of citePatterns) {
-  const m = bodyTextN.match(re);
+  const m = bodyText.match(re);
   if (m) citationHits.push(...m);
 }
 
@@ -1662,10 +1636,10 @@ function normCiteKey(text) {
   const s = _stripZW(text);
 
   // 取（作者，年份）內文
-  const m = s.match(/（\s*([^，,（）\n]{1,40})\s*[，,]\s*(\d{4}|無日期|n\.?d\.?)\s*）/); // 抓第一個作者 & 4位年
+  const m = s.match(/（([^，,]+)[，,]\s*([12]\d{3})\s*）/); // 抓第一個作者 & 4位年
   if (!m) return null;
 
-  const authorRaw = (m[1] || '').replace(/\s+/g, '');
+  const authorRaw = m[1];
   const year = m[2];
 
   const author = _canonAuthorName(authorRaw);
