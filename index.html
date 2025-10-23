@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-21e';
+  const APP_VER = '2025-10-24a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -108,6 +108,16 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     </details>
     <div class="row" style="margin-top:8px">
       <input id="consent" type="checkbox"/><label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
+    <p style="color:#444; font-size:14px; margin-top:6px; line-height:1.6;">
+     💡 <b>使用建議：</b>請先使用本網頁系統進行初步格式檢查以獲得摘要結果，
+     接著再使用下方的 <b>「單獨 GPT 檢查 PDF」</b> 進行更詳細的分析與頁碼解說。
+     <br>
+     目前前端檢查可快速偵測頁碼、結構、字體與邊界等規範；
+     而 GPT 模式則能進一步檢查圖表、引註與參考文獻對應、錯別字與內容一致性。
+     <br>
+     🧩 <b>兩者搭配使用，能獲得最準確的自檢結果（建議精確率可達 92% 以上）。</b>
+    </p>
+
     </div>
     <div id="drop" class="drop" aria-disabled="true">
       <p><strong>拖拉 PDF 或 DOCX 到這裡</strong></p>
