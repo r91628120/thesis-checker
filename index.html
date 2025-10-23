@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-23a';
+  const APP_VER = '2025-10-23b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1626,7 +1626,7 @@ const citePatterns = [
 
 const citationHits = [];
 for (const re of citePatterns) {
-  const m = bodyTextN（N = normalized）;
+  const m = bodyTextN.match(re);
   if (m) citationHits.push(...m);
 }
 
