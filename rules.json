@@ -1,5 +1,6 @@
 {
   "meta": {
+    "version_full": "v1.4.1-teacher-standard",
     "rules_version": "v1.4",
     "updated_at": "2025-10-03T00:00:00+08:00",
     "language": "zh-Hant",
@@ -138,6 +139,36 @@
       "severity": "minor",
       "check_kind": "manual",
       "description": "請以篇名到 Google Scholar、歷屆競賽作品、臺灣中學生網站等檢索，彙整結果並判斷是否與校外發表/得獎重複或相似。"
+    },
+    {
+      "rule_id": "references.bold_style_scope",
+      "category": "formatting",
+      "level": "minor",
+      "title": "參考文獻粗體使用範圍",
+      "description": "僅限書籍與期刊類文獻的『書名』及『期刊名（含卷號）』使用粗體字。其他來源（報紙、電子報、網站、部落格、法規、影片等）之標題一律不加粗。",
+      "criteria": {
+        "book": "書名需加粗",
+        "journal": "期刊名稱與卷（Volume）需加粗，期數（Issue）以括號表示但不加粗",
+        "web": "一般網頁、部落格、政府或新聞網站標題不加粗",
+        "law": "法規名稱不加粗",
+        "video_social": "影片、社群平台貼文標題不加粗"
+      },
+      "trigger": {
+        "condition": "detect_bold_in_web_or_nonprint_source",
+        "message": "網站或部落格標題不需加粗，僅書名與期刊名需加粗。"
+      },
+      "reference": "教育部《全國高級中等學校小論文寫作比賽引註及參考文獻格式範例》（113年5月8日修訂，第3頁）",
+      "example": {
+        "correct": [
+          "王大明 (2020)。**教育心理學**。臺北市：心理出版社。",
+          "李小華 (2022)。高中職學生閱讀策略研究。**教育研究，35**(2)，45–60。",
+          "教育部 (2023年3月12日)。十二年國教課綱。https://www.edu.tw/"
+        ],
+        "incorrect": [
+          "教育部 (2023年3月12日)。**十二年國教課綱**。https://www.edu.tw/",
+          "王大明 (2020)。教育心理學。臺北市：心理出版社。"
+        ]
+      }
     }
   ]
 }
