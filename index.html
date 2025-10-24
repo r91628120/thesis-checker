@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24n';
+  const APP_VER = '2025-10-24o';
   (function () {
     try {
       const url = new URL(location.href);
@@ -561,10 +561,11 @@ const MAX_CM = RULES.marginMaxCM.toFixed(1);
 const tolPt  = MARGIN_TOL_PT.toFixed(1);
 
 addRow(
-  `四周邊界 ${MIN_CM}–${MAX_CM} 公分（正文區推估）`,
+  `四周邊界 2 公分（正文區推估）`,
   marginPass,
   `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
-  `四邊皆須落在 ${MIN_CM}–${MAX_CM} cm 範圍；若使用 Word→PDF 轉檔，建議 Word 預先設：上 2.2、下 2.2、左 2.3、右 2.2（cm），以抵消轉檔誤差。`
+  `四邊邊界依小論文格式規範應設為 2.0 公分；本系統允許 ±0.2 公分的轉檔誤差（即 1.8–2.3 cm）視為合格，無需另行調整 Word 邊界設定。`
+
 );
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
