@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24j';
+  const APP_VER = '2025-10-24k';
   (function () {
     try {
       const url = new URL(location.href);
@@ -58,26 +58,6 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 .gpt-inline-desc{ display:inline-block; margin-left:8px; font-size:13px; }
 .gpt-inline-desc summary{ cursor:pointer; color:#c2185b; font-weight:600; }
 .gpt-inline-desc ul{ margin:6px 0 0 20px; color:#555; }
-
-/* AI 助手按鈕（紫色底） */
-.btn-ai {
-  display: inline-block;
-  background: linear-gradient(90deg, #7c3aed, #a855f7);
-  color: #fff !important;
-  border: none;
-  border-radius: 10px;
-  padding: 0.75rem 1.3rem;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
-  transition: all 0.2s ease-in-out;
-}
-.btn-ai:hover {
-  background: linear-gradient(90deg, #6d28d9, #9333ea);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4);
-}
-
 </style>
 
 <!-- pdf.js (ESM) -->
@@ -207,10 +187,8 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
       <button id="downloadHtml">下載檢查結果（網頁）</button>
       <button id="copyJson">複製檢查結果 (給AI助手)</button>
       <button id="downloadJson">儲存檢查結果檔案</button>
-      <a id="openGpts" class="btn-ai" href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong" target="_blank" rel="noopener">
-       💜 打開 AI 助手（貼上檢查結果）
-      </a>
-
+      <a id="openGpts" class="primary" href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong" target="_blank" rel="noopener">打開AI助手（貼上檢查結果）</a>
+    </div>
     <pre id="jsonPreview" class="mono" style="margin-top:8px"></pre>
   </section>
 </div>
