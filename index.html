@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24k';
+  const APP_VER = '2025-10-24l';
   (function () {
     try {
       const url = new URL(location.href);
@@ -1191,6 +1191,11 @@ const FIGTAB_LABEL = new RegExp(
   '(' + AR_NUM + '|' + CN_NUM + ')' + '[\\s\\u3000]*[：:、．\\.]',
   'g'
 );
+// 另外也支援「（圖 1）」/「（表 2）」這種 *括號樣式* 的標號
+const FIGTAB_PAREN = new RegExp(
+  '（\\s*(圖|表)\\s*(' + AR_NUM + '|' + CN_NUM + ')\\s*）',
+  'g'
+);
 
 // 來源詞彙
 const SOURCE_LABEL = /(資料來源[:：]|圖片來源[:：]|出處[:：]|來源[:：])/;
@@ -1543,6 +1548,45 @@ jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
       });
     }
 
+// 另外處理「（圖 1）/（表 2）」的括號樣式
+FIGTAB_PAREN.lastIndex = 0;
+while ((m = FIGTAB_PAREN.exec(fullText)) !== null) {
+  const whole = m[0];
+  const kind  = m[1];            // 圖 or 表（注意括號樣式群組不同）
+  const idx   = m.index;
+
+  const near = _extractNearbySource(fullText, idx);
+  const hasInline = _hasInlineCiteNearby(fullText, idx);
+
+  const hasSourceLine = !!near;
+  const isSelfMade    = !!(near && near.hasSelfMade);
+  const inlineOK      = hasInline;
+
+  let looksFullRef = false, refMatched = false, refHit = null;
+  if (hasSourceLine && !isSelfMade) {
+    looksFullRef = _looksLikeFullReference(near.content);
+    if (looksFullRef) {
+      const mres = _matchSourceToRefs(near.content, refEntries);
+      refMatched = mres.matched; refHit = mres.hit;
+    }
+  }
+
+  entries.push({
+    kind,
+    label: whole.trim(),
+    index: idx,
+    hasSourceLine,
+    sourceLine: near?.label || '',
+    sourceContent: near?.content || '',
+    isSelfMade,
+    inlineOK,
+    looksFullRef,
+    refMatched,
+    refHit
+  });
+}
+
+
     const totalFT = entries.length;
     const withAnySource = entries.filter(it => it.hasSourceLine || it.inlineOK || it.isSelfMade).length;
     const lackSource = totalFT > 0 && (withAnySource < totalFT);
@@ -1574,8 +1618,12 @@ jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
       `判定缺標號：${lackLabel ? '是' : '否'}`
     ];
 
-    // 用更明確、可操作的格式建議（先報告總數，並要求不用括號、用空格與標點）
-  let suggest =
+    // 統計用：有多少是「（圖 1）」/「（表 2）」這種括號樣式（屬錯誤格式）
+const parenStyleCount = entries.filter(it =>
+  /（\s*(圖|表)\s*(\d+|[一二三四五六七八九十百千]+)\s*）/.test(it.label)
+).length;
+
+let suggest =
   `本次檢出共 ${totalFT} 個圖／表。` +
   `請注意標號與標題格式「不用任何括號」，統一以「空格、逗號、句號」分隔：` +
   `例如：<br>` +
@@ -1583,15 +1631,12 @@ jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
   `下方一行：<b>資料來源：王小明（2022）。</b> 或 <b>資料來源：作者自製。</b><br>` +
   `若於圖／表內已出現（作者，年份）之內嵌引注，可視為已提供來源；但仍建議在下方保留「資料來源：…」一行以利審查。` +
   `另外，請避免用各式括號（如（）[]【】《》〈〉）包住整段的標號或來源。`;
-;
-    if (fullRefUnmatch > 0) {
-      const samples = entries
-        .filter(it => it.looksFullRef && !it.refMatched)
-        .slice(0, 3)
-        .map(it => `「${it.sourceContent.slice(0, 60)}…」`)
-        .join('；');
-      suggest += ` 檢測到有完整參考文獻卻未出現在「陸、參考文獻」：${samples}。請把這些文獻補進「陸、參考文獻」。`;
-    }
+
+if (parenStyleCount > 0) {
+  suggest += ` <br>⚠️ 偵測到 <b>${parenStyleCount}</b> 項以全形括號包圍的圖表標號（例如「（圖 1）」），`
+           + `此為錯誤格式；雖已計入總數，但請改成行首「圖 1／表 1」且不要括號。`;
+}
+
 
     addRow(
       '圖表需有標號/標題與來源',
