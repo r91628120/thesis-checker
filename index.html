@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24m';
+  const APP_VER = '2025-10-24n';
   (function () {
     try {
       const url = new URL(location.href);
@@ -258,6 +258,8 @@ const RULES = {
 const CM_TO_PT = cm => cm * 72 / 2.54;
 const MARGIN_MIN_PT = CM_TO_PT(RULES.marginMinCM);
 const MARGIN_MAX_PT = CM_TO_PT(RULES.marginMaxCM);
+// 首頁篇名與頁碼的固定 2 cm 判定帶
+const MARGIN_PT = CM_TO_PT(2);   // 2 公分 -> pt
 
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){
