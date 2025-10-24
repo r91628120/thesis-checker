@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24l';
+  const APP_VER = '2025-10-24m';
   (function () {
     try {
       const url = new URL(location.href);
@@ -249,13 +249,15 @@ const RULES = {
   sixSections: ['前言', '文獻探討', '研究方法', '研究分析與結果', '研究結論與建議', '參考文獻'],
   quoteMaxChars: 50,
   minQuoteCharsForDirect: 10,
-  marginCM: 2.0
+  // 改為區間
+  marginMinCM: 1.8,
+  marginMaxCM: 2.3
 };
 
 /* ===== 邊界換算 ===== */
 const CM_TO_PT = cm => cm * 72 / 2.54;
-const MARGIN_PT = CM_TO_PT(RULES.marginCM);
-
+const MARGIN_MIN_PT = CM_TO_PT(RULES.marginMinCM);
+const MARGIN_MAX_PT = CM_TO_PT(RULES.marginMaxCM);
 
 /* ===== 可用性 ===== */
 function setUploadEnabled(ok){
@@ -538,18 +540,30 @@ async function runPdfChecks(buf){
   const tol = MARGIN_TOL_PT.toFixed(1);
   // …在 addRow 的 evidence 字串裡：
 
-  const marginPass =
-  (isFinite(minLeft)   && (minLeft   + MARGIN_TOL_PT) >= MARGIN_PT) &&
-  (isFinite(minRight)  && (minRight  + MARGIN_TOL_PT) >= MARGIN_PT) &&
-  (isFinite(minBottom) && (minBottom + MARGIN_TOL_PT) >= MARGIN_PT) &&
-  (isFinite(minTop)    && (minTop    + MARGIN_TOL_PT) >= MARGIN_PT);
+  // 幫助函式：允許微小誤差（pt）
+const within = v =>
+  isFinite(v) &&
+  v >= (MARGIN_MIN_PT - MARGIN_TOL_PT) &&
+  v <= (MARGIN_MAX_PT + MARGIN_TOL_PT);
 
-  addRow(
-    '四周邊界 ≥ 2 公分（正文區推估）',
-    marginPass,
-    `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（門檻≈${MPT}）`,
-    '只要第1頁正文四邊皆 ≥ 2 公分，即視為版面合格。'
-  );
+// 四邊都要在允許範圍內
+const marginPass =
+  within(minLeft)   &&
+  within(minRight)  &&
+  within(minTop)    &&
+  within(minBottom);
+
+// 顯示用的門檻（轉小數一位）
+const MIN_CM = RULES.marginMinCM.toFixed(1);
+const MAX_CM = RULES.marginMaxCM.toFixed(1);
+const tolPt  = MARGIN_TOL_PT.toFixed(1);
+
+addRow(
+  `四周邊界 ${MIN_CM}–${MAX_CM} 公分（正文區推估）`,
+  marginPass,
+  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
+  `四邊皆須落在 ${MIN_CM}–${MAX_CM} cm 範圍；若使用 Word→PDF 轉檔，建議 Word 預先設：上 2.2、下 2.2、左 2.3、右 2.2（cm），以抵消轉檔誤差。`
+);
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
