@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-25e';
+  const APP_VER = '2025-10-25f';
   (function () {
     try {
       const url = new URL(location.href);
@@ -122,7 +122,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     <div id="drop" class="drop" aria-disabled="true">
       <p><strong>拖拉 PDF 或 DOCX 到這裡</strong></p>
       <label for="file" class="file">選擇檔案</label>
-      <input id="file" type="file" accept=".pdf,.docx"/>
+      <input id="file" type="file" accept=".pdf,.docx" disabled/>
       <p class="hint">完成檢查即釋放／不保存。</p>
     </div>
     <div class="row" style="margin-top:8px">
@@ -467,16 +467,11 @@ async function runPdfChecks(buf){
 
       // 只在第1頁偵測「壹、前言／一、前言／1、前言」當作正文起點
       if (p === 1 && txt) {
-        // 僅允許「壹、前言」
-      if (/^\s*壹\s*[、．\.]\s*前言\s*$/.test(txt)) {
-        firstSectionY = y;
-
-       // 立刻用標題行本身量測「上、左」邊界（只量一次）
-       if (!window.__MEASURED_HEADING) {
-         minTop  = Math.min(minTop, H - y); // H - y = 距離頁頂的 pt
-         minLeft = Math.min(minLeft, x);    // x = 距離左側的 pt
-         window.__MEASURED_HEADING = true;
-       }
+        // 常見三種寫法：壹、一、1，加上 、．. 任一標點
+        if (/^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
+          // 記下這一行的 y（pdf.js：越大越靠近上緣）
+          firstSectionY = y;
+        }
       }
 
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
@@ -510,12 +505,12 @@ async function runPdfChecks(buf){
         const distLeft   = x;
         const distRight  = W - (x + w);
         const distBottom = y;
-        // const distTop = H - y;  // 不再用段落更新「上」
+        const distTop    = H - y;
 
         if (distLeft   < minLeft)   minLeft   = distLeft;
         if (distRight  < minRight)  minRight  = distRight;
         if (distBottom < minBottom) minBottom = distBottom;
-       // 不更新 minTop（上邊界），它已固定用〈壹、前言〉那一行
+        if (distTop    < minTop)    minTop    = distTop;
       }
 
     }
@@ -553,8 +548,12 @@ const within = v =>
   v >= (MARGIN_MIN_PT - MARGIN_TOL_PT) &&
   v <= (MARGIN_MAX_PT + MARGIN_TOL_PT);
 
-// 只檢查「左＋上」兩邊是否在允許範圍內
-const marginPass = within(minLeft) && within(minTop);
+// 四邊都要在允許範圍內
+const marginPass =
+  within(minLeft)   &&
+  within(minRight)  &&
+  within(minTop)    &&
+  within(minBottom);
 
 // 顯示用的門檻（轉小數一位）
 const MIN_CM = RULES.marginMinCM.toFixed(1);
@@ -562,10 +561,11 @@ const MAX_CM = RULES.marginMaxCM.toFixed(1);
 const tolPt  = MARGIN_TOL_PT.toFixed(1);
 
 addRow(
-  `版心邊界（左＋上）≥ 2 公分（正文區推估）`,
+  `四周邊界 2 公分（正文區推估）`,
   marginPass,
-  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
-  `格式規範要求版心邊界 2.0 公分。本系統採「第 1 頁、〈壹、前言〉以下」正文區文字來量測，僅以「左＋上」兩邊作為合格判定；同時保留 ±0.2 公分的 PDF 轉檔誤差容許範圍（約 1.8–2.3 cm）。`
+  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
+  `四邊邊界依小論文格式規範應設為 2.0 公分；本系統允許 ±0.2 公分的轉檔誤差（即 1.8–2.3 cm）視為合格，無需另行調整 Word 邊界設定。`
+
 );
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
@@ -1960,7 +1960,7 @@ function addRow(rule,pass,evidence,suggestion){
     '首頁頁碼需置中且落在距下緣 2 公分內':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
     '檔案名稱與頁首篇名一致（不符判定淘汰）':{rule_id:'filename.title_consistency',category:'命名',severity:'critical'},
     '每頁需有置中頁碼（底端帶）':{rule_id:'footer.pagenum',category:'頁碼',severity:'critical'},
-    '版心邊界（左＋上）≥ 2 公分（正文區推估）': { rule_id:'layout.margins', category:'版面', severity:'major' },
+    '四周邊界 ≥ 2 公分（正文區推估）':{rule_id:'layout.margins',category:'版面',severity:'major'},
     '不得有封面頁（4–10頁）':{rule_id:'file.coverpage',category:'檔案規格',severity:'critical'},
     '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
     '六大段落依序':{rule_id:'structure.sections_order',category:'結構',severity:'critical'},
