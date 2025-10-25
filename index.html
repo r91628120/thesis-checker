@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-25a';
+  const APP_VER = '2025-10-25b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -467,11 +467,11 @@ async function runPdfChecks(buf){
 
       // 只在第1頁偵測「壹、前言／一、前言／1、前言」當作正文起點
       if (p === 1 && txt) {
-        // 常見三種寫法：壹、一、1，加上 、．. 任一標點
-        if (/^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
-          // 記下這一行的 y（pdf.js：越大越靠近上緣）
-          firstSectionY = y;
-        }
+        // 僅允許「壹、前言」
+      if (/^\s*壹\s*[、．\.]\s*前言\s*$/.test(txt)) {
+        firstSectionY = y;
+      }
+
       }
 
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
