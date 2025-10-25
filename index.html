@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-25c';
+  const APP_VER = '2025-10-25d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -470,8 +470,13 @@ async function runPdfChecks(buf){
         // 僅允許「壹、前言」
       if (/^\s*壹\s*[、．\.]\s*前言\s*$/.test(txt)) {
         firstSectionY = y;
-      }
 
+       // 立刻用標題行本身量測「上、左」邊界（只量一次）
+       if (!window.__MEASURED_HEADING) {
+         minTop  = Math.min(minTop, H - y); // H - y = 距離頁頂的 pt
+         minLeft = Math.min(minLeft, x);    // x = 距離左側的 pt
+         window.__MEASURED_HEADING = true;
+       }
       }
 
       const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
@@ -505,12 +510,12 @@ async function runPdfChecks(buf){
         const distLeft   = x;
         const distRight  = W - (x + w);
         const distBottom = y;
-        const distTop    = H - y;
+        // const distTop = H - y;  // 不再用段落更新「上」
 
         if (distLeft   < minLeft)   minLeft   = distLeft;
         if (distRight  < minRight)  minRight  = distRight;
         if (distBottom < minBottom) minBottom = distBottom;
-        if (distTop    < minTop)    minTop    = distTop;
+       // 不更新 minTop（上邊界），它已固定用〈壹、前言〉那一行
       }
 
     }
