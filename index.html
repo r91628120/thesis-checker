@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-24o';
+  const APP_VER = '2025-10-25a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -548,12 +548,8 @@ const within = v =>
   v >= (MARGIN_MIN_PT - MARGIN_TOL_PT) &&
   v <= (MARGIN_MAX_PT + MARGIN_TOL_PT);
 
-// 四邊都要在允許範圍內
-const marginPass =
-  within(minLeft)   &&
-  within(minRight)  &&
-  within(minTop)    &&
-  within(minBottom);
+// 只檢查「左＋上」兩邊是否在允許範圍內
+const marginPass = within(minLeft) && within(minTop);
 
 // 顯示用的門檻（轉小數一位）
 const MIN_CM = RULES.marginMinCM.toFixed(1);
@@ -561,11 +557,10 @@ const MAX_CM = RULES.marginMaxCM.toFixed(1);
 const tolPt  = MARGIN_TOL_PT.toFixed(1);
 
 addRow(
-  `四周邊界 2 公分（正文區推估）`,
+  `版心邊界（左＋上）≥ 2 公分（正文區推估）`,
   marginPass,
-  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
-  `四邊邊界依小論文格式規範應設為 2.0 公分；本系統允許 ±0.2 公分的轉檔誤差（即 1.8–2.3 cm）視為合格，無需另行調整 Word 邊界設定。`
-
+  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
+  `格式規範要求版心邊界 2.0 公分。本系統採「第 1 頁、〈壹、前言〉以下」正文區文字來量測，僅以「左＋上」兩邊作為合格判定；同時保留 ±0.2 公分的 PDF 轉檔誤差容許範圍（約 1.8–2.3 cm）。`
 );
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
@@ -1960,7 +1955,7 @@ function addRow(rule,pass,evidence,suggestion){
     '首頁頁碼需置中且落在距下緣 2 公分內':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
     '檔案名稱與頁首篇名一致（不符判定淘汰）':{rule_id:'filename.title_consistency',category:'命名',severity:'critical'},
     '每頁需有置中頁碼（底端帶）':{rule_id:'footer.pagenum',category:'頁碼',severity:'critical'},
-    '四周邊界 ≥ 2 公分（正文區推估）':{rule_id:'layout.margins',category:'版面',severity:'major'},
+    '版心邊界（左＋上）≥ 2 公分（正文區推估）': { rule_id:'layout.margins', category:'版面', severity:'major' },
     '不得有封面頁（4–10頁）':{rule_id:'file.coverpage',category:'檔案規格',severity:'critical'},
     '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
     '六大段落依序':{rule_id:'structure.sections_order',category:'結構',severity:'critical'},
