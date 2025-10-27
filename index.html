@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-27a';
+  const APP_VER = '2025-10-27b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -556,7 +556,19 @@ const within = v =>
 
 // ➎ 新：只採用〈壹、前言〉那一行作為量測基準：左邊界 = firstSectionLeftX；上邊界 = page1H - firstSectionY
 const leftForCheck = isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;   // 後備：若抓不到就退回原本推估
-const topForCheck  = (page1H!=null && firstSectionY!=null) ? (page1H - firstSectionY) : minTop;
+// === 修正版：以上緣篇名區推估後修正 ===
+let topForCheck = minTop; // 預設保留原推估
+if (page1H && firstSectionY) {
+  // 量壹、前言行的上緣距離頁頂
+  topForCheck = page1H - firstSectionY;
+
+  // 若頁首篇名存在（firstHeaderY 已先量好），
+  // 則扣除篇名與前言間距，避免高估上邊界
+  if (typeof firstHeaderY === 'number' && firstHeaderY > firstSectionY) {
+    const titleGap = firstHeaderY - firstSectionY;
+    topForCheck -= titleGap * 0.5; // 保留一半作安全區
+  }
+}
 
 const marginPass = within(leftForCheck) && within(topForCheck);
 
