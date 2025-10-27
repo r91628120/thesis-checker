@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-25f';
+  const APP_VER = '2025-10-27a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -422,10 +422,13 @@ async function runPdfChecks(buf){
 
   // 只量測第1頁正文用
   let firstSectionY = null;    // 第1頁「壹、前言」那一行的 Y 座標（pdf.js 的 y 座標：越大越靠上）
+  let firstSectionLeftX = Infinity; // ➊ 新增：〈壹、前言〉行的最左 x
+  let page1H = null;               // ➋ 新增：第1頁高度（用來算「上邊界 = H - y」）
   const FIRST_BODY_GUESS_FALLBACK = 40; // 容差（pt），找不到「前言」時，往上略過 40pt 當作正文起點
 
   for(let p=1;p<=numPages;p++){
     const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
+    if (p === 1) page1H = H;  // ➌ 把第1頁的高度存起來
     const tc=await page.getTextContent();
 
     const topBandMinY = H - MARGIN_PT;
@@ -467,10 +470,10 @@ async function runPdfChecks(buf){
 
       // 只在第1頁偵測「壹、前言／一、前言／1、前言」當作正文起點
       if (p === 1 && txt) {
-        // 常見三種寫法：壹、一、1，加上 、．. 任一標點
+      // 常見三種寫法：壹、一、1 + 前言
         if (/^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
-          // 記下這一行的 y（pdf.js：越大越靠近上緣）
-          firstSectionY = y;
+          firstSectionY = y;                  // 基準 y
+          firstSectionLeftX = Math.min(firstSectionLeftX, x); // ➍ 記下這一行最靠左的 x
         }
       }
 
@@ -548,14 +551,16 @@ const within = v =>
   v >= (MARGIN_MIN_PT - MARGIN_TOL_PT) &&
   v <= (MARGIN_MAX_PT + MARGIN_TOL_PT);
 
-// 四邊都要在允許範圍內
-const marginPass =
-  within(minLeft)   &&
-  within(minRight)  &&
-  within(minTop)    &&
-  within(minBottom);
+// 原：四邊都要在允許範圍內
+// const marginPass = within(minLeft) && within(minRight) && within(minTop) && within(minBottom);
 
-// 顯示用的門檻（轉小數一位）
+// ➎ 新：只採用〈壹、前言〉那一行作為量測基準：左邊界 = firstSectionLeftX；上邊界 = page1H - firstSectionY
+const leftForCheck = isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;   // 後備：若抓不到就退回原本推估
+const topForCheck  = (page1H!=null && firstSectionY!=null) ? (page1H - firstSectionY) : minTop;
+
+const marginPass = within(leftForCheck) && within(topForCheck);
+
+// 顯示用的門檻（原樣）
 const MIN_CM = RULES.marginMinCM.toFixed(1);
 const MAX_CM = RULES.marginMaxCM.toFixed(1);
 const tolPt  = MARGIN_TOL_PT.toFixed(1);
@@ -563,9 +568,11 @@ const tolPt  = MARGIN_TOL_PT.toFixed(1);
 addRow(
   `四周邊界 2 公分（正文區推估）`,
   marginPass,
-  `（僅第1頁、從「壹、前言」起算）估計最小邊界（pt）：左 ${isFinite(minLeft)?minLeft.toFixed(1):'—'}、右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、上 ${isFinite(minTop)?minTop.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}（允許誤差±${tolPt}pt）`,
-  `四邊邊界依小論文格式規範應設為 2.0 公分；本系統允許 ±0.2 公分的轉檔誤差（即 1.8–2.3 cm）視為合格，無需另行調整 Word 邊界設定。`
-
+  // ➏ 證據：主顯示「左/上（以〈壹、前言〉為基準）」；右/下僅列數值但標註「略檢」
+  `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${tolPt}pt）｜參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`,
+  // ➐ 說明：清楚寫出新規則
+  `依老師判準，本系統僅檢「左邊界」與「上邊界」（以首頁〈壹、前言〉行作基準），右/下不列為判斷依據。
+   規範仍以 2.0 公分為準，轉檔誤差 ±0.2 公分（即 1.8–2.3 cm）視為合格。`
 );
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
