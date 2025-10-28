@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-28a';
+  const APP_VER = '2025-10-28b';
   (function () {
     try {
       const url = new URL(location.href);
@@ -364,7 +364,7 @@ fontCheckBtn.addEventListener('click', async () => {
       const { pass, suggestion } = normalizeApiResult(data);
       const ev = buildEvidenceString(data);
       _fontCheckMirror = { pass: Boolean(pass), evidence: ev, suggestion: suggestion || '' };
-      ('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
+      addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
       syncBasicFontRuleMirror();
       buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
       resultCard.style.display = 'block';
@@ -378,11 +378,22 @@ fontCheckBtn.addEventListener('click', async () => {
 });
 
 async function fetchCloudRun(fileOrBlob, nameForServer) {
-  const formData = new FormData();
-  // 用欄位名 "file"（後端已支援），並保留原始檔名
-  formData.append("file", fileOrBlob, nameForServer || "upload.pdf");
+  // sanity check（避免 0 bytes）
+  if (!fileOrBlob || !fileOrBlob.size) {
+    throw new Error('EMPTY_FILE_BLOB');
+  }
 
-  // 破壞快取，避免命中舊的預檢/錯誤回應
+  const formData = new FormData();
+  const fname = nameForServer || "upload.pdf";
+
+  // 同時送出兩個常見欄位名，避免後端只讀其中之一
+  formData.append("file", fileOrBlob, fname);
+  formData.append("upload", fileOrBlob, fname);
+
+  // 便於除錯：可觀察 boundary 與大小
+  console.log('[CloudRun] form ready, size =', fileOrBlob.size, 'name =', fname);
+
+  // 破壞快取，避免打到舊回應
   const url = CLOUD_RUN_ENDPOINT + "?v=" + Date.now();
 
   try {
@@ -390,15 +401,19 @@ async function fetchCloudRun(fileOrBlob, nameForServer) {
       method: "POST",
       mode: "cors",
       cache: "no-store",
-      body: formData,
-      // 注意：使用 FormData 時不要自己設 Content-Type，瀏覽器會帶 boundary
+      body: formData
+      // 不要自行加 Content-Type；瀏覽器會含 multipart boundary
     });
 
+    // 讀一下純文字備註，方便顯示後端的原始訊息
+    const text = await res.text();
     if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error(`API ${res.status} ${res.statusText} ${t}`);
+      throw new Error(`API ${res.status} ${res.statusText} ${text || ''}`.trim());
     }
-    return await res.json();
+
+    // 成功就嘗試 parse JSON，parse 失敗就回傳原文字
+    try { return JSON.parse(text); }
+    catch { return { ok: true, raw: text }; }
 
   } catch (err) {
     console.error("Cloud Run 失敗：", err);
@@ -413,6 +428,7 @@ async function fetchCloudRun(fileOrBlob, nameForServer) {
     return null;
   }
 }
+
 
 function normalizeApiResult(data){const pass=typeof data.pass==='boolean'?data.pass:(data.summary?.pass??data.ok??false);const suggestion=data.suggestion||data.summary?.suggestion||'';return {pass,suggestion}}
 function buildEvidenceString(data){
@@ -2135,7 +2151,7 @@ function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
 }
 function syncBasicFontRuleMirror(){
   if(_fontCheckMirror){
-    ('字體/字型規範（需人工確認）',_fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
+    addRow('字體/字型規範（需人工確認）', _fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
   }else{
     addRow('字體/字型規範（需人工確認）',true,'建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體。','若需精確檢查請使用「字體字型進階檢查」。');
   }
