@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-27b';
+  const APP_VER = '2025-10-28a';
   (function () {
     try {
       const url = new URL(location.href);
@@ -58,6 +58,15 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
 .gpt-inline-desc{ display:inline-block; margin-left:8px; font-size:13px; }
 .gpt-inline-desc summary{ cursor:pointer; color:#c2185b; font-weight:600; }
 .gpt-inline-desc ul{ margin:6px 0 0 20px; color:#555; }
+
+/* ==== 邊界尺規縮圖（SVG） ==== */
+.margin-preview { margin-top:8px; }
+.margin-preview .legend { display:flex; gap:10px; align-items:center; font-size:12px; color:#374151; margin:6px 0;}
+.margin-preview .dot{display:inline-block;width:10px;height:10px;border-radius:2px;border:2px solid #111}
+.margin-preview .dot.red{border-color:#be123c;border-style:dashed}
+.margin-preview .dot.blue{border-color:#1d4ed8;border-style:dashed}
+
+
 </style>
 
 <!-- pdf.js (ESM) -->
@@ -258,6 +267,18 @@ const RULES = {
 const CM_TO_PT = cm => cm * 72 / 2.54;
 const MARGIN_MIN_PT = CM_TO_PT(RULES.marginMinCM);
 const MARGIN_MAX_PT = CM_TO_PT(RULES.marginMaxCM);
+
+// === 邊界尺規常數（黑=2.0cm，紅=2.2cm，藍=1.8cm） ===
+const BASE_MARGIN_CM = 2.0;
+const TOL_CM = 0.2;
+const BASE_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM);
+const UPPER_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM + TOL_CM); // 2.2cm（紅）
+const LOWER_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM - TOL_CM); // 1.8cm（藍）
+
+// 安全字串
+function _esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+
+
 // 首頁篇名與頁碼的固定 2 cm 判定帶
 const MARGIN_PT = CM_TO_PT(2);   // 2 公分 -> pt
 
@@ -343,7 +364,7 @@ fontCheckBtn.addEventListener('click', async () => {
       const { pass, suggestion } = normalizeApiResult(data);
       const ev = buildEvidenceString(data);
       _fontCheckMirror = { pass: Boolean(pass), evidence: ev, suggestion: suggestion || '' };
-      addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
+      ('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
       syncBasicFontRuleMirror();
       buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
       resultCard.style.display = 'block';
@@ -577,15 +598,59 @@ const MIN_CM = RULES.marginMinCM.toFixed(1);
 const MAX_CM = RULES.marginMaxCM.toFixed(1);
 const tolPt  = MARGIN_TOL_PT.toFixed(1);
 
-addRow(
-  `四周邊界 2 公分（正文區推估）`,
-  marginPass,
-  // ➏ 證據：主顯示「左/上（以〈壹、前言〉為基準）」；右/下僅列數值但標註「略檢」
-  `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${tolPt}pt）｜參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`,
-  // ➐ 說明：清楚寫出新規則
-  `依老師判準，本系統僅檢「左邊界」與「上邊界」（以首頁〈壹、前言〉行作基準），右/下不列為判斷依據。
-   規範仍以 2.0 公分為準，轉檔誤差 ±0.2 公分（即 1.8–2.3 cm）視為合格。`
-);
+// === 四周邊界 2 公分（正文區推估 + 視覺尺規） ===
+{
+  const tolPt  = MARGIN_TOL_PT.toFixed(1);
+  const evText =
+    `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：` +
+    `左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、` +
+    `上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${tolPt}pt）｜` +
+    `參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
+
+  addRow(
+    `四周邊界 2 公分（正文區推估）`,
+    marginPass,
+    { note: evText }, // 先以物件 evidence 放文字（renderEvidence 會美化）
+    `依老師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
+     規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格；超出紅框為不合格，完全落入藍框為過寬。`
+  );
+
+  // 在剛剛新增的這列下方插入 SVG 視覺尺規
+  try {
+    const lastRow = tbody.lastElementChild; // addRow 會 append 在最後
+    // 取得第 1 頁的 W/H（前面已算）
+    const W = (typeof page1H === 'number') ? (W || 595) : (pdf?.getPage ? (await (await pdf.getPage(1)).getViewport({scale:1})).width : 595);
+    const H = (typeof page1H === 'number') ? page1H : (pdf?.getPage ? (await (await pdf.getPage(1)).getViewport({scale:1})).height : 842);
+
+    const html = buildMarginPreviewSVG({
+      W, H,
+      measLeft:  leftForCheck,
+      measRight: minRight,
+      measTop:   topForCheck,
+      measBottom:minBottom
+    });
+
+    const cell = lastRow?.children?.[2];
+    if (cell) {
+      const holder = document.createElement('div');
+      holder.innerHTML = html;
+      cell.appendChild(holder);
+    }
+  } catch (e) { console.warn('margin preview svg error', e); }
+
+  // 若本次檔名為 test001（你的基準檔），顯示校準提示
+  if ((fileName||'').toLowerCase().startsWith('test001')) {
+    const lastRow = tbody.lastElementChild;
+    const cell = lastRow?.children?.[2];
+    if (cell) {
+      const tip = document.createElement('div');
+      tip.className = 'hint';
+      tip.style.marginTop = '6px';
+      tip.innerHTML = '🧭 已偵測到基準檔 <b>test001</b>：此檔視為「完全合格」的 2 cm 基準，供其他 PDF 對照用。';
+      cell.appendChild(tip);
+    }
+  }
+}
 
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
   const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
@@ -1486,7 +1551,7 @@ const sampleRefs = refEntries.slice(0, 3).map((s, i) => `${i + 1}. ${_escapeHtml
 const evidence12x = evidence12_strict + `<br/>前 3 筆：<br/>${sampleRefs}` + detailHtml;
 
 // === 呼叫你現有的 addRow ===
-addRow('參考文獻 ≥ 3', _auditList.length >= 3, evidence12x,
+('參考文獻 ≥ 3', _auditList.length >= 3, evidence12x,
   '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。'
 );
 
@@ -1964,6 +2029,59 @@ function renderEvidence(evd){
   }
 }
 
+/**
+ * 產生 2D 縮圖（SVG）顯示：黑=2.0cm、紅=2.2cm（上限）、藍=1.8cm（下限），
+ * 並標示本次實測的四邊最小距（pt）。W/H/距離單位皆依 pdf.js viewport（scale=1）的座標系。
+ */
+function buildMarginPreviewSVG({W, H, measLeft, measRight, measTop, measBottom}) {
+  // 頁面縮放到寬 240 px 的縮圖
+  const thumbW = 240;
+  const scale = thumbW / W;
+  const th = Math.round(H * scale);
+
+  const insetBlack = BASE_MARGIN_PT * scale;
+  const insetRed   = UPPER_MARGIN_PT * scale;
+  const insetBlue  = LOWER_MARGIN_PT * scale;
+
+  // 實測線：以「距離頁緣」的最小值畫 4 條內縮線
+  const mL = Math.max(0, (measLeft ?? 0)   * scale);
+  const mR = Math.max(0, (measRight ?? 0)  * scale);
+  const mT = Math.max(0, (measTop ?? 0)    * scale);
+  const mB = Math.max(0, (measBottom ?? 0) * scale);
+
+  const strokeMeasure = '#16a34a'; // 不指定色系也可，單純視覺辨識
+
+  const svg = `
+<svg width="${thumbW}" height="${th}" viewBox="0 0 ${thumbW} ${th}" xmlns="http://www.w3.org/2000/svg" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px">
+  <!-- 外框 -->
+  <rect x="0.5" y="0.5" width="${thumbW-1}" height="${th-1}" fill="white" stroke="#9ca3af"/>
+
+  <!-- 黑 2.0cm -->
+  <rect x="${insetBlack}" y="${insetBlack}" width="${thumbW-2*insetBlack}" height="${th-2*insetBlack}"
+        fill="none" stroke="#111" stroke-width="2"/>
+
+  <!-- 紅 2.2cm（上限；虛線） -->
+  <rect x="${insetRed}" y="${insetRed}" width="${thumbW-2*insetRed}" height="${th-2*insetRed}"
+        fill="none" stroke="#be123c" stroke-width="2" stroke-dasharray="6 4"/>
+
+  <!-- 藍 1.8cm（下限；虛線） -->
+  <rect x="${insetBlue}" y="${insetBlue}" width="${thumbW-2*insetBlue}" height="${th-2*insetBlue}"
+        fill="none" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="6 4"/>
+
+  <!-- 實測線（綠） -->
+  ${Number.isFinite(mL) ? `<line x1="${mL}" y1="0" x2="${mL}" y2="${th}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
+  ${Number.isFinite(mR) ? `<line x1="${thumbW - mR}" y1="0" x2="${thumbW - mR}" y2="${th}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
+  ${Number.isFinite(mT) ? `<line x1="0" y1="${mT}" x2="${thumbW}" y2="${mT}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
+  ${Number.isFinite(mB) ? `<line x1="0" y1="${th - mB}" x2="${thumbW}" y2="${th - mB}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
+</svg>
+<div class="legend">
+  <span class="dot"></span><span>黑：2.0 cm</span>
+  <span class="dot red"></span><span>紅：2.2 cm（上限）</span>
+  <span class="dot blue"></span><span>藍：1.8 cm（下限）</span>
+</div>`;
+  return `<div class="margin-preview">${svg}</div>`;
+}
+
 // ✅ 新版 addRow：支援物件 evidence、展開 JSON、避免 [object Object]
 function addRow(rule,pass,evidence,suggestion){
   const tr=document.createElement('tr');
@@ -2017,7 +2135,7 @@ function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
 }
 function syncBasicFontRuleMirror(){
   if(_fontCheckMirror){
-    addRow('字體/字型規範（需人工確認）',_fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
+    ('字體/字型規範（需人工確認）',_fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
   }else{
     addRow('字體/字型規範（需人工確認）',true,'建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體。','若需精確檢查請使用「字體字型進階檢查」。');
   }
