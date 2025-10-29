@@ -7,7 +7,7 @@
 
 <!-- ===== 發版字串（改這行就能強制換新） ===== -->
 <script>
-  const APP_VER = '2025-10-28c';
+  const APP_VER = '2025-10-28d';
   (function () {
     try {
       const url = new URL(location.href);
@@ -452,13 +452,24 @@ async function runPdfChecks(buf){
   let boldWordCount = 0;
   let boldFonts = new Set();
 
-  const pageTexts=[];
-  // 扣除略過頁再計算實際檢查頁數
-const effectivePages = Array.from({length: numPages}, (_, i) => i + 1).filter(p => !skipPages.has(p));
+  const pageTexts = [];
+
+// 先把各頁文字塞進 pageTexts（你已有迴圈）…
+// 迴圈結束後，先找出要略過的頁：
+const skipPages = new Set();
+for (let i = 1; i <= numPages; i++) {
+  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
+}
+
+// 再來才用 skipPages 算有效頁數
+const effectivePages = Array.from({ length: numPages }, (_, i) => i + 1)
+  .filter(p => !skipPages.has(p));
+
 addRow('頁數 4–10',
   (effectivePages.length >= RULES.minPages && effectivePages.length <= RULES.maxPages),
   `共 ${numPages} 頁（實際檢查 ${effectivePages.length} 頁，略過 ${skipPages.size} 頁）`,
-  '若少於4或多於10頁，請修訂篇幅。');
+  '若少於4或多於10頁，請修訂篇幅。'
+);
 
   let pageNumOkPages=[];
   const headerTitleTexts=[];
@@ -567,12 +578,6 @@ addRow('頁數 4–10',
     pageTexts[p]=pageBuf.join('');
   }
 
-// === 依關鍵字找出要略過的頁（例如：小論文評分表） ===
-const skipPages = new Set();
-for (let i = 1; i <= numPages; i++) {
-  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
-}
-
 // 提示：若有略過頁，顯示資訊（仍計入頁數與頁碼檢查；但不納入「全文檢查」）
 if (skipPages.size > 0) {
   addRow(
@@ -581,12 +586,6 @@ if (skipPages.size > 0) {
     `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
     '此頁將不納入內文、圖表、引註、參考文獻等全文型檢查；但仍計入「頁數」與「每頁置中頁碼」等版面規則。'
   );
-}
-
-// === 依關鍵字找出要略過的頁（例如：小論文評分表） ===
-const skipPages = new Set();
-for (let i = 1; i <= numPages; i++) {
-  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
 }
 
 // 顯示略過頁提示
@@ -749,10 +748,6 @@ async function runDocxChecks(buf){
   addRow('頁數 4–10（DOCX）', true, 'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。', '請匯出 PDF。');
   runTextRules([text]);
 }
-
-// 將含「小論文評分表」的頁面排除後再做全文檢查
-const pageTextsFiltered = pageTexts.map((t, i) => (skipPages.has(i) ? '' : t));
-runTextRules(pageTextsFiltered);
 
 /* ===== 參考文獻工具（僅小幅修正） ===== */
 
@@ -1448,7 +1443,7 @@ function _matchSourceToRefs(srcContent, refEntries) {
 }
 
 /* ===== 文字規則（只有第11、12項含微調） ===== */
-function ){
+function runTextRules(pageTexts) {
   const pages = pageTexts.length - 1 || 1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
 
