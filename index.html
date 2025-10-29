@@ -250,7 +250,10 @@ const MARGIN_TOL_PT = 0.8;
 const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
 const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部)/g];
 
-/* ===== 規則常數 ===== */
+/* =====  ===== */
+// 需要略過的頁面關鍵詞（出現即不納入「全文檢查」）
+const SKIP_PAGE_TOKEN = /小論文評分表/;
+
 const RULES = {
   minPages: 4,
   maxPages: 10,
@@ -450,7 +453,12 @@ async function runPdfChecks(buf){
   let boldFonts = new Set();
 
   const pageTexts=[];
-  addRow('頁數 4–10',(numPages>=RULES.minPages&&numPages<=RULES.maxPages),`共 ${numPages} 頁`,'若少於4或多於10頁，請修訂篇幅。');
+  // 扣除略過頁再計算實際檢查頁數
+const effectivePages = Array.from({length: numPages}, (_, i) => i + 1).filter(p => !skipPages.has(p));
+addRow('頁數 4–10',
+  (effectivePages.length >= RULES.minPages && effectivePages.length <= RULES.maxPages),
+  `共 ${numPages} 頁（實際檢查 ${effectivePages.length} 頁，略過 ${skipPages.size} 頁）`,
+  '若少於4或多於10頁，請修訂篇幅。');
 
   let pageNumOkPages=[];
   const headerTitleTexts=[];
@@ -464,6 +472,7 @@ async function runPdfChecks(buf){
   const FIRST_BODY_GUESS_FALLBACK = 40; // 容差（pt），找不到「前言」時，往上略過 40pt 當作正文起點
 
   for(let p=1;p<=numPages;p++){
+    if (skipPages.has(p)) continue; // 略過小論文評分表頁
     const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
     if (p === 1) page1H = H;  // ➌ 把第1頁的高度存起來
     const tc=await page.getTextContent();
@@ -557,6 +566,42 @@ async function runPdfChecks(buf){
     if(hasCenterPageNum)pageNumOkPages.push(p);
     pageTexts[p]=pageBuf.join('');
   }
+
+// === 依關鍵字找出要略過的頁（例如：小論文評分表） ===
+const skipPages = new Set();
+for (let i = 1; i <= numPages; i++) {
+  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
+}
+
+// 提示：若有略過頁，顯示資訊（仍計入頁數與頁碼檢查；但不納入「全文檢查」）
+if (skipPages.size > 0) {
+  addRow(
+    '略過特定頁面（不納入全文檢查）',
+    true,
+    `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
+    '此頁將不納入內文、圖表、引註、參考文獻等全文型檢查；但仍計入「頁數」與「每頁置中頁碼」等版面規則。'
+  );
+}
+
+// === 依關鍵字找出要略過的頁（例如：小論文評分表） ===
+const skipPages = new Set();
+for (let i = 1; i <= numPages; i++) {
+  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
+}
+
+// 顯示略過頁提示
+if (skipPages.size > 0) {
+  addRow(
+    '略過特定頁面',
+    true,
+    `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
+    '此頁不納入內文、圖表、引註、參考文獻、頁數、頁碼、邊界等檢查。'
+  );
+}
+
+// ✅ 新增：全文檢查前過濾略過頁
+const pageTextsFiltered = pageTexts.map((t, i) => (skipPages.has(i) ? '' : t));
+runTextRules(pageTextsFiltered);
 
   addRow('首頁篇名需置中且落在距上緣 2 公分內', firstHeaderOK,
     firstHeaderOK?'已於首頁偵測到置中之篇名/標題':'未偵測到置中篇名或位置不在 2 公分內',
@@ -682,7 +727,7 @@ const tolPt  = MARGIN_TOL_PT.toFixed(1);
     hasBoldFont ? 'OK（已檢測到粗體字體）' : '請確認參考文獻之書名、期刊名、卷期等需以粗體表示。'
   );
 
-  runTextRules(pageTexts);
+  ;
 }
 
 /* ===== DOCX ===== */
@@ -705,7 +750,9 @@ async function runDocxChecks(buf){
   runTextRules([text]);
 }
 
-function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||''}
+// 將含「小論文評分表」的頁面排除後再做全文檢查
+const pageTextsFiltered = pageTexts.map((t, i) => (skipPages.has(i) ? '' : t));
+runTextRules(pageTextsFiltered);
 
 /* ===== 參考文獻工具（僅小幅修正） ===== */
 
@@ -1401,7 +1448,7 @@ function _matchSourceToRefs(srcContent, refEntries) {
 }
 
 /* ===== 文字規則（只有第11、12項含微調） ===== */
-function runTextRules(pageTexts){
+function ){
   const pages = pageTexts.length - 1 || 1;
   const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
 
@@ -2106,7 +2153,7 @@ function addRow(rule,pass,evidence,suggestion){
   tr.innerHTML=`<td><span class="num">${++_ruleCounter}</span>${rule}</td><td>${badge}</td><td>${evdHtml}</td><td>${suggestion||''}</td>`;
   tbody.appendChild(tr);
 
-  // 以下是原本的規則對應表（原封不動保留）
+  // 以下是原本的對應表（原封不動保留）
   const map={
     '頁數 4–10':{rule_id:'file.pages',category:'檔案規格',severity:'critical'},
     '首頁篇名需置中且落在距上緣 2 公分內':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
