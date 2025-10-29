@@ -1,75 +1,42 @@
+<!-- 高中職小論文格式自檢系統（簡化版） -->
+<!-- Version: v=2025-10-30a -->
+<!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢系統</title>
-
-<!-- ===== 發版字串（改這行就能強制換新） ===== -->
-<script>
-  const APP_VER = '2025-10-28d';
-  (function () {
-    try {
-      const url = new URL(location.href);
-      if (url.searchParams.get('v') !== APP_VER) {
-        url.searchParams.set('v', APP_VER);
-        location.replace(url.toString());
-      }
-    } catch (e) {}
-  })();
-  console.log("載入版本:", (new URL(location.href)).searchParams.get('v') || APP_VER);
-</script>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
+<title>高中職小論文格式自檢（簡化版 v=2025-10-30a）</title>
 
 <style>
 :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
 .wrap{max-width:960px;margin:auto;padding:24px}
-header h1{margin:0 0 4px;font-size:clamp(22px,4vw,28px)}header p{margin:0;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px}
-.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.pill{background:#eef2ff;border:1px solid #e5e7eb;border-radius:999px;padding:.3rem .6rem;font-size:12px}
-.hint{color:var(--muted);font-size:13px}.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
-input[type=file]{display:none}label.file{display:inline-flex;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
-button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}button.primary{background:var(--accent);color:#fff;border-color:transparent}button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.hint{color:var(--muted);font-size:13px}
+.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
+input[type=file]{display:none}
+label.file{display:inline-flex;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
+button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:transparent}
 .ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
 .bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
-table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{white-space:pre-wrap;max-height:260px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
-.filetag{font-size:13px;color:#374151;margin:6px 0 0}.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
-.extsearch{background:#f9fafb;border:1px dashed #e5e7eb;border-radius:10px;padding:10px;margin-top:6px}.extsearch ul{margin:6px 0 0 18px;padding:0}.extsearch li{margin:4px 0}
-
-/* 單獨 GPT 檢查按鈕（淡粉紅） */
-.btn-gpt{
-  background:#f8c8dc;       /* 淡粉紅 */
-  color:#333;
-  border:1px solid #f5a6c4;
-  border-radius:10px;
-  padding:.7rem 1.1rem;
-  font-weight:600;
-  cursor:pointer;
-  transition:background .15s;
-}
-.btn-gpt:hover{ background:#f5a6c4; }
-.btn-gpt:disabled{ opacity:.5; cursor:not-allowed; }
-
-/* 右側的小三角解說 */
-.gpt-inline-desc{ display:inline-block; margin-left:8px; font-size:13px; }
-.gpt-inline-desc summary{ cursor:pointer; color:#c2185b; font-weight:600; }
-.gpt-inline-desc ul{ margin:6px 0 0 20px; color:#555; }
-
-/* ==== 邊界尺規縮圖（SVG） ==== */
-.margin-preview { margin-top:8px; }
-.margin-preview .legend { display:flex; gap:10px; align-items:center; font-size:12px; color:#374151; margin:6px 0;}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f9fafb}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.btn-gpt{background:#f8c8dc;color:#333;border:1px solid #f5a6c4;border-radius:10px;padding:.7rem 1.1rem;font-weight:600;cursor:pointer;text-decoration:none}
+.margin-preview .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:#374151;margin:6px 0}
 .margin-preview .dot{display:inline-block;width:10px;height:10px;border-radius:2px;border:2px solid #111}
 .margin-preview .dot.red{border-color:#be123c;border-style:dashed}
 .margin-preview .dot.blue{border-color:#1d4ed8;border-style:dashed}
-
-
+.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
+footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </style>
 
-<!-- pdf.js (ESM) -->
+<!-- pdf.js loader -->
 <script type="module">
   window.loadPdfjs = async () => {
     const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
@@ -78,2213 +45,322 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding
     return { getDocument };
   };
 </script>
-<!-- mammoth.js -->
-<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>高中職小論文格式自檢系統</h1>
-    <p>支援 PDF / DOCX；解析僅在瀏覽器記憶體中，完成即釋放，不留存。</p>
-    <div class="hint" id="counterBox">目前累積小論文格式自檢人次：<b id="counter">載入中…</b>　<span class="mono">v=<script>document.write(new URL(location.href).searchParams.get('v')||APP_VER)</script></span></div>
-    <div class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</div>
-    <!-- 📘 系統介紹導覽區 -->
-<div style="background:#e8f1fd;border-radius:10px;padding:16px;margin-top:16px;text-align:center;">
-  <p style="margin:0;font-size:15px;color:#1e3a8a;">
-    想了解系統判定方式與 AI 小助手使用教學嗎？<br/>
-    <a href="about.html" style="color:#2563eb;font-weight:600;text-decoration:none;">
-      📘 點我前往「系統介紹與 AI 說明」
-    </a>
-    <a href="manual.pdf" style="display:inline-block;margin-top:6px;color:#1e40af;text-decoration:none;">📄 下載操作與判定說明書（PDF）</a>
-    <a href="gpt-safety.html" style="display:inline-block;margin-top:6px;color:#c2185b;text-decoration:none;font-weight:600;">🔒 AI小助手 GPT 單獨檢查PDF模式安全說明網頁
-    </a>
-
+  <h1 style="margin:0 0 6px">高中職小論文格式自檢（簡化版）</h1>
+  <p class="hint">
+    本頁僅保留：#15 四周邊界、#10 校外發表檢索（交 GPT）、Cloud Run 字體字型進階檢查。
+    <strong>版本：v=2025-10-30a</strong>
   </p>
-</div>
-
-
-  </header>
 
   <section class="card">
-    <div class="row"><div class="pill">PDF / DOCX</div><div class="pill">頁數 4–10</div><div class="pill">≤ 5MB</div><div class="pill">不得含校名／姓名</div></div>
-    <details style="margin-top:8px">
-      <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
-      <ul>
-        <li>僅做格式檢查，不做存證或投稿。</li>
-        <li>解析於瀏覽器記憶體，完成後即釋放；本站不保存。</li>
-        <li>請勿含個資（校名、姓名、班級）。</li>
-      </ul>
-    </details>
-    <div class="row" style="margin-top:8px">
-      <input id="consent" type="checkbox"/><label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
-    <p style="color:#444; font-size:14px; margin-top:6px; line-height:1.6;">
-     💡 <b>使用建議：</b>請先使用本網頁系統進行初步格式檢查以獲得摘要結果，
-     接著再使用下方的 <b>「單獨 GPT 檢查 PDF」</b> 進行更詳細的分析與解說。
-     <br>
-     目前前端檢查可快速偵測頁碼、結構、字體與邊界等規範；
-     而 GPT 模式則能進一步檢查圖表、引註與參考文獻對應、錯別字與內容一致性。
-     <br>
-     🧩 <b>兩者搭配使用，能獲得最準確的自檢結果。</b>
-    </p>
-
+    <div class="row">
+      <div class="hint">PDF（≤ 5 MB）</div>
     </div>
+    <div style="margin-top:8px">
+      <input id="consent" type="checkbox"/>
+      <label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
+    </div>
+
     <div id="drop" class="drop" aria-disabled="true">
-      <p><strong>拖拉 PDF 或 DOCX 到這裡</strong></p>
+      <p><strong>拖拉 PDF 到這裡</strong></p>
       <label for="file" class="file">選擇檔案</label>
-      <input id="file" type="file" accept=".pdf,.docx" disabled/>
-      <p class="hint">完成檢查即釋放／不保存。</p>
+      <input id="file" type="file" accept=".pdf" disabled/>
+      <p class="hint" id="status">請先勾選同意。</p>
     </div>
+
     <div class="row" style="margin-top:8px">
-      <button id="start" class="primary" disabled>開始檢查</button>
-      <button id="clear" disabled>清除</button>
-      <button id="fontCheckBtn" disabled>字體字型進階檢查</button>
-      <a id="gptCheckBtn"
-         class="btn-gpt"
-         href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy"
-         target="_blank"
-         rel="noopener noreferrer">
-         單獨 GPT 檢查 PDF 檔案
-      </a>
-
-      <details class="gpt-inline-desc">
-        <summary>了解此功能</summary>
-        <ul>
-          <li>由 GPT 直接解析 PDF（不經前端解析），快速產出「含頁碼」錯誤清單。</li>
-          <li>可檢查：格式、錯字、文獻、圖表來源，報告支援頁碼標註。</li>
-          <li>為保隱私，系統完成後會自動刪除暫存檔，不會永久保存。</li>
-        </ul>
-      </details>
-
-      <span id="status" class="hint" role="status" aria-live="polite"></span>
+      <button id="start" class="primary" disabled>開始檢查（#15 邊界）</button>
+      <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+      <a class="btn-gpt" id="gptB" target="_blank" rel="noopener"
+         href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
+      <a class="primary" id="gptA" style="text-decoration:none" target="_blank" rel="noopener"
+         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">AI 小助手（GPT A）</a>
     </div>
-  </section>
-
-  <section class="card" id="spec">
-    <h2>系統檢查規則（合格標準）</h2>
-    <ol>
-      <li>頁數：4–10 頁。</li>
-      <li>首頁篇名需置中且落在距上緣 2 公分內。</li>
-      <li>首頁頁碼需置中且落在距下緣 2 公分內。</li>
-      <li>檔案名稱與頁首篇名一致（不符判定淘汰）。</li>
-      <li>每頁需有置中頁碼（底端帶）。</li>
-      <li>四周邊界 ≥ 2 公分（正文區推估）。</li>
-      <li>不得有封面頁（4–10頁）。</li>
-      <li>不得含校名/姓名（參考文獻之後的區段自動略過）。</li>
-      <li>六大段落依序：前言 → 文獻探討 → 研究方法 → 研究分析與結果 → 研究結論與建議 → 參考文獻。</li>
-      <li>內文引註採 作者-年份；直接引文 ≤ 50 字（不含標點）。</li>
-      <li>參考文獻 ≥ 3；同時顯示四層統計（總數/合格/不合格/網路來源）。</li>
-      <li>圖表需有標號/標題與來源（表內已引注可不於表下再標）。</li>
-      <li>參考文獻與內文引註一致；來源不可全為網路。</li>
-      <li>字體/字型規範（可用進階檢查）。</li>
-      <li>校外發表/得獎：外部檢索助手 + GPT 提示。</li>
-    </ol>
-    <ul class="hint" style="margin-top:8px">
-      <li><b>情境加值檢查（結果頁可能出現）：</b></li>
-      <li>・粗體樣式檢查（PDF/DOCX）— 協助你確認書名、期刊名、卷期等是否有使用粗體。</li>
-      <li>・頁數 4–10（DOCX）— 若上傳 DOCX，因無法準確估頁，會顯示替代提示（建議匯出 PDF 再檢查）。</li>
-      <li>・Cloud Run 字體字型檢查（進階）— 你按下「字體字型進階檢查」時才會新增一列並同步至「字體/字型規範」。</li>
-    </ul>
-
-    <p class="hint">※ 本系統為輔助工具，仍需老師覆核。</p>
   </section>
 
   <section class="card" id="resultCard" style="display:none">
     <h3>檢查結果</h3>
-    <div id="fileTag" class="filetag"></div>
-    <table><thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead><tbody id="tbody"></tbody></table>
-    <div class="row" style="margin-top:8px">
+    <div id="fileTag" class="hint" style="margin:6px 0 12px"></div>
+    <table>
+      <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="row" style="margin-top:10px">
       <button id="downloadHtml">下載檢查結果（網頁）</button>
-      <button id="copyJson">複製檢查結果 (給AI助手)</button>
-      <button id="downloadJson">儲存檢查結果檔案</button>
-      <a id="openGpts" class="primary" href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong" target="_blank" rel="noopener">打開AI助手（貼上檢查結果）</a>
     </div>
-    <pre id="jsonPreview" class="mono" style="margin-top:8px"></pre>
   </section>
+
+  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30a</footer>
 </div>
 
 <script>
-/* ===== 設定 ===== */
-// 這裡一定要貼「部署 > 管理部署 > 網頁應用程式 > 網址」那個 /exec
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTtq4W2kf0MErBPoq_bCMzZBryMCf16ko_5tqAAw7nqq7yJAwjvQKEi/exec";
-const ENABLE_COUNTER = true;
+/* ========= 常數與狀態 ========= */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
-// ⚠️ 先不要在這裡呼叫 fetchCounter()，改到 DOM 解析完成後再叫（見下）
-</script>
-<script>
-/* ===== UI 變數 ===== */
-const consent=document.getElementById('consent'),fileInput=document.getElementById('file'),drop=document.getElementById('drop');
-const startBtn=document.getElementById('start'),clearBtn=document.getElementById('clear'),fontCheckBtn=document.getElementById('fontCheckBtn');
-const statusEl=document.getElementById('status'),resultCard=document.getElementById('resultCard'),tbody=document.getElementById('tbody');
-const downloadHtmlBtn=document.getElementById('downloadHtml'),copyBtn=document.getElementById('copyJson'),downloadJsonBtn=document.getElementById('downloadJson');
-const jsonPreview=document.getElementById('jsonPreview'),counterBox=document.getElementById('counterBox'),counterEl=document.getElementById('counter'),fileTagEl=document.getElementById('fileTag');
+const consent  = document.getElementById('consent');
+const fileInput= document.getElementById('file');
+const drop     = document.getElementById('drop');
+const statusEl = document.getElementById('status');
+const startBtn = document.getElementById('start');
+const fontBtn  = document.getElementById('fontCheckBtn');
+const resultCard = document.getElementById('resultCard');
+const tbody    = document.getElementById('tbody');
+const fileTag  = document.getElementById('fileTag');
+const downloadHtmlBtn = document.getElementById('downloadHtml');
 
+let arrayBuffer=null, fileName='', fileExt='pdf';
 
-// ✅ 等 DOM 解析完成再抓人次；不阻塞 UI
-(function initCounter() {
-  if (!ENABLE_COUNTER) return;
-
-  // 延遲 0.5 秒執行以避免阻塞
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(async () => {
-      try {
-        await fetchCounter();
-      } catch (err) {
-        console.error('讀取人次失敗', err);
-        if (counterEl) counterEl.textContent = '—';
-      }
-    }, 500);
-  });
-})();
-
-// 「同意上傳政策」勾選後你原本也會再叫 fetchCounter() —— 保留即可
-
-/* ===== 狀態 ===== */
-let arrayBuffer=null, fileName=null, fileBase=null, fileExt=null, lastSummaryJSON=null, _lastPageCount=0;
-let _ruleCounter=0;
-const _rowsBuffer=[];
-let _fontCheckMirror=null;
-// 允許的邊界誤差（pt）。0.8pt ≈ 0.28mm
-const MARGIN_TOL_PT = 0.8;
-const PUNCT=/[，。、．；：、！？—─\-…‧（）()〔〕【】《》〈〉「」『』“”"'\[\]{}<>‧·~`^_=+\|\\/:，,.;:!\?\s]/g;
-const SCHOOL_PATTERNS=[/(國立|市立|縣立)[\u4e00-\u9fa5]{0,8}(高級中學|高中|高職|高工|家商|商工|農工|高農|職業學校|中學|國中|小學|大學|科技大學|科大|師範大學|大學附中|實驗高中|高中部)/g];
-
-/* =====  ===== */
-// 需要略過的頁面關鍵詞（出現即不納入「全文檢查」）
-const SKIP_PAGE_TOKEN = /小論文評分表/;
-
-const RULES = {
-  minPages: 4,
-  maxPages: 10,
-  maxSizeMB: 5,
-  sixSections: ['前言', '文獻探討', '研究方法', '研究分析與結果', '研究結論與建議', '參考文獻'],
-  quoteMaxChars: 50,
-  minQuoteCharsForDirect: 10,
-  // 改為區間
-  marginMinCM: 1.8,
-  marginMaxCM: 2.3
-};
-
-/* ===== 邊界換算 ===== */
-const CM_TO_PT = cm => cm * 72 / 2.54;
-const MARGIN_MIN_PT = CM_TO_PT(RULES.marginMinCM);
-const MARGIN_MAX_PT = CM_TO_PT(RULES.marginMaxCM);
-
-// === 邊界尺規常數（黑=2.0cm，紅=2.2cm，藍=1.8cm） ===
-const BASE_MARGIN_CM = 2.0;
-const TOL_CM = 0.2;
-const BASE_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM);
-const UPPER_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM + TOL_CM); // 2.2cm（紅）
-const LOWER_MARGIN_PT = CM_TO_PT(BASE_MARGIN_CM - TOL_CM); // 1.8cm（藍）
-
-// 安全字串
-function _esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
-
-
-// 首頁篇名與頁碼的固定 2 cm 判定帶
-const MARGIN_PT = CM_TO_PT(2);   // 2 公分 -> pt
-
-/* ===== 可用性 ===== */
-function setUploadEnabled(ok){
-  fileInput.disabled=!ok;
-  const has=!!arrayBuffer;
-  startBtn.disabled = !ok || !has;
-  clearBtn.disabled = !ok || !has;
-  fontCheckBtn.disabled = !ok || !has || fileExt!=='pdf';
-  if (window.gptCheckBtn) {
-    gptCheckBtn.disabled = !ok || !has || fileExt!=='pdf';
-  }
+/* ========= 同意 → 啟用 ========= */
+function setEnabled(ok){
+  fileInput.disabled = !ok;
+  startBtn.disabled  = !ok || !arrayBuffer;
+  fontBtn.disabled   = !ok || !arrayBuffer;
+  statusEl.textContent = ok ? (arrayBuffer ? '已選擇檔案，準備開始。' : '已同意，可選檔。') : '請先勾選同意。';
 }
+setEnabled(false);
+consent.addEventListener('change', ()=>setEnabled(consent.checked));
 
-// 再去抓人次（避免初始化鎖死 fileInput）
-if (ENABLE_COUNTER) fetchCounter();
-statusEl.textContent=consent.checked?'已同意，可上傳。':'請先同意政策。';
-// 可用性：頁面載入後先同步一次
-setUploadEnabled(consent.checked);
-// 勾選/取消同意時，立即更新可用性與提示文字
-consent.addEventListener('change', () => {
-  setUploadEnabled(consent.checked);
-  statusEl.textContent = consent.checked ? '已同意，可上傳。' : '請先同意政策。';
-});
-
-
-/* DnD */
+/* ========= 選檔/拖拉 ========= */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();drop.classList.remove('drag');}));
 drop.addEventListener('drop',e=>{if(fileInput.disabled)return;const f=e.dataTransfer.files?.[0];if(f)handleFile(f);});
 fileInput.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)handleFile(f);});
-function baseName(n){return(n||'').replace(/\.[^.]+$/,'').trim();}
+
 async function handleFile(f){
-  const ext=(f.name.split('.').pop()||'').toLowerCase(); if(!['pdf','docx'].includes(ext)){statusEl.textContent='僅支援 PDF 或 DOCX';return;}
-  if(f.size>RULES.maxSizeMB*1024*1024){statusEl.textContent=`檔案超過 ${RULES.maxSizeMB}MB 上限。`;return;}
-  fileName=f.name;fileBase=baseName(f.name);fileExt=ext;arrayBuffer=await f.arrayBuffer();
-  statusEl.textContent=`已選擇：${f.name}（${(f.size/1024/1024).toFixed(2)} MB）`;setUploadEnabled(consent.checked);
-}
-clearBtn.addEventListener('click',()=>{fileInput.value='';arrayBuffer=null;fileName=fileBase=fileExt=null;startBtn.disabled = true;
-clearBtn.disabled = true;
-fontCheckBtn.disabled = true;
-if (window.gptCheckBtn) window.gptCheckBtn.disabled = true;resultCard.style.display='none';tbody.innerHTML='';fileTagEl.textContent='';statusEl.textContent='已清除。';jsonPreview.textContent='';lastSummaryJSON=null;_rowsBuffer.length=0;_fontCheckMirror=null;});
-
-/* ===== 主流程 ===== */
-startBtn.addEventListener('click',async()=>{
-  if(!arrayBuffer)return;tbody.innerHTML='';resultCard.style.display='none';statusEl.textContent='解析中…';_rowsBuffer.length=0;_ruleCounter=0;_fontCheckMirror=null;
-  try{
-    if(fileExt==='pdf'){await runPdfChecks(arrayBuffer);} else {await runDocxChecks(arrayBuffer);}
-    resultCard.style.display='block';fileTagEl.textContent=`此次檢查檔案：${fileName||'(未命名)'}`;statusEl.textContent='完成檢查。';
-    buildAndShowSummaryJSON({fileName,pages:_lastPageCount||0,passFailRows:_rowsBuffer.slice()});
-    if(ENABLE_COUNTER){await bumpCounterEveryTime();await fetchCounter();}
-  }catch(e){console.error(e);statusEl.textContent='解析失敗：請確認檔案是否有效。'}
-});
-
-/* ===== 進階字體檢查 ===== */
-fontCheckBtn.addEventListener('click', async () => {
-  // 1) 優先用 <input type=file> 的 File 物件（最可靠）
-  const picked = document.querySelector('#file')?.files?.[0];
-
-  // 2) 退而求其次：用記憶體中的 arrayBuffer 轉 Blob
-  const fallbackBlob = arrayBuffer
-    ? new Blob([arrayBuffer], { type: "application/pdf" })
-    : null;
-
-  // 3) 取得要送出的檔案與檔名
-  const fileForUpload = picked || fallbackBlob;
-  const nameForServer = picked?.name || fileName || "upload.pdf";
-
-  if (!fileForUpload || fileExt !== 'pdf') {
-    alert('請先選擇一個 PDF 檔再進行字體檢查。');
-    return;
-  }
-
-  // 小小除錯：在 Console 看看實際送出的大小
-  console.log('[CloudRun] going to upload:',
-              fileForUpload, 'size =', fileForUpload.size);
-
-  try {
-    statusEl.textContent = '上傳至 Cloud Run 進行字體檢查…';
-    const data = await fetchCloudRun(fileForUpload, nameForServer);
-    if (data) {
-      const { pass, suggestion } = normalizeApiResult(data);
-      const ev = buildEvidenceString(data);
-      _fontCheckMirror = { pass: Boolean(pass), evidence: ev, suggestion: suggestion || '' };
-      addRow('Cloud Run 字體字型檢查', !!pass, ev, suggestion || '請依規範修正字體。');
-      syncBasicFontRuleMirror();
-      buildAndShowSummaryJSON({ fileName, pages: _lastPageCount || 0, passFailRows: _rowsBuffer.slice() });
-      resultCard.style.display = 'block';
-      fileTagEl.textContent = `此次檢查檔案：${fileName || '(未命名)'}`;
-      statusEl.textContent = 'Cloud Run 檢查完成。';
-    }
-  } catch (e) {
-    console.error(e);
-    statusEl.textContent = 'Cloud Run 檢查失敗。';
-  }
-});
-
-async function fetchCloudRun(fileOrBlob, nameForServer) {
-  // sanity check（避免 0 bytes）
-  if (!fileOrBlob || !fileOrBlob.size) {
-    throw new Error('EMPTY_FILE_BLOB');
-  }
-
-  const formData = new FormData();
-  const fname = nameForServer || "upload.pdf";
-
-  // 同時送出兩個常見欄位名，避免後端只讀其中之一
-  formData.append("file", fileOrBlob, fname);
-  formData.append("upload", fileOrBlob, fname);
-
-  // 便於除錯：可觀察 boundary 與大小
-  console.log('[CloudRun] form ready, size =', fileOrBlob.size, 'name =', fname);
-
-  // 破壞快取，避免打到舊回應
-  const url = CLOUD_RUN_ENDPOINT + "?v=" + Date.now();
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      mode: "cors",
-      cache: "no-store",
-      body: formData
-      // 不要自行加 Content-Type；瀏覽器會含 multipart boundary
-    });
-
-    // 讀一下純文字備註，方便顯示後端的原始訊息
-    const text = await res.text();
-    if (!res.ok) {
-      throw new Error(`API ${res.status} ${res.statusText} ${text || ''}`.trim());
-    }
-
-    // 成功就嘗試 parse JSON，parse 失敗就回傳原文字
-    try { return JSON.parse(text); }
-    catch { return { ok: true, raw: text }; }
-
-  } catch (err) {
-    console.error("Cloud Run 失敗：", err);
-
-    const msg = (err && err.message ? String(err.message).slice(0, 400) : '');
-    addRow(
-      "Cloud Run 字體字型檢查",
-      false,
-      `CORS/快取或資料問題：details: ${msg || '（無更多訊息）'}`,
-      "請檢查 Cloud Run 是否允許匿名、已開 CORS，且前端確實送出檔案。"
-    );
-    return null;
-  }
+  if((f.name.split('.').pop()||'').toLowerCase()!=='pdf'){statusEl.textContent='僅支援 PDF';return;}
+  if(f.size>5*1024*1024){statusEl.textContent='超過 5MB 上限';return;}
+  arrayBuffer = await f.arrayBuffer();
+  fileName = f.name;
+  setEnabled(consent.checked);
 }
 
-
-function normalizeApiResult(data){const pass=typeof data.pass==='boolean'?data.pass:(data.summary?.pass??data.ok??false);const suggestion=data.suggestion||data.summary?.suggestion||'';return {pass,suggestion}}
-function buildEvidenceString(data){
-  try{const parts=[]; if(data.summary?.pages)parts.push(`頁數：${data.summary.pages}`);
-    if(data.summary?.dominant_fonts)parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
-    if(Array.isArray(data.top_fonts))parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
-    if(data.layout?.per_page_margins?.length){const f=data.layout.per_page_margins[0];parts.push(`第1頁邊界量測：左${f.left} / 右${f.right} / 上${f.top} / 下${f.bottom} pt`);}
-    return parts.join('｜')||JSON.stringify(data).slice(0,800);
-  }catch{return typeof data==='object'?JSON.stringify(data).slice(0,800):String(data)}
-}
-
-/* ===== PDF 檢查 ===== */
-async function runPdfChecks(buf){
-  const {getDocument}=await window.loadPdfjs(); const pdf=await getDocument({data:buf}).promise;
-  const numPages=pdf.numPages; _lastPageCount=numPages;
- 
-  // ===== PDF 粗體偵測 =====
-  let boldWordCount = 0;
-  let boldFonts = new Set();
-
-  const pageTexts = [];
-
-// 先把各頁文字塞進 pageTexts（你已有迴圈）…
-// 迴圈結束後，先找出要略過的頁：
-const skipPages = new Set();
-for (let i = 1; i <= numPages; i++) {
-  if (SKIP_PAGE_TOKEN.test(pageTexts[i] || '')) skipPages.add(i);
-}
-
-// 再來才用 skipPages 算有效頁數
-const effectivePages = Array.from({ length: numPages }, (_, i) => i + 1)
-  .filter(p => !skipPages.has(p));
-
-addRow('頁數 4–10',
-  (effectivePages.length >= RULES.minPages && effectivePages.length <= RULES.maxPages),
-  `共 ${numPages} 頁（實際檢查 ${effectivePages.length} 頁，略過 ${skipPages.size} 頁）`,
-  '若少於4或多於10頁，請修訂篇幅。'
-);
-
-  let pageNumOkPages=[];
-  const headerTitleTexts=[];
-  let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
-  let firstHeaderOK=false, firstFooterOK=false;
-
-  // 只量測第1頁正文用
-  let firstSectionY = null;    // 第1頁「壹、前言」那一行的 Y 座標（pdf.js 的 y 座標：越大越靠上）
-  let firstSectionLeftX = Infinity; // ➊ 新增：〈壹、前言〉行的最左 x
-  let page1H = null;               // ➋ 新增：第1頁高度（用來算「上邊界 = H - y」）
-  const FIRST_BODY_GUESS_FALLBACK = 40; // 容差（pt），找不到「前言」時，往上略過 40pt 當作正文起點
-
-  for(let p=1;p<=numPages;p++){
-    if (skipPages.has(p)) continue; // 略過小論文評分表頁
-    const page=await pdf.getPage(p); const viewport=page.getViewport({scale:1}); const W=viewport.width,H=viewport.height;
-    if (p === 1) page1H = H;  // ➌ 把第1頁的高度存起來
-    const tc=await page.getTextContent();
-
-    const topBandMinY = H - MARGIN_PT;
-    const bottomBandMaxY = MARGIN_PT;
-    const centerTol = Math.max(W*0.15,72);
-
-    let hasCenterPageNum=false;
-    const pageBuf=[];
-    let _lastXY=null;
-
-    for(const it of tc.items){
-      const tr=it.transform; const x=tr[4], y=tr[5]; const w=(typeof it.width==='number')?it.width:0;
-      const txt=(it.str||'').trim();
-
-            // 粗體字體名稱偵測
-      if (it.fontName && /bold|黑體|heavy|medium/i.test(it.fontName)) {
-        boldWordCount += (txt.length || 1);
-        boldFonts.add(it.fontName);
-      }
-
-      if(txt){
-        if(_lastXY){
-          const newLine =
-            (Math.abs(y - _lastXY.y) > 6 && x < _lastXY.x + 20) ||
-            (y < _lastXY.y - 2 && x <= _lastXY.x);
-          if(newLine) pageBuf.push('\n');
-        }
-        pageBuf.push(txt);
-        _lastXY = {x,y};
-      }
-
-      if(p===1 && txt){
-        const mid = x + w/2;
-        const centeredByMid = (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));
-        const inTop2cm = (y >= topBandMinY);
-        const looksLikeTitle = !/^\d+$/.test(txt) && txt.replace(/\s/g,'').length >= 2;
-        if(inTop2cm && centeredByMid && looksLikeTitle){ firstHeaderOK = true; }
-      }
-
-      // 只在第1頁偵測「壹、前言／一、前言／1、前言」當作正文起點
-      if (p === 1 && txt) {
-      // 常見三種寫法：壹、一、1 + 前言
-        if (/^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
-          firstSectionY = y;                  // 基準 y
-          firstSectionLeftX = Math.min(firstSectionLeftX, x); // ➍ 記下這一行最靠左的 x
-        }
-      }
-
-      const centeredBottomByMid = (()=>{const mid=x+w/2;return (mid >= (W/2 - centerTol) && mid <= (W/2 + centerTol));})();
-      const inBottom2cm = (y <= bottomBandMaxY);
-      const m = txt.match(/^\s*(?:第)?\s*[-—]*\s*(\d{1,4})\s*[-—]*(?:\s*頁)?\s*$/);
-      if(inBottom2cm && centeredBottomByMid && m){
-        const num=parseInt(m[1],10);
-        hasCenterPageNum=true;
-        if(num!==p) {/* 忽略是否連號 */}
-        if(p===1) firstFooterOK = true;
-      }
-
-      if(y>=topBandMinY && txt){ headerTitleTexts.push(txt); }
-
-            // 只量測第1頁；且必須是正文區（下緣超過 2cm、上緣在 2cm 內）
-      const inBody = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
-
-      // 只採用第1頁且「位在〈壹、前言〉那行之下」的文字方塊
-      let isFirstPageBody = false;
-      if (p === 1 && inBody) {
-        // 找到「壹、前言」：正文在它之下（y 會比它小一些，留一點容差）
-        if (firstSectionY != null) {
-          isFirstPageBody = (y < firstSectionY - 2);
-        } else {
-          // 找不到就保守略過最上方約 40pt，視為正文起點
-          isFirstPageBody = (y < (H - MARGIN_PT - FIRST_BODY_GUESS_FALLBACK));
-        }
-      }
-
-      if (isFirstPageBody) {
-        const distLeft   = x;
-        const distRight  = W - (x + w);
-        const distBottom = y;
-        const distTop    = H - y;
-
-        if (distLeft   < minLeft)   minLeft   = distLeft;
-        if (distRight  < minRight)  minRight  = distRight;
-        if (distBottom < minBottom) minBottom = distBottom;
-        if (distTop    < minTop)    minTop    = distTop;
-      }
-
-    }
-    if(hasCenterPageNum)pageNumOkPages.push(p);
-    pageTexts[p]=pageBuf.join('');
-  }
-
-// 提示：若有略過頁，顯示資訊（仍計入頁數與頁碼檢查；但不納入「全文檢查」）
-if (skipPages.size > 0) {
-  addRow(
-    '略過特定頁面（不納入全文檢查）',
-    true,
-    `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
-    '此頁將不納入內文、圖表、引註、參考文獻等全文型檢查；但仍計入「頁數」與「每頁置中頁碼」等版面規則。'
-  );
-}
-
-// 顯示略過頁提示
-if (skipPages.size > 0) {
-  addRow(
-    '略過特定頁面',
-    true,
-    `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
-    '此頁不納入內文、圖表、引註、參考文獻、頁數、頁碼、邊界等檢查。'
-  );
-}
-
-// ✅ 新增：全文檢查前過濾略過頁
-const pageTextsFiltered = pageTexts.map((t, i) => (skipPages.has(i) ? '' : t));
-runTextRules(pageTextsFiltered);
-
-  addRow('首頁篇名需置中且落在距上緣 2 公分內', firstHeaderOK,
-    firstHeaderOK?'已於首頁偵測到置中之篇名/標題':'未偵測到置中篇名或位置不在 2 公分內',
-    '請將篇名置中於頁首，且位置落在距上緣 2 公分以內。');
-
-  addRow('首頁頁碼需置中且落在距下緣 2 公分內', firstFooterOK,
-    firstFooterOK?'已於首頁偵測到置中頁碼':'未偵測到置中頁碼或位置未落在距下緣 2 公分內',
-    '請將頁碼置中於頁尾，並保持距下緣 2 公分以內。');
-
-  const headerTitleGuess=(()=>{const n=s=>(s||'').replace(/\s/g,'').toLowerCase();const filtered=headerTitleTexts.filter(s=>n(s).length>=4);const freq=new Map();for(const s of filtered){const k=n(s);freq.set(k,(freq.get(k)||0)+1)}let bestKey='',bestCount=0;for(const [k,c] of freq){if(c>bestCount){bestKey=k;bestCount=c}}const raw=filtered.find(s=>n(s)===bestKey)||'';return{norm:bestKey,raw}})();
-  const fileNorm=(fileBase||'').replace(/\s/g,'').toLowerCase(), titleNorm=headerTitleGuess.norm;
-  const titleDetected=!!titleNorm, nameTitleConsistent = titleDetected && (titleNorm.includes(fileNorm)||fileNorm.includes(titleNorm));
-  addRow('檔案名稱與頁首篇名一致（不符判定淘汰）',nameTitleConsistent,
-    titleDetected?`檔名「${fileBase}」；頁首篇名「${headerTitleGuess.raw}」`:'未偵測到頁首篇名',
-    '請使檔名與頁首篇名一致。');
-
-  const pageNumPass=(pageNumOkPages.length===_lastPageCount);
-  addRow('每頁需有置中頁碼（底端帶）',pageNumPass,
-    pageNumPass?'所有頁底中央皆有頁碼':`缺少頁碼頁次：${missingRange(pageNumOkPages,_lastPageCount)}`,
-    '請在頁尾置中放置阿拉伯數字頁碼。');
-
-  const MPT = MARGIN_PT.toFixed(1);
-  const tol = MARGIN_TOL_PT.toFixed(1);
-  // …在 addRow 的 evidence 字串裡：
-
-  // 幫助函式：允許微小誤差（pt）
-const within = v =>
-  isFinite(v) &&
-  v >= (MARGIN_MIN_PT - MARGIN_TOL_PT) &&
-  v <= (MARGIN_MAX_PT + MARGIN_TOL_PT);
-
-// 原：四邊都要在允許範圍內
-// const marginPass = within(minLeft) && within(minRight) && within(minTop) && within(minBottom);
-
-// ➎ 新：只採用〈壹、前言〉那一行作為量測基準：左邊界 = firstSectionLeftX；上邊界 = page1H - firstSectionY
-const leftForCheck = isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;   // 後備：若抓不到就退回原本推估
-// === 修正版：以上緣篇名區推估後修正 ===
-let topForCheck = minTop; // 預設保留原推估
-if (page1H && firstSectionY) {
-  // 量壹、前言行的上緣距離頁頂
-  topForCheck = page1H - firstSectionY;
-
-  // 若頁首篇名存在（firstHeaderY 已先量好），
-  // 則扣除篇名與前言間距，避免高估上邊界
-  if (typeof firstHeaderY === 'number' && firstHeaderY > firstSectionY) {
-    const titleGap = firstHeaderY - firstSectionY;
-    topForCheck -= titleGap * 0.5; // 保留一半作安全區
-  }
-}
-
-const marginPass = within(leftForCheck) && within(topForCheck);
-
-// 顯示用的門檻（原樣）
-const MIN_CM = RULES.marginMinCM.toFixed(1);
-const MAX_CM = RULES.marginMaxCM.toFixed(1);
-const tolPt  = MARGIN_TOL_PT.toFixed(1);
-
-// === 四周邊界 2 公分（正文區推估 + 視覺尺規） ===
-{
-  const tolPt  = MARGIN_TOL_PT.toFixed(1);
-  const evText =
-    `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：` +
-    `左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、` +
-    `上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${tolPt}pt）｜` +
-    `參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
-
-  addRow(
-    `四周邊界 2 公分（正文區推估）`,
-    marginPass,
-    { note: evText }, // 先以物件 evidence 放文字（renderEvidence 會美化）
-    `依老師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
-     規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格；超出紅框為不合格，完全落入藍框為過寬。`
-  );
-
-  // 在剛剛新增的這列下方插入 SVG 視覺尺規
-  try {
-    const lastRow = tbody.lastElementChild; // addRow 會 append 在最後
-    // 取得第 1 頁的 W/H（前面已算）
-    const W = (typeof page1H === 'number') ? (W || 595) : (pdf?.getPage ? (await (await pdf.getPage(1)).getViewport({scale:1})).width : 595);
-    const H = (typeof page1H === 'number') ? page1H : (pdf?.getPage ? (await (await pdf.getPage(1)).getViewport({scale:1})).height : 842);
-
-    const html = buildMarginPreviewSVG({
-      W, H,
-      measLeft:  leftForCheck,
-      measRight: minRight,
-      measTop:   topForCheck,
-      measBottom:minBottom
-    });
-
-    const cell = lastRow?.children?.[2];
-    if (cell) {
-      const holder = document.createElement('div');
-      holder.innerHTML = html;
-      cell.appendChild(holder);
-    }
-  } catch (e) { console.warn('margin preview svg error', e); }
-
-  // 若本次檔名為 test001（你的基準檔），顯示校準提示
-  if ((fileName||'').toLowerCase().startsWith('test001')) {
-    const lastRow = tbody.lastElementChild;
-    const cell = lastRow?.children?.[2];
-    if (cell) {
-      const tip = document.createElement('div');
-      tip.className = 'hint';
-      tip.style.marginTop = '6px';
-      tip.innerHTML = '🧭 已偵測到基準檔 <b>test001</b>：此檔視為「完全合格」的 2 cm 基準，供其他 PDF 對照用。';
-      cell.appendChild(tip);
-    }
-  }
-}
-
-  const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
-  const firstText=pageTexts[1]||''; const coverHits=['封面','學校','指導老師','學生','班級','學號'].filter(k=>firstText.includes(k));
-  addRow('不得有封面頁（4–10頁）',coverHits.length===0, coverHits.length?`第1頁疑似封面關鍵字：${coverHits.join('、')}`:'未發現','4–10頁之小論文不應包含封面資訊。');
-
-  // ===== 粗體字體統計 =====
-  const boldFontsList = Array.from(boldFonts);
-  const hasBoldFont = boldWordCount > 0;
-  addRow(
-    '粗體樣式檢查（PDF）',
-    hasBoldFont,
-    hasBoldFont ? `檢出粗體字體 ${boldFontsList.join('、')}｜約 ${boldWordCount} 字` : '未檢出粗體樣式',
-    hasBoldFont ? 'OK（已檢測到粗體字體）' : '請確認參考文獻之書名、期刊名、卷期等需以粗體表示。'
-  );
-
-  ;
-}
-
-/* ===== DOCX ===== */
-async function runDocxChecks(buf){
-  // 先把 DOCX 轉成 HTML
-  const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer: buf });
-
-  // ===== DOCX 粗體偵測 =====
-  const boldTags = (html.match(/<(b|strong)>/gi) || []).length;
-  addRow(
-    '粗體樣式檢查（DOCX）',
-    boldTags > 0,
-    boldTags > 0 ? `檢出 <b>/<strong> 標籤 ${boldTags} 處` : '未檢出粗體樣式',
-    boldTags > 0 ? 'OK（已偵測到粗體文字樣式）' : '請確認書名、期刊名、卷期等需以粗體表示。'
-  );
-
-  const text = stripHtml(html);
-  _lastPageCount = 0;
-  addRow('頁數 4–10（DOCX）', true, 'DOCX 無法精確估頁，建議匯出 PDF 再檢查空間規則。', '請匯出 PDF。');
-  runTextRules([text]);
-}
-
-/* ===== 參考文獻工具（僅小幅修正） ===== */
-
-// 取「最後一個」參考文獻標題位置
-function _findRefStart(fullText) {
-  const text = fullText || '';
-  const pat = /(^|\n)[^\n]{0,6}\s*(?:陸[、，.]?\s*)?(參考文獻|參考資料|References)\s*$/gmi;
-  let m, lastIdx = -1;
-  while ((m = pat.exec(text)) !== null) lastIdx = m.index + (m[1] ? m[1].length : 0);
-  if (lastIdx < 0) {
-    const cands = ['參考文獻','參考資料','References']
-      .map(t => text.lastIndexOf(t)).filter(i => i >= 0);
-    if (cands.length) lastIdx = Math.max(...cands);
-  }
-  return lastIdx;
-}
-
-// 小標偵測：類別標題（不算一條文獻）
-function _isCategoryHeader(line) {
-  const s = (line || '').replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
-  if (/^(陸[、，.]?)?\s*(參考文獻|參考資料|References)\s*$/i.test(s)) return true;
-  if (/^([（(]?\s*[一二三四五六七八九十\d]+\s*[)）]?\s*[\.．、]?)\s*[\u4e00-\u9fa5A-Za-z]{0,12}(書籍|專書|期刊|期刊論文|論文|博碩士|會議|報紙|電子報|網站|網路|網路相關資源|資料|文獻|法規|政府|機構)\s*(類|資料|資源)?\s*$/.test(s)) return true;
-  if (/^[【〈《]\s*[\u4e00-\u9fa5A-Za-z]{1,12}\s*(類|資料|資源)?\s*[】〉》]$/.test(s)) return true;
-  return false;
-}
-
-// 參考文獻前處理（新增短網址換行合併）
-function _preCleanRefText(s) {
-  return (s || '')
-    // PDF 頁分隔標記 → 換行
-    .replace(/\[\[PAGE_SPLIT\]\]/g, '\n')
-
-    // 單獨頁碼/行號 → 移除
-    .replace(/^\s*\d{1,4}\s*$/gm, '')
-
-    // 英數連字跨行 → 接回
-    .replace(/([A-Za-z0-9])-\s*\n\s*([A-Za-z0-9])/g, '$1$2')
-
-    // 將「獨立網址行（含短網址）」推回上一行（避免被誤當成新條）
-    .replace(/\n\s*(https?:\/\/\S+)\s*$/gm, ' $1')
-    .replace(/\n\s*(www\.\S+)\s*$/gm, ' $1')
-    .replace(/\n\s*(doi\.org\/\S+)\s*$/gim, ' $1')
-    .replace(/\n\s*((?:reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)\S*)\s*$/gim, ' $1')
-
-    // 有些學生會在每筆之間插「1 個空行」→ 保留 1 個換行即可（多於 2 個壓成 1 個）
-    .replace(/\n{3,}/g, '\n\n')
-
-    // 行尾空白 → 清理
-    .replace(/[ \t]+\n/g, '\n')
-    .trim();
-}
-
-// 文獻切條
-function _parseReferenceEntries(refText) {
-  // 先按「至少一個換行」切；不先濾空，讓空行有機會當作「分隔符」
-  const rawLines = (refText || '').split(/\n+/);
-
-  const entries = [];
-  let cur = '';
-
-  const SHORT_DOMAINS = /(reurl\.cc|bit\.ly|tinyurl\.com|t\.ly|t\.co|goo\.gl|is\.gd|ow\.ly|lihi\d?\.cc|ppt\.cc|forms\.gle|youtu\.be|github\.io|medium\.com|shorturl\.at|url\.cn)/i;
-
-  const isNewByIndex = s =>
-    // 1) 阿拉伯數字 1. / 1、 / 1＋空白
-    /^[\s\u3000]*\d+\s*(?:[\.．、]\s*|\s{1,})/.test(s) ||
-    // 2) 中文數字 一. / 一、 / 一＋空白
-    /^[\s\u3000]*[一二三四五六七八九十百千]{1,4}\s*(?:[\.．、]\s*|\s{1,})/.test(s) ||
-    // 3) 括號編號 （一）. / （一）、 / （一）＋空白
-    /^[\s\u3000]*[（(]\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]\s*(?:[\.．、]?\s*|\s*)/.test(s);
-
-  // ✅ 改良：同時辨識「（YYYY）」與「（YYYY年M月D日）」與「（無日期/n.d.）」
-  // - 開頭允許中英作者/機構名
-  // - 括號內允許：YYYY、YYYY年M月、YYYY年M月D日、無日期、n.d.
-  const isNewByAuthorYear = s => {
-    const re = /^[\s\u3000]*[\u4e00-\u9fa5A-Za-z].{0,60}[（(]\s*(?:\d{4}(?:\s*年\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?)?|無日期|n\.?d\.?)\s*[)）]/;
-    return re.test(s);
-  };
-
-  const isContinuation = s =>
-    /^\s{2,}/.test(s) || /^[\u3000]+/.test(s) ||
-    /^(https?:\/\/|www\.|doi\.org|doi:|取自|Available at|網址)/i.test(s) ||
-    /^[-–•．·●]/.test(s) ||
-    /^([a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#:].*)?$/i.test(s) ||
-    /^\/[^\s]/.test(s) ||
-    SHORT_DOMAINS.test(s);
-
-  const isUrlOnly = s => /^\s*(https?:\/\/|www\.|doi\.org\/)\S+\s*$/i.test(s);
-  const isBlank   = s => !s || !s.trim();
-
-  for (let raw of rawLines) {
-    const s = (raw || '').trim();
-
-    // 類別小標 → 略過
-    if (_isCategoryHeader(s)) continue;
-
-    // 「純空行」：若目前有在累積條目，視為「條目結束」
-    if (isBlank(s)) {
-      if (cur) { entries.push(cur.trim()); cur = ''; }
-      continue;
-    }
-
-    // 去掉開頭編號（1 / 一 / （一））後面「可有標點、或至少 1 個空白」
-   const base = s.replace(
-     /^[\s\u3000]*(?:[（(]?\s*(\d+|[一二三四五六七八九十百千]{1,4})\s*[)）]?)\s*(?:[\.．、]\s*|\s{1,})/,
-     ''
-   ).trim();
-
-    // 沒在累積且遇到純網址 → 略過
-    if (!cur && isUrlOnly(s)) continue;
-
-    // 判斷是否「新條」：有明顯編號、或偵測到 作者(年份)
-    const looksNew = isNewByIndex(s) || isNewByAuthorYear(s);
-
-    if (!cur) {                // 目前沒有條目：開新條（若是純網址，跳過）
-      cur = isUrlOnly(base) ? '' : base;
-      continue;
-    }
-
-    if (looksNew) {            // 命中新條：收前一條、再開新條
-      entries.push(cur.trim());
-      cur = isUrlOnly(base) ? '' : base;
-      continue;
-    }
-
-    // 其他情況：延續（含網址、doi、取自…）
-    if (isContinuation(s)) {
-      cur += ' ' + s;
-    } else {
-      // 一般文本但沒有新條特徵 → 大多是同條延續
-      cur += ' ' + s;
-    }
-  }
-
-  if (cur) entries.push(cur.trim());
-
-  // 過濾掉只有網址的假條目與太短的殘片
-  return entries.filter(s =>
-    !/^\s*(https?:\/\/|www\.|doi\.org\/)\S+\s*$/i.test(s) &&
-    s.replace(/\s/g, '').length >= 6
-  );
-}
-
-function _normRefKey(s) {
-  return s
-    .replace(/https?:\/\/(www\.)?/gi, '')   // URL 去頭
-    .replace(/[，、；。]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-function _dedupReferences(list) {
-  const map = new Map();
-  for (const e of list) {
-    const k = _normRefKey(e);
-    if (!map.has(k)) map.set(k, e);
-  }
-  return Array.from(map.values());
-}
-
-function _hasYear(text) {
-  return /（\d{4}|無日期）|\(\d{4}\)|\b\d{4}\b年|\b(19|20)\d{2}\b|\(n\.?d\.?\)/i.test(text);
-}
-function _textWithoutUrls(s) { return s.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim(); }
-
-// ==== helpers for web references (新增) ====
-// 是否有「（YYYY年M月D日）」的中文日期，允許 1～2 位數月份與日期
-function _hasZhDateInParens(s) {
-  return /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(s);
-}
-// 是否有「無日期 + 擷取日期」的網路寫法
-function _hasNoDateWithRetrieval(s) {
-  const noDate = /（\s*無日期\s*）/.test(s);
-  // 允許：擷取日期：2025年10月12日，取自 https://...
-  const retrieved = /(擷取日期\s*[:：]\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*，\s*取自\s*https?:\/\/\S+|取自\s*https?:\/\/\S+|Retrieved\s+from\s+https?:\/\/\S+)/i.test(s);
-  return noDate && retrieved;
-}
-
-// 1) 安全輸出 HTML（避免破版）
-function _escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'
-  }[c]));
-}
-
-// 允許「無空格」的中文寫法；英/中皆可，空格可有可無
-function _hasAuthorYearWithParen(text) {
-  const s = String(text || '');
-  // 允許：張三（2001）、Zhang (2001)、Zhang(2001)、作者（無日期）
-  return /[^\s，、。]{1,40}\s*[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(s);
-}
-// 舊名相容：舊程式若呼叫 _hasAuthorYearWithSpace，轉呼叫新函式
-function _hasAuthorYearWithSpace(text) {
-  return _hasAuthorYearWithParen(text);
-}
-
-// 3) 網路資料「年月日」與「無日期＋擷取日期」二擇一；移除中文空格強制
-function _qualifyRefStrict(s) {
-  const t = String(s || '').replace(/\s+/g, ' ').trim();
-  const reasons = [];
-
-  const isWebToken = /(https?:\/\/|取自|Available at|網址)/i.test(t);
-  const hasEbookPlatform =
-    /(電子書|e-?book)/i.test(t) ||
-    /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(t);
-
-  // 若命中「電子書平台」則視為 nonweb；否則有網址/取自才當 web
-  const kind = (isWebToken && !hasEbookPlatform) ? 'web' : 'nonweb';
-
-  // 時間相關
-  const hasYearOnly = /[(（]\s*(\d{4}|n\.?d\.?|無日期)\s*[)）]/i.test(t); // ←補上
-  const hasZhDate   = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(t);
-  const hasNoDate   = /（\s*無日期\s*）/.test(t);
-  const hasRetrievalToken = /(擷取日期|取自|Retrieved\s+from)/i.test(t);
-  const hasNoDateWithRetrieval = hasNoDate && hasRetrievalToken;
-
-  const authorParenOK = _hasAuthorYearWithParen(t);
-
-  const hasSourceCue =
-    /(出版社|Publishing|Press|出版|書局|文化|圖書)/.test(t) ||
-    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\s*\d+)/i.test(t) ||
-    /(學報|Journal|期刊|通訊|評論|會刊)/i.test(t) ||
-    /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(t) ||
-    /(法規|條例|辦法|函釋|教育部|衛福部|行政院|各縣市政府)/.test(t) ||
-    /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|天下雜誌|今周刊)/.test(t) ||
-    /(doi\.org|doi:)/i.test(t) || /(https?:\/\/)/i.test(t);
-
-  // —— 規則 ——（這裡只保留一組 if/else，刪掉多餘的 "}"）
-  if (kind === 'web') {
-    if (!(hasZhDate || hasNoDateWithRetrieval)) {
-      reasons.push('網路/電子期刊/新聞/平台文需用「完整年月日（YYYY年M月D日）」；若無日期，改用「（無日期）擷取日期，取自網址」。');
-    }
-  } else {
-    if (!hasYearOnly) reasons.push('未偵測到（年份），請補 4 位年份。');
-  }
-
-  if (!authorParenOK) {
-    reasons.push('作者與括號（年份/日期）格式不明，請使用：作者（年份）或 作者（YYYY年M月D日）。');
-  }
-  if (!hasSourceCue) {
-    reasons.push('未偵測到出版/來源資訊（出版社、期刊/卷期頁、法規、DOI 或網址…）。');
-  }
-
-// 禁用《》《》與〈〉（整體規範不使用；blog 也不要括號，只在標題後加標籤）
-  if (/[《》〈〉]/.test(t)) {
-    reasons.push('參考文獻中的書名、篇名、期刊、出版社與來源，不需使用《》《》或〈〉括號。');
-  }
-
-// Blog 例外：需在標題後方加［部落格文章］
-  const looksBlog = /(部落格|blog)/i.test(t) ||
-                  /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(t);
-  if (looksBlog && !/［\s*部落格文章\s*］/.test(t)) {
-    reasons.push('部落格文章需在標題後加［部落格文章］。');
-}
-
-const maybeHasJournal = /(學報|期刊|雜誌|特刊|季刊|月刊|週刊)/.test(t);
-if (maybeHasJournal) {
-  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現。PDF 解析無法自動判斷，請人工確認。');
-}
-
-  const ok = reasons.length === 0;
-  const rule_hits = { kind, hasYearOnly, hasZhDate, hasNoDateWithRetrieval, authorParenOK, hasSourceCue };
-  return { ok, reasons, kind, text: s, rule_hits };
-}
-
-// 單筆參考文獻是否「基本合格」：供統計/分類用（嚴格原因與 rule_hits 由 _qualifyRefStrict 產）
-
-function _isQualifiedRef(item) {
-  // 先做基礎清理
-  const s = String(item || '').replace(/\s+/g, ' ').trim();
-
-  // 電子書/平台（視同非網路出版之證據）
-  const hasEbookPlatform =
-  /(電子書|e-?book)/i.test(s) ||
-  /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
-  
-  // ===== 非網路出版類的線索（命中即視為有「出版證據」）=====
-  const hasPublisher =
-    /(出版社|Press\b|Publishing|出版|文化|書局|圖書).{0,12}$/.test(s) ||
-    /(麥浩斯|麥克斯|遠流|天下文化|聯經|三民|五南|高寶|時報文化|商周|親子天下|聯合文學|春天|木馬文化|大塊文化|典藏藝術).{0,12}$/.test(s);
-
-  const hasJournalMeta =
-    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
-    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/i.test(s);
-
-  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
-  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
-  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
-  const hasDOI          = /(doi\.org|doi:)/i.test(s);
-  const hasAcademicPlatform =
-    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
-
-  // 命中以上任何一個 → 視為「非網路」出版型態：仍需基本作者(年份)間空格
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform || hasEbookPlatform) {
-    const authorYearSpaceOK = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\d{4}）/.test(s);
-    return authorYearSpaceOK;
-  }
-
-
-  // ===== 網路類 =====
-  const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
-  if (hasLink) {
-    // 網路規範：允許「作者（YYYY年M月D日）」或「（無日期）+ 擷取/取自」
-    const hasZhDate = /（\s*\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日\s*）/.test(s);
-    const hasNoDateWithRetrieval = /（\s*無日期\s*）/.test(s) && /(擷取日期|取自|Retrieved\s+from)/.test(s);
-    const authorBeforeParensHasSpace = /[\u4e00-\u9fa5A-Za-z．・·．\u00A0]\s+（\s*(?:\d{4}\s*年|無日期)/.test(s);
-    return (hasZhDate || hasNoDateWithRetrieval) && authorBeforeParensHasSpace;
-  }
-
-  // ===== 保底：有年份且內文（去掉網址）夠長也給過（與舊版一致）=====
-  if (_hasYear(s) && _textWithoutUrls(s).replace(/[，、；。.,]/g, '').length >= 6) return true;
-
-  return false;
-}
-
-function _classifyReference(item) {
-  const s = String(item || '').trim();
-
-  const hasEbookPlatform =
-    /(電子書|e-?book)/i.test(s) ||
-    /(hyread|ebookdrm|overdrive|read\.moo\.com|books\.google\.com\/books)/i.test(s);
-
-  // 與 _isQualifiedRef 一致的「出版社/出版型態」識別（避免被歸為 web）
-  const hasPublisher =
-    /(出版社|Press\b|Publishing|出版|文化|書局|圖書|Author\s*\.$).{0,12}$/.test(s) ||
-    /(麥浩斯|麥克斯|遠流|天下文化|聯經|三民|五南|高寶|時報文化|商周|親子天下|聯合文學|春天|木馬文化|大塊文化|典藏藝術).{0,12}$/.test(s);
-
-  const hasJournalMeta =
-    /(\bVol\.?\s*\d+|\bNo\.?\s*\d+|\bpp?\.?\s*\d+[-–]\d+|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+[-–]\d+)/i.test(s) ||
-    /(Journal|期刊|學報|通訊|評論|會刊).{0,40}\d{4}/.test(s);
-
-  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
-  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
-  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
-  const hasDOI          = /(doi\.org|doi:)/i.test(s);
-  const hasAcademicPlatform =
-    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
-
-  if (hasPublisher || hasJournalMeta || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasDOI || hasAcademicPlatform || hasEbookPlatform) {
-  return 'nonweb';
-  }
-
-  const hasLink = /(https?:\/\/|取自|Available at|網址)/i.test(s);
-  if (hasLink) return 'web';
-
-  // 其餘保守歸類 nonweb（跟你原邏輯一致）
-  return 'nonweb';
-}
-
-// 取得「到日」的中文日期；抓不到傳回 null
-function extractFullZhDate(s){
-  const m = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*）/.exec(s);
-  return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : null;
-}
-
-// 產生「示範用」的正確日期片段（一定到日；抓不到就提示補日）
-function makeZhDateForExample(sourceText){
-  const full = extractFullZhDate(sourceText);
-  if (full) return `（${full}）`;
-  const ym = /（\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*）/.exec(sourceText);
-  const y  = /（\s*(\d{4})\s*）/.exec(sourceText);
-  if (ym) return `（${ym[1]}年${ym[2]}月「請補日期」日）`;
-  if (y)  return `（${y[1]}年「請補月份與日期」）`;
-  return '（「請補完整年月日」）';
-}
-
-// 去掉《》〈〉；若為 blog 且未標註就在標題後補［部落格文章］
-function sanitizeTitleAndSource(str){
-  let out = String(str || '').replace(/[《》〈〉]/g, '');
-  const isBlog = /(部落格|blog)/i.test(out) ||
-                 /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(out);
-  const hasBlogTag = /［\s*部落格文章\s*］/.test(out);
-  if (isBlog && !hasBlogTag) {
-    // 在最後一個全形句點前補上標籤（沒有句點就直接加在結尾）
-    if (/。/.test(out)) out = out.replace(/。(?!.*。)/, '［部落格文章］。');
-    else out += '［部落格文章］';
-  }
-  return out;
-}
-
-/* ===== 修正示例產生器（含粗體呈現） ===== */
-function buildRefFixExample(rawText) {
-  if (!rawText) return "";
-
-  let s = String(rawText).trim();
-
-  // ① 移除《》《》〈〉符號
-  s = s.replace(/[《》〈〉]/g, "");
-
-  // ② 若為部落格文章，加上［部落格文章］
-  const isBlog =
-    /(部落格|blog|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
-  if (isBlog && !/［\s*部落格文章\s*］/.test(s)) {
-    s = s.replace(/(。|．)/, "［部落格文章］$1");
-  }
-
-  // ③ 若是網頁文但缺完整年月日 → 改為「（無日期）擷取日期」
-  if (/(http|https):\/\//.test(s) && !/\d{4}年\d{1,2}月\d{1,2}日/.test(s)) {
-    s = s.replace(/（\d{4}年\d{1,2}月?）?/, "（無日期）");
-    if (!/擷取日期/.test(s)) {
-      s += "擷取日期，取自網址。";
-    }
-  }
-
-  // ④ 建立示例前的標準化（清空多餘空白）
-  s = s.replace(/\s+/g, " ").trim();
-
-  // ⑤ 讓畫面上顯示粗體（書名、期刊名、卷期等）
-  s = boldExampleFields(s);
-
-  return s;
-}
-
-/* ===== 將期刊名與卷期加粗（僅畫面顯示用） ===== */
-function boldExampleFields(text) {
-  let s = String(text || "");
-
-  // 期刊或書名常見關鍵字，例如「學報」「期刊」「季刊」「雜誌」「特刊」等
-  s = s.replace(
-    /。([^。，“”]+?(?:期刊|學報|雜誌|通訊|評論|會刊|特刊|季刊|月刊|週刊|季報|年報)[^，。]*)，/,
-    (m, name) => `。<b>${name.trim()}</b>，`
-  );
-
-  // 卷期：例如 45(2)、121、第52期、第12卷
-  s = s.replace(
-    /([，、]\s*)(\d+\s*\(\s*\d+\s*\))/,
-    (m, sep, v) => `${sep}<b>${v.replace(/\s+/g, "")}</b>`
-  );
-  s = s.replace(
-    /([，、]\s*)(\d{1,4})(?=\s*[，、])/,
-    (m, sep, v) => `${sep}<b>${v}</b>`
-  );
-  s = s.replace(/(第\s*\d+\s*卷|第\s*\d+\s*期)/g, (m) =>
-    `<b>${m.replace(/\s+/g, "")}</b>`
-  );
-
-  return s;
-}
-
-/* ===== 若複製示例到剪貼簿：轉為純文字（粗體→(粗體)） ===== */
-function stripHtmlForClipboard(htmlText) {
-  return String(htmlText || "")
-    .replace(/<b>(.*?)<\/b>/g, "$1")
-    .replace(/<\/?[^>]+>/g, "");
-}
-
-/* ===== 提示式規則：在 _qualifyRefStrict() 裡加入 ===== */
-// 在 _qualifyRefStrict() 結尾前 (const ok = reasons.length === 0;) 上方加入：
-/*
-const maybeHasJournal = /(學報|期刊|雜誌|特刊|季刊|月刊|週刊)/.test(t);
-if (maybeHasJournal) {
-  reasons.push('【提示】書名、期刊名、卷或期應以粗體呈現（PDF 解析無法自動判斷，請人工確認）。');
-}
-*/
-
-
-// 將單一參考文獻做細部稽核，回傳可序列化物件
-function auditReference(text, idx) {
-  const s = String(text || '').trim();
-
-  // 先建 reasons，後面才 push
-  const reasons = [];
-
-  // 各子檢查（與你的現有規則對齊）
-  const hasYear =
-    /[（(]\s*(\d{4}|無日期|n\.?d\.?)(?:\s*[年\/\.\-]\s*\d{1,2}(?:\s*[月\/\.\-]\s*\d{1,2}(?:\s*日)?)?)?\s*[)）]/i.test(s) ||
-    /\b(19|20)\d{2}年/.test(s); // 支援 (2018年12月18日)
-
-  const isOrgAuthor = /(?:政府|部|署|處|會|基金會|研究院|學會|委員會|學校|大學|高中|國中|國小|公司|股份有限公司|集團|基金)/.test(s.split(/[。．]/)[0] || '');
-
-  const hasAuthorYearSpace = isOrgAuthor ? true : _hasAuthorYearWithParen(s);
-
-  const hasUrlOrDoi = /(https?:\/\/|doi\.org|doi:)/i.test(s);
-
-  // 書/期刊/會議/法規/報紙等來源 cue（你的 _isQualifiedRef 亦會用到）
-  const hasPublisher = /(出版社|Press\b|Publishing|出版|台北市|新北市|高雄市).{0,10}$/.test(s);
-  const hasJournalLike =
-    /。\s*[^，。]{2,30}，\s*(第?\s*\d+\s*卷)?\s*(第?\s*\d+\s*期|\(\s*\d+\s*\))?[^。]*(\d+\s*[-–]\s*\d+|pp?\.\s*\d+)/.test(s) ||
-    /。\s*[^，。]{2,30}\s*[（(]\s*\d+\s*[)）]\s*[。．]?/.test(s);
-  const hasThesisOrConf = /(碩士論文|博士論文|學位論文|Master'?s|Ph\.?D\.?|dissertation|thesis|Proceedings|研討會|會議論文)/i.test(s);
-  const hasLawOrGov     = /(法規|條例|辦法|函釋|教育部|衛福部|主計總處|行政院|內政部|各縣市政府)/.test(s);
-  const hasNewspaper    = /(日報|電子報|聯合報|自由時報|中國時報|經濟日報|蘋果日報|天下雜誌|今周刊)/.test(s);
-  const hasAcademicPlatform =
-    /(ScienceDirect|Wiley|Springer|Elsevier|Taylor & Francis|SAGE|ACM Digital Library|IEEE Xplore|Nature|Cell Press|Oxford Academic|Cambridge Core)/i.test(s);
-
-  const hasSourceCue = hasPublisher || hasJournalLike || hasThesisOrConf || hasLawOrGov || hasNewspaper || hasAcademicPlatform || hasUrlOrDoi;
-
-  // 「粗體線索」：書名/期刊名等（保守：仍沿用來源 cue 作為替代）
-  const hasBoldCue = hasPublisher || hasJournalLike || hasThesisOrConf || hasNewspaper;
-
-  // Web/Nonweb 分類（沿用你現有邏輯）
-  const kind = _classifyReference(s);
-
-  // 綜合是否合格（嚴格版）
-  const qualified =
-    hasYear &&
-    hasAuthorYearSpace &&     // 個人作者需空格；機構作者通過 isOrgAuthor 即放行此檢
-    hasSourceCue &&
-    hasBoldCue;
-
-// 網路/平台/電子期刊/新聞 → 一定要「年月日」或「（無日期）＋擷取日期」
-{
-  const fullDateOK = _hasZhDateInParens(s);
-  const noDateRetr = _hasNoDateWithRetrieval(s);
-  if (kind === 'web' && !(fullDateOK || noDateRetr)) {
-    reasons.push({
-      code: 'WEB_DATE_INCOMPLETE',
-      message: '網路/電子期刊/新聞/平台文需用完整年月日（YYYY年M月D日）；若無日期，改用「（無日期）擷取日期，取自網址」。',
-      suggestion: '修正範例：' + buildRefFixExample(s),
-      severity: 'error'
-    });
-  }
-}
-
-   // A. 禁用《》《》與〈〉
-if (/[《》〈〉]/.test(s)) {
-  reasons.push({
-    code: 'BRACKETS_FORBIDDEN',
-    message: '參考文獻中的書名、篇名、期刊、出版社與來源，不需使用《》《》或〈〉括號。',
-    suggestion: '修正範例：' + buildRefFixExample(s),
-    severity: 'error'
-  });
-}
-
-// B. 部落格文章要有［部落格文章］
-const looksBlog = /(部落格|blog)/i.test(s) || /(blogspot|wordpress|pixnet|medium\.com|pinkoi\.com\/tw\/|blogs?\.)/i.test(s);
-const hasBlogTag = /［\s*部落格文章\s*］/.test(s);
-if (looksBlog && !hasBlogTag) {
-  reasons.push({
-    code: 'BLOG_TAG_MISSING',
-    message: '部落格文章需在標題後加［部落格文章］。',
-    suggestion: '修正範例：' + buildRefFixExample(s),
-    severity: 'error'
-  });
-}
-
-  
-    // 原因與建議
-  
-  if (!hasYear) {
-    reasons.push({
-      code: 'YEAR_MISSING',
-      message: '未偵測到年份（或格式不符）。',
-      suggestion: '年份建議用半形括號： (2002)。亦支援 (2018年12月18日)。',
-      severity: 'error'
-    });
-  }
-  if (!hasAuthorYearSpace) {
-    reasons.push({
-      code: 'AUTHOR_YEAR_SPACE',
-      message: '個人作者與年份之間須有 1 個空白。',
-      suggestion: '例：王小明 (2020)。若為機構作者（教育部、某基金會等）可不需此規則。',
-      severity: 'error'
-    });
-  }
-  if (!hasSourceCue) {
-    reasons.push({
-      code: 'SOURCE_CUE_MISSING',
-      message: '未偵測到來源/出版訊息（出版社、期刊、會議、法規、報紙、學術平台或 URL/DOI）。',
-      suggestion: '書籍：補「書名、出版地、出版社」；期刊：補「期刊名、卷(期)、頁碼」；網頁：至少要有網址或 DOI。',
-      severity: 'error'
-    });
-  }
-  if (!hasBoldCue) {
-    reasons.push({
-      code: 'BOLD_CUE_MISSING',
-      message: '書名／期刊名等應以粗體表示，但未偵測到相關樣式或出版線索。',
-      suggestion: '請將書名、期刊名、卷期資訊加粗（Bold），例如商業周刊、第5卷(2期)需以粗體顯示。',
-      severity: 'warn'
-    });
-  }
-
-  // 太短又沒有任何線索的兜底
-  if (_textWithoutUrls(s).replace(/[，、；。.,]/g, '').length < 8 && reasons.length === 0) {
-    reasons.push({
-      code: 'TOO_WEAK',
-      message: '文字過短且缺乏有效線索，難以判定。',
-      suggestion: '補全作者、年份、題名與來源。',
-      severity: 'warn'
-    });
-  }
-
-  return {
-    index: idx,
-    text: s,
-    qualified,
-    checks: {
-      hasYear, hasAuthorYearSpace, hasSourceCue, hasBoldCue, isOrgAuthor, hasUrlOrDoi, kind
-    },
-    reasons
-  };
-}
-
-/* ===== 圖表檢查升級：工具常數與函式（新增） ===== */
-
-// 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
-const CN_NUM = '[一二三四五六七八九十百千]+';
-const AR_NUM = '\\d+';
-const FIGTAB_LABEL = new RegExp(
-  '(^|\\n|[\\s\\u3000])' + '(圖|表)' + '[\\s\\u3000]*' +
-  '(' + AR_NUM + '|' + CN_NUM + ')' + '[\\s\\u3000]*[：:、．\\.]',
-  'g'
-);
-// 另外也支援「（圖 1）」/「（表 2）」這種 *括號樣式* 的標號
-const FIGTAB_PAREN = new RegExp(
-  '（\\s*(圖|表)\\s*(' + AR_NUM + '|' + CN_NUM + ')\\s*）',
-  'g'
-);
-
-// 來源詞彙
-const SOURCE_LABEL = /(資料來源[:：]|圖片來源[:：]|出處[:：]|來源[:：])/;
-
-// 圖/表附近視窗
-const WINDOW_BEFORE = 0;
-const WINDOW_AFTER  = 400;
-const WINDOW_EXTRA  = 200;
-
-// 自製/自繪等自我來源（免比對參考文獻）
-const SELF_MADE = /(作者自(製|繪|攝|整理)|自製|自行(繪製|整理|攝影)|研究者自製|自行製作)/;
-
-// 支援更多圖表標號樣式（全形空白、混合空白、各式標點）
-
-// 來源詞彙（擴充）
-
-// 圖/表附近視窗（跨頁容錯拉大）
-       // 嚴格只看下方
-     // 向後 400 字
-     // 再向後延伸（避免換行/跨頁）
-
-// 自製/自繪等自我來源（免比對參考文獻）
-
-
-/** 取出「就近的來源行」：只在圖/表 *下方* 視窗內找來源詞彙 */
-function _extractNearbySource(fullText, startIdx) {
-  const from = Math.max(0, startIdx - WINDOW_BEFORE);
-  const to   = Math.min(fullText.length, startIdx + WINDOW_AFTER + WINDOW_EXTRA);
-  const slice = fullText.slice(from, to);
-
-  // 只取「圖表之後」的內容
-  const after = slice.slice(Math.min(slice.length, startIdx - from));
-
-  // 找第一個來源詞彙
-  const m = after.match(SOURCE_LABEL);
-  if (!m) return null;
-
-  // 來源詞彙起點在 after 的哪裡？
-  const pos = after.search(SOURCE_LABEL);
-  if (pos < 0) return null;
-
-  // 抓該行到行尾（或下一個斷行）
-  const tail = after.slice(pos);
-  const line = tail.split(/\r?\n/)[0].trim();
-
-  // 拿掉標籤（資料來源：）保留內容
-  const content = line.replace(SOURCE_LABEL, '').trim();
-
-  return {
-    label: line,              // 含「資料來源：」整行
-    content,                  // 去掉標籤的內容
-    hasSelfMade: SELF_MADE.test(line)
-  };
-}
-
-/** 檢查「就近片段」是否存在作者–年份制（視為內嵌來源） */
-function _hasInlineCiteNearby(fullText, startIdx) {
-  const from = Math.max(0, startIdx - 80);
-  const to   = Math.min(fullText.length, startIdx + 200);
-  const slice = fullText.slice(from, to);
-  // （王小明，2023）或 王小明（2023）或 無日期/n.d.
-  const INLINE = /(（[^，\n]{1,12}，\s*(\d{4}|無日期)）|[^\s，、]{1,12}（\s*(\d{4}|n\.?d\.?)）)/;
-  return INLINE.test(slice);
-}
-
-/** 判斷來源行看起來像「完整參考文獻」 */
-function _looksLikeFullReference(line) {
-  const s = line || '';
-  const hasYear = _hasYear(s);
-  const hasMeta = /(出版社|Publishing|Press|第\s*\d+\s*卷|第\s*\d+\s*期|頁\s*\d+|Vol\.?|No\.?|pp?\.?|doi\.org|https?:\/\/)/i.test(s);
-  return hasYear && hasMeta;
-}
-
-/** 嘗試把來源行（已去除「資料來源：」）對應到「陸、參考文獻」清單 */
-function _matchSourceToRefs(srcContent, refEntries) {
-  if (!srcContent) return { matched: false, hit: null };
-  const skey = _normRefKey(srcContent);
-  for (const r of refEntries) {
-    const rkey = _normRefKey(r);
-    // 互為包含即可視為對上（避免極嚴格完全一致）
-    if (skey.includes(rkey) || rkey.includes(skey)) {
-      return { matched: true, hit: r };
-    }
-  }
-  return { matched: false, hit: null };
-}
-
-/* ===== 文字規則（只有第11、12項含微調） ===== */
-function runTextRules(pageTexts) {
-  const pages = pageTexts.length - 1 || 1;
-  const fullText = pageTexts.slice(1).join('\n\n[[PAGE_SPLIT]]\n\n');
-
-  // 先找出「陸、參考文獻」的起點，接著切出只包含「參考文獻之前」的正文文字
-  const refIdx = _findRefStart(fullText);
-  const bodyText = (refIdx >= 0) ? fullText.slice(0, refIdx) : fullText;
-
-
-  // 六段落
-  const sec=RULES.sixSections;
-  const idx=sec.map(s=>fullText.indexOf(s)); const hasAll=idx.every(i=>i>=0); const inOrder=hasAll && idx.join(',')===idx.slice().sort((a,b)=>a-b).join(',');
-  addRow('六大段落依序',hasAll&&inOrder,hasAll?(inOrder?'順序正確':'找到各段落但順序錯誤'):'有段落缺失','請補齊並按規定順序排列：'+sec.join(' → '));
-
-    // 作者-年份（只算「參考文獻」之前的正文）
-  // －－新增：支援多作者（中文用「、」或「和」，英文用 “,” / “and” / “&”）、以及「等 / et al.」－－
-
-  // 1) 中文括號內： （作者、作者，年份） / （作者 等，年份） / （機構，無日期）
-  const citeParenZhSingle =
-    /（[^，\n()]{1,40}(?:等)?，\s*(\d{4}|無日期|n\.?d\.?)）/g;
-  const citeParenZhMulti =
-    /（[^，\n()]{1,20}(?:、|和)[^，\n()]{1,20}(?:(?:、|和)[^，\n()]{1,20}){0,6}，\s*(\d{4}|無日期|n\.?d\.?)）/g;
-
-  // 2) 英文括號內： (Author, Author, 2022) / (Author & Author, 2022) / (Author et al., 2022) / (Author, n.d.)
-  const citeParenEnSingle =
-    /\(\s*[A-Z][A-Za-z.\s'\-]{0,40}(?:et al\.)?\s*,\s*(\d{4}|n\.?d\.)\s*\)/g;
-  const citeParenEnMulti =
-    /\(\s*[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){1,6}\s*,\s*(\d{4}|n\.?d\.)\s*\)/g;
-
-  // 3) 中文作者在前： 作者、作者（年份） / 作者 等（年份）
-  const citeLeadZhSingle =
-    /[^\s，。、]{1,20}(?:等)?（\s*(\d{4}|無日期|n\.?d\.?)\s*）/g;
-  const citeLeadZhMulti =
-    /[^\s，。、]{1,20}(?:、|和)[^\s，。、]{1,20}(?:(?:、|和)[^\s，。、]{1,20}){0,6}（\s*(\d{4}|無日期|n\.?d\.?)\s*）/g;
-
-  // 4) 英文作者在前： Author, Author (2022) / Author & Author (n.d.) / Author et al. (2022)
-  const citeLeadEnSingle =
-    /[A-Z][A-Za-z.\s'\-]{0,40}(?:et al\.)?\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g;
-  const citeLeadEnMulti =
-    /[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){1,6}\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g;
-
-  // 統一計數（避免重複相加）
-  const countMatches = (re) => (bodyText.match(re)?.length || 0);
-  const hasCite =
-    countMatches(citeParenZhSingle) +
-    countMatches(citeParenZhMulti)  +
-    countMatches(citeParenEnSingle) +
-    countMatches(citeParenEnMulti)  +
-    countMatches(citeLeadZhSingle)  +
-    countMatches(citeLeadZhMulti)   +
-    countMatches(citeLeadEnSingle)  +
-    countMatches(citeLeadEnMulti);
-
-  addRow(
-    '內文引註採 作者-年份',
-    hasCite > 0,
-    hasCite ? `檢出 ${hasCite} 處（僅統計正文，不含參考文獻）` : '未檢出引註樣式',
-    '請使用（姓名，年份）或 姓名（年份）；三人以上可用「姓A、姓B、姓C（年份）」或「等 / et al.」。英文可用 and / & / et al. 與 (n.d.)。'
-  );
-
-  // 直接引文長度
-  const quotesRaw=[...(fullText.match(/「[^」]{1,200}」/g)||[]),...(fullText.match(/“[^”]{1,200}”/g)||[])];
-  const clean=s=>s.replace(PUNCT,''); const isDirect=q=>clean(q).length>=RULES.minQuoteCharsForDirect;
-  const directQuotes=quotesRaw.filter(q=>isDirect(q)), over=directQuotes.filter(q=>clean(q).length>RULES.quoteMaxChars);
-  addRow(`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`,over.length===0,over.length?`超標處：${over.length} 例`:(directQuotes.length?`OK（偵測 ${directQuotes.length} 例）`:'OK（未偵測引號片段）'),'引號內淨字數≥10才視為直接引文。');
-
-  // 8) 不得含校名/姓名 —— ★修正：跨頁時只檢查錨點前半段
-  const schoolHits=[]; const schoolPages=new Set();
-  for(let p=1;p<=pages;p++){
-    let t=pageTexts[p]||'';
-    const pageStartOffset = fullText.indexOf(pageTexts[p]);
-    if(refIdx>=0 && pageStartOffset>=refIdx) continue;
-    if(refIdx>=0 && pageStartOffset < refIdx && (pageStartOffset + t.length) > refIdx){
-      t = t.slice(0, refIdx - pageStartOffset);
-    }
-    for(const re of SCHOOL_PATTERNS){
-      const m=t.match(re);
-      if(m&&m.length){schoolHits.push(...m); schoolPages.add(p);}
-    }
-  }
-  addRow('不得含校名/姓名',schoolHits.length===0,
-    schoolHits.length?`偵測到疑似校名：${[...new Set(schoolHits)].join('、')}｜頁次：${[...schoolPages].join(', ')}`:'未發現',
-    '請去識別化（以 XXX 取代完整校名）。');
-
-  // 12) 參考文獻切條 + 四層統計 —— ★修正：移除標題行
-  const refTextRaw   = refIdx >= 0 ? fullText.slice(refIdx).replace(/^(?:陸[、，.]?\s*)?(?:參考文獻|參考資料|References)\s*[\r\n]+/i, '') : '';
-  const refTextFull  = _preCleanRefText(refTextRaw);
-  const MAX_REF_CHECK = Infinity;  // 全檢查：不限制筆數
-  let refEntries = refIdx >= 0
-    ? _parseReferenceEntries(_preCleanRefText(refTextFull)).slice(0, MAX_REF_CHECK)
-    : [];
-
-  refEntries         = _dedupReferences(refEntries);
-
-  const A_total = refEntries.length;
-  const B_hasYear = refEntries.filter(s => _hasYear(s)).length;
-  const C_hasLink = refEntries.filter(s => /(https?:\/\/|doi\.org|doi:|取自|Available at|網址)/i.test(s)).length;
-
-  const classified = refEntries.map(s => ({ text: s, kind: _classifyReference(s) }));
-  const nonwebCount = classified.filter(x => x.kind === 'nonweb').length;
-  const webCount    = classified.filter(x => x.kind === 'web').length;
-
-  const qualifiedCount   = refEntries.filter(_isQualifiedRef).length;
-  const unqualifiedCount = Math.max(0, A_total - qualifiedCount);
-
-// === 嚴格逐條審查（新增） ===
-const _auditList = refEntries.map((s, i) => {
-  const r = _qualifyRefStrict(s);
-  return { idx: i + 1, ...r };
-});
-
-const strictPass = _auditList.filter(x => x.ok).length;
-const strictFail = _auditList.length - strictPass;
-
-// 供 summary 使用的次級統計（沿用你原本的 A/B/C 定義）
-const hasYearCount = refEntries.filter(_hasYear).length;
-const hasLinkCount = refEntries.filter(s => /(https?:\/\/|doi\.org|DOI[:：])/i.test(s)).length;
-
-// === 封裝 JSON 給 AI （新增）===
-window.__refAudit = {
-  stats: {
-    total: _auditList.length,
-    pass: strictPass,
-    fail: strictFail,
-    nonweb: _auditList.filter(x => x.kind === 'nonweb').length,
-    web: _auditList.filter(x => x.kind === 'web').length
-  },
-  items: _auditList.map(it => ({
-    idx: it.idx,
-    text: it.text,
-    qualified: it.ok,
-    kind: it.kind,
-    rule_hits: it.rule_hits,
-    reasons: it.reasons
-  }))
-};
-
-// === 逐條細節 UI（新增）===
-const listHtml = _auditList.map(x => {
-  return `<li data-ok="${x.ok ? '1' : '0'}">
-    <b>#${x.idx}</b> ${_escapeHtml(x.text)} 
-    ${x.ok ? '✅ <span class="ok">合格</span>' 
-           : '❌ <span class="bad">不合格</span>：' + x.reasons.map(_escapeHtml).join('、')}
-  </li>`;
-}).join('');
-
-const detailHtml = `
-  <details class="hint" style="margin-top:6px">
-    <summary>逐條檢查（點我展開）</summary>
-    <ol style="padding-left:22px;margin-top:6px">${listHtml}</ol>
-    <div style="margin-top:8px">
-      <button id="btnCopyRefAudit" class="btn btn-sm">📋 複製不合格清單給 AI</button>
-    </div>
-  </details>
-`;
-
-// === 覆寫第 12 項的 evidence 文案（以嚴格結果為主），其餘 A/B/C 保留 ===
-const evidence12_strict = 
-  `總筆數：${_auditList.length}｜合格：${strictPass}｜不合格：${strictFail}` +
-  `｜純網路來源：${webCount}` +
-  `｜（A.總數：${_auditList.length}｜B.含年份：${hasYearCount}｜C.含網址/DOI：${hasLinkCount}）`;
-
-const sampleRefs = refEntries.slice(0, 3).map((s, i) => `${i + 1}. ${_escapeHtml(s)}`).join('<br/>');
-const evidence12x = evidence12_strict + `<br/>前 3 筆：<br/>${sampleRefs}` + detailHtml;
-
-// === 呼叫你現有的 addRow ===
-('參考文獻 ≥ 3', _auditList.length >= 3, evidence12x,
-  '以整筆條目計數（標題＋出版資訊＋網址若換行視為同一條）。若「不合格」存在，請補齊出版資訊或新增具出版證據的來源，使合格數達標。'
-);
-
-// === 產生稽核 JSON 與複製按鈕 ===
-const refAudit = refEntries.map((t, i) => auditReference(t, i + 1));
-const evidence13JsonObj = {
-  summary: {
-    total: A_total,
-    qualified: qualifiedCount,
-    unqualified: unqualifiedCount,
-    webCount
-  },
-  items: refAudit
-};
-const evidence13Json = JSON.stringify(evidence13JsonObj, null, 2);
-
-// 附加：JSON 與複製按鈕（不影響既有表格）
-const jsonBox = document.createElement('div');
-jsonBox.style.marginTop = '6px';
-jsonBox.innerHTML = `
-  <details>
-    <summary class="mono" style="cursor:pointer">顯示參考文獻詳細報告（給 AI/除錯用）</summary>
-    <div style="margin:8px 0">
-      <button id="btnCopyRefJson" class="pill">複製文獻詳細報告</button>
-      <button id="btnCopyRefBad" class="pill">複製「不合格」文獻清單給 AI</button>
-    </div>
-    <pre id="refAuditJson" style="white-space:pre-wrap;overflow:auto;max-height:280px">${evidence13Json}</pre>
-  </details>
-`;
-// 把 JSON 面板插到「按鈕群」與 <pre id="jsonPreview"> 之間
-const rc = document.getElementById('resultCard');
-const anchor = document.getElementById('jsonPreview');
-rc.insertBefore(jsonBox, anchor);
-
-// 複製 JSON 按鈕
-jsonBox.querySelector('#btnCopyRefJson').addEventListener('click', () => {
-  navigator.clipboard.writeText(evidence13Json).then(() => alert('已複製 JSON'));
-});
-
-// 複製不合格清單按鈕
-jsonBox.querySelector('#btnCopyRefBad').addEventListener('click', () => {
-  const bad = refAudit.filter(x => !x.qualified);
-  const payload = bad.map(x =>
-    `#${x.index}\n${x.text}\n原因：\n- ${x.reasons.map(r => `${r.message}（建議：${r.suggestion}）`).join('\n- ')}`
-  ).join('\n\n');
-  const prompt = [
-    '請逐筆指出下列參考文獻的錯誤並提供修正後範例（符合台灣高中職小論文規範）。',
-    '規則重點：個人作者需「作者⎵(年份)」、書名/期刊名/卷(期)/頁碼、出版/來源線索（出版社、期刊資訊或網址/DOI）。',
-    '---',
-    payload
-  ].join('\n');
-  navigator.clipboard.writeText(prompt).then(() => alert('已複製「不合格」清單與說明給 AI'));
-});
-
-    // 圖表
-  /* ===== 圖表需有標號/標題與來源 —— 升級版（中文數字、內嵌引注、對位比對、跨頁容錯） ===== */
-  (() => {
-    const entries = [];
-
-    // 逐一找「圖/表 + 編號」
-    let m;
-    while ((m = FIGTAB_LABEL.exec(fullText)) !== null) {
-      const whole = m[0];
-      const kind  = m[2];        // 圖 or 表
-      const idx   = m.index;
-
-      const near = _extractNearbySource(fullText, idx);    // {label, content, hasSelfMade} | null
-      const hasInline = _hasInlineCiteNearby(fullText, idx);
-
-      const hasSourceLine = !!near;
-      const isSelfMade    = !!(near && near.hasSelfMade);
-      const inlineOK      = hasInline;
-
-      let looksFullRef = false, refMatched = false, refHit = null;
-      if (hasSourceLine && !isSelfMade) {
-        looksFullRef = _looksLikeFullReference(near.content);
-        if (looksFullRef) {
-          const mres = _matchSourceToRefs(near.content, refEntries);
-          refMatched = mres.matched; refHit = mres.hit;
-        }
-      }
-
-      entries.push({
-        kind,
-        label: whole.trim(),
-        index: idx,
-        hasSourceLine,
-        sourceLine: near?.label || '',
-        sourceContent: near?.content || '',
-        isSelfMade,
-        inlineOK,
-        looksFullRef,
-        refMatched,
-        refHit
-      });
-    }
-
-// 另外處理「（圖 1）/（表 2）」的括號樣式
-FIGTAB_PAREN.lastIndex = 0;
-while ((m = FIGTAB_PAREN.exec(fullText)) !== null) {
-  const whole = m[0];
-  const kind  = m[1];            // 圖 or 表（注意括號樣式群組不同）
-  const idx   = m.index;
-
-  const near = _extractNearbySource(fullText, idx);
-  const hasInline = _hasInlineCiteNearby(fullText, idx);
-
-  const hasSourceLine = !!near;
-  const isSelfMade    = !!(near && near.hasSelfMade);
-  const inlineOK      = hasInline;
-
-  let looksFullRef = false, refMatched = false, refHit = null;
-  if (hasSourceLine && !isSelfMade) {
-    looksFullRef = _looksLikeFullReference(near.content);
-    if (looksFullRef) {
-      const mres = _matchSourceToRefs(near.content, refEntries);
-      refMatched = mres.matched; refHit = mres.hit;
-    }
-  }
-
-  entries.push({
-    kind,
-    label: whole.trim(),
-    index: idx,
-    hasSourceLine,
-    sourceLine: near?.label || '',
-    sourceContent: near?.content || '',
-    isSelfMade,
-    inlineOK,
-    looksFullRef,
-    refMatched,
-    refHit
-  });
-}
-
-
-    const totalFT = entries.length;
-    const withAnySource = entries.filter(it => it.hasSourceLine || it.inlineOK || it.isSelfMade).length;
-    const lackSource = totalFT > 0 && (withAnySource < totalFT);
-
-    const anySourceTokens = (fullText.match(SOURCE_LABEL) || []).length > 0;
-    const lackLabel = (totalFT === 0 && anySourceTokens);
-
-    const figPass = totalFT === 0 ? true : (!lackSource && !lackLabel);
-
-    const tableInlineOK    = entries.filter(it => it.kind === '表' && it.inlineOK).length;
-    const figureInlineOK   = entries.filter(it => it.kind === '圖' && it.inlineOK).length;
-    const sourceLineCount  = entries.filter(it => it.hasSourceLine).length;
-    const selfMadeCount    = entries.filter(it => it.isSelfMade).length;
-    const fullRefCount     = entries.filter(it => it.looksFullRef).length;
-    const fullRefMatched   = entries.filter(it => it.looksFullRef && it.refMatched).length;
-    const fullRefUnmatch   = entries.filter(it => it.looksFullRef && !it.refMatched).length;
-
-    const figureCount      = entries.filter(it => it.kind === '圖').length;
-    const tableCount       = entries.filter(it => it.kind === '表').length;
-    const tableImageInline = entries.filter(it => it.kind === '表' && it.hasSourceLine && /圖片來源[:：]/.test(it.sourceLine)).length;
-
-    const parts = [
-      `檢出圖/表：${totalFT} 項`,
-      `就近來源行：${sourceLineCount} 項`,
-      `表內已引注：${tableInlineOK} 項`,
-      `圖內已引注：${figureInlineOK} 項`,
-      `自製/自繪：${selfMadeCount} 項`,
-      `判定缺來源：${lackSource ? '是' : '否'}`,
-      `判定缺標號：${lackLabel ? '是' : '否'}`
-    ];
-
-    // 統計用：有多少是「（圖 1）」/「（表 2）」這種括號樣式（屬錯誤格式）
-const parenStyleCount = entries.filter(it =>
-  /（\s*(圖|表)\s*(\d+|[一二三四五六七八九十百千]+)\s*）/.test(it.label)
-).length;
-
-let suggest =
-  `本次檢出共 ${totalFT} 個圖／表。` +
-  `請注意標號與標題格式「不用任何括號」，統一以「空格、逗號、句號」分隔：` +
-  `例如：<br>` +
-  `上方一行：<b>圖 1 水溫變化趨勢。</b>（「圖」與數字之間留一個空格，標題結尾用句號）<br>` +
-  `下方一行：<b>資料來源：王小明（2022）。</b> 或 <b>資料來源：作者自製。</b><br>` +
-  `若於圖／表內已出現（作者，年份）之內嵌引注，可視為已提供來源；但仍建議在下方保留「資料來源：…」一行以利審查。` +
-  `另外，請避免用各式括號（如（）[]【】《》〈〉）包住整段的標號或來源。`;
-
-if (parenStyleCount > 0) {
-  suggest += ` <br>⚠️ 偵測到 <b>${parenStyleCount}</b> 項以全形括號包圍的圖表標號（例如「（圖 1）」），`
-           + `此為錯誤格式；雖已計入總數，但請改成行首「圖 1／表 1」且不要括號。`;
-}
-
-
-    addRow(
-      '圖表需有標號/標題與來源',
-      figPass,
-      parts.join('｜') + '<br/>' +
-        (`圖：${figureCount} 項｜表：${tableCount} 項`) + '<br/>' +
-        (`表內圖片引注：${tableImageInline} 項`),
-      suggest
-    );
-  })();
-
-  // 一致性
-  // === 參考文獻與內文引註一致性（升級版） ===
-// 1) 收集「正文中的」各式引註
-const citePatterns = [
-  // 中文：括號內單/多作者、或含「等/無日期/n.d.」
-  /（[^\n()，]{1,20}(?:、|和)[^\n()，]{1,20}(?:(?:、|和)[^\n()，]{1,20}){0,6}，\s*(\d{4}|無日期|n\.?d\.?)）/g, // 多作者
-  /（[^\n()，]{1,40}(?:等)?，\s*(\d{4}|無日期|n\.?d\.?)）/g,                                                // 單作者/等
-  // 中文：作者在前
-  /[^\s，。、]{1,20}(?:、[^\s，。、]{1,20}){0,6}（\s*(\d{4}|無日期|n\.?d\.?)\s*）/g,
-  // 英文：括號內/作者在前，含 and/&/et al. 與 n.d.
-  /\(\s*[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){0,6}(?:\s*et al\.)?\s*,\s*(\d{4}|n\.?d\.)\s*\)/g,
-  /[A-Z][A-Za-z.\s'\-]{0,40}(?:\s*(?:,|and|&)\s*[A-Z][A-Za-z.\s'\-]{0,40}){0,6}(?:\s*et al\.)?\s*\(\s*(\d{4}|n\.?d\.)\s*\)/g
-];
-
-const citationHits = [];
-for (const re of citePatterns) {
-  const m = bodyText.match(re);
-  if (m) citationHits.push(...m);
-}
-
-// 把每個命中的「作者群 + 年份」變成可比對的 key（只留作者字母/中文字 + 年份/n.d./無日期）
-// 內文命中的作者-年份 → 統一成年份 key
-// —— 新增：把常見異體字/雜訊統一（作者名字用）
-// 更強的零寬字 / 雜訊清理
-function _stripZW(s) {
-  return String(s || '')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '') // 零寬字
-    .replace(/\u00A0/g, ' ')               // 不換行空白 → 一般空白
-    .trim();
-}
-
-// 作者正規化：清除標點、把全形空白/點號去掉，僅保留中英數
-function _canonAuthorName(raw) {
-  if (!raw) return '';
-  let s = _stripZW(raw);
-
-  // 常見全形括號/點號改成空白，避免被當作作者字的一部分
-  s = s.replace(/[《》〈〉「」『』【】\[\]（）()，、．。・・‧•·]/g, ' ');
-
-  // 只保留：漢字、字母、數字（合併多重空白）
-  s = s.replace(/[^\p{sc=Han}\p{Alphabetic}\p{Number}]+/gu, ' ')
-       .replace(/\s+/g, ' ')
-       .trim()
-       .toLowerCase();
-  return s;
-}
-
-// 生成「引註」的比對 key：作者(第一個) + 年份(四位)
-function normCiteKey(text) {
-  const s = _stripZW(text);
-
-  // 取（作者，年份）內文
-  const m = s.match(/（([^，,]+)[，,]\s*([12]\d{3})\s*）/); // 抓第一個作者 & 4位年
-  if (!m) return null;
-
-  const authorRaw = m[1];
-  const year = m[2];
-
-  const author = _canonAuthorName(authorRaw);
-  if (!author || !year) return null;
-
-  // 英文作者取首字母；中文機關/中文名取全名
-  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author;
-  return `${authorKey}#${year}`;
-}
-
-// 生成「參考文獻項目」的比對 key：第一作者(或機構) + 年份(四位)
-function normRefKeyForCite(refLine) {
-  const s = _stripZW(refLine);
-
-  // 取第一個作者/機構（句首到第一個括號前）
-  const mAuthor = s.match(/^([^（(]+?)\s*（/);
-  if (!mAuthor) return null;
-  const authorRaw = mAuthor[1];
-
-  // 取括號內年份（允許有年/月/日）
-  const mYear = s.match(/（\s*(無日期|n\.?d\.?|([12]\d{3})(?:年\d{1,2}月\d{1,2}日)?)\s*）/i);
-  let year = '';
-  if (mYear) {
-    if (/無日期|n\.?d\.?/i.test(mYear[1])) year = 'nd';
-    else year = (mYear[2] || '').slice(0, 4);
-  }
-  if (!year) {
-    // 後備：抓四位數年
-    const y2 = s.match(/([12]\d{3})/);
-    year = y2 ? y2[1] : '';
-  }
-  if (!year) return null;
-
-  const author = _canonAuthorName(authorRaw);
-  const authorKey = /^[a-z]+$/.test(author) ? author[0] : author;
-  return `${authorKey}#${year}`;
-}
-
-const citeKeys = citationHits.map(normCiteKey);
-
-const refKeys = refEntries.map(normRefKeyForCite);
-
-// 3) 交叉比對
-let linked = 0;
-for (const k of citeKeys) {
-  if (refKeys.includes(k)) linked++;
-}
-const unlinkedInText = Math.max(0, citeKeys.length - linked);
-
-// 反向：文獻在清單裡，但正文沒出現
-const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
-
-// === 參考文獻與內文引註一致性（擴充：列出未對應清單 + 寫入 JSON） ===
-{
-  // 1) 先照舊計算統計
-  let linked = 0;
-  for (const k of citeKeys) {
-    if (refKeys.includes(k)) linked++;
-  }
-  const unlinkedInText = Math.max(0, citeKeys.length - linked);
-  const reverseUnlinked = refKeys.filter(k => !citeKeys.includes(k)).length;
-
-  // 2) 產生「清單」
-  // 2-1 內文命中的引文裡，哪些沒有對到參考文獻
-  const unmatchedCitations = [];
-  for (const hit of citationHits) {
-    const k = normCiteKey(hit);
-    if (!refKeys.includes(k)) unmatchedCitations.push(hit);
-  }
-  // 去重；保留前 30 筆
-  const uniqUnmatchedCites = Array.from(new Set(unmatchedCitations)).slice(0, 30);
-
-  // 2-2 參考文獻清單裡，哪些沒有出現在內文（同時附上索引）
-  const unreferencedRefs = refEntries
-    .map((text, i) => ({ index: i + 1, text, key: refKeys[i] }))
-    .filter(x => !citeKeys.includes(x.key))
-    .slice(0, 50); // 最多列 50 筆
-
-  // 3) 是否通過（維持你原規則：內文→文獻要 0，文獻→內文允許 <=1）
-  const passConsistency = (unlinkedInText === 0 && reverseUnlinked <= 1);
-
-  // 4) 組出 evidence 物件（寫入 JSON）
-  const evidenceObj = {
-    note: `引註共 ${citeKeys.length}；對應 ${linked}；未對應（內文→文獻）${unlinkedInText}；疑似未被引用（文獻→內文）${reverseUnlinked}`,
-    stats: {
-      total_citations: citeKeys.length,
-      linked,
-      unmatched_in_text: unlinkedInText,
-      unreferenced_refs: reverseUnlinked
-    },
-    unmatched_citations: uniqUnmatchedCites,   // 會放原始命中的樣式字串，如：（王小明，2021）
-    unreferenced_refs: unreferencedRefs        // 物件：{index, text}
-  };
-
-  // 5) 把 evidence 物件丟給 addRow（JSON 會帶到 #jsonPreview）
-  addRow(
-    '參考文獻與內文引註一致性',
-    passConsistency,
-    evidenceObj,
-    '內文出現之引用需在參考文獻出現；未引用者不得列入參考文獻。'
-  );
-
-  // 6) 顯示一個「子行」：把未對應清單直覺列給老師/學生看（只在有項目時出現）
-  if (uniqUnmatchedCites.length || unreferencedRefs.length) {
-    const sub = document.createElement('tr');
-    const citeList = uniqUnmatchedCites
-      .slice(0, 10) // 畫面最多顯示 10 筆（完整清單在 JSON）
-      .map(s => `<li class="mono">${_escapeHtml(s)}</li>`).join('') || '<li class="mono">（無）</li>';
-
-    const refList = unreferencedRefs
-      .slice(0, 10)
-      .map(x => `<li class="mono">#${x.index} ${_escapeHtml(x.text)}</li>`).join('') || '<li class="mono">（無）</li>';
-
-    sub.innerHTML = `
-      <td></td>
-      <td colspan="3">
-        <div class="hint"><b>↳ 未對應引文／未被引用文獻</b></div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:6px">
-          <div style="min-width:280px">
-            <div class="hint">內文引文未對應到參考文獻（前 10 筆）：</div>
-            <ol style="margin:6px 0 0 20px">${citeList}</ol>
-          </div>
-          <div style="min-width:280px">
-            <div class="hint">參考文獻疑似未被引用（前 10 筆）：</div>
-            <ol style="margin:6px 0 0 20px">${refList}</ol>
-          </div>
-        </div>
-        <div class="hint" style="margin-top:6px">
-          完整清單已寫入本次檢查 JSON（欄位：<code>unmatched_citations</code>、<code>unreferenced_refs</code>）。
-        </div>
-      </td>`;
-    tbody.appendChild(sub);
-  }
-}
-
-  // 來源不可全為網路
-  const nonAllWebPass = (A_total > 0) && (webCount < A_total);
-  const evidence16 = [
-    `分類 → 非網路 ${nonwebCount}｜純網路 ${webCount}｜總數 ${A_total}`,
-    `（檢查總數量：${A_total}｜合格：${qualifiedCount}｜不合格：${unqualifiedCount}）`
-  ].join('｜');
-  addRow(
-  '參考文獻來源不可全為網路',
-   nonAllWebPass,
-   evidence16,
-   nonAllWebPass
-    ? '至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。'
-    : `至少保留 1 筆非純網路來源（書籍/期刊/論文/報紙/會議/法規等）。
-       <div class="hint" style="margin-top:4px;">
-         💡 <b>說明：</b>請至少包含 1 筆書籍、期刊、學位論文、報紙或法規等非網路來源。
-         若全為網站、新聞或部落格等網路資源，將不符合比賽規定。
-       </div>`
-);
-
-  // 字體 mirror
-  syncBasicFontRuleMirror();
-
-  // 外部檢索助手
-  const extEvidence=buildExternalSearchEvidence(fileBase||'小論文篇名');
-  addRow('作品是否已於校外發表/得獎（需人工/GPT）',true,extEvidence,'使用下方「外部檢索助手」或「複製查核提示」至 AI 小助手進行確認。');
-  setTimeout(()=>initExternalSearchAssist(fileBase||'小論文篇名'),0);
-}
-
-/* ===== 外部檢索助手（保留原樣） ===== */
-function buildExternalSearchEvidence(baseTitle){
-  const t=(baseTitle||'小論文篇名').trim(), mk=s=>encodeURIComponent(s);
-  const items=[
-    {label:'Google Scholar（繁中）',href:`https://scholar.google.com/scholar?hl=zh-TW&q=${mk(t)}`,q:`${t}`},
-    {label:'Google：題名 + 小論文 得獎',href:`https://www.google.com/search?q=${mk(t+' 小論文 得獎')}`,q:`${t} 小論文 得獎`},
-    {label:'Google：題名 + 專題製作 比賽 歷屆 作品',href:`https://www.google.com/search?q=${mk(t+' 專題製作 比賽 歷屆 作品')}`,q:`${t} 專題製作 比賽 歷屆 作品`},
-    {label:'Google：題名 + site:shs.edu.tw',href:`https://www.google.com/search?q=${mk(t+' site:shs.edu.tw')}`,q:`${t} site:shs.edu.tw`},
-    {label:'Google：題名 + site:edu.tw 小論文',href:`https://www.google.com/search?q=${mk(t+' site:edu.tw 小論文')}`,q:`${t} site:edu.tw 小論文`}
-  ];
-  const links=items.map((it,i)=>`<li class="mono">#${i+1} ${it.label}：<a data-extlink href="${it.href}" target="_blank" rel="noopener">${it.q}</a></li>`).join('');
-  return `<div id="extSearchPanel" class="extsearch"><div class="row"><button id="btnOpenAllSearch">一鍵開啟所有搜尋</button><button id="btnCopyGptPrompt" class="primary">複製查核提示（給 AI小助手）</button></div><div class="hint" style="margin-top:6px">以下為自動生成的查詢（即將檢索的內容）：</div><ul style="margin-top:6px">${links}</ul></div>`;
-}
-function initExternalSearchAssist(baseTitle){
-  const panel=document.getElementById('extSearchPanel'); if(!panel)return;
-  const btnOpen=panel.querySelector('#btnOpenAllSearch'), btnCopy=panel.querySelector('#btnCopyGptPrompt');
-  btnOpen?.addEventListener('click',()=>{panel.querySelectorAll('a[data-extlink]').forEach(a=>window.open(a.href,'_blank','noopener'));});
-  btnCopy?.addEventListener('click',async()=>{
-    const t=(baseTitle||'小論文篇名').trim();
-    const qsEls=panel.querySelectorAll('a[data-extlink]'); const qs=Array.from(qsEls).map((a,i)=>`(${i+1}) ${a.textContent} -> ${a.href}`).join('\n');
-    const summary=(typeof lastSummaryJSON==='object'&&lastSummaryJSON)?JSON.stringify(lastSummaryJSON,null,2):(document.getElementById('jsonPreview')?.textContent||'');
-    const prompt=`請協助進行「校外發表／得獎」外部檢索確認：
-題名/檔名：${t}
-
-請到以下來源檢索並彙整前 10 筆結果（標題、來源、年份、連結），同時判斷是否疑似相同題名之公開發表或得獎紀錄：
-1) Google Scholar（繁中）
-2) Google 關鍵字：題名 +「小論文 得獎」、題名 +「專題製作 比賽 歷屆 作品」
-3) Google 限站：site:shs.edu.tw、site:edu.tw 小論文
-
-請用表格＋條列輸出；最後給「是否查到疑似相同題名」結論與理由，並附上實際使用的查詢字串清單。
-
-（附：本次檢查摘要 JSON）
-${summary||'(若空白可忽略)'}
-
-（查詢字串與連結預覽）
-${qs}`;
-    try{await navigator.clipboard.writeText(prompt);alert('已複製查核提示，請點「打開AI助手」並貼上。');}catch{alert('複製失敗，請重試。')}
-  });
-}
-
-/* ===== 工具 & 報告 ===== */
-function missingRange(okPages,total){const ok=new Set(okPages);const miss=[];for(let i=1;i<=total;i++){if(!ok.has(i))miss.push(i)}return miss.length?miss.join(', '):'—'}
-// 小工具：把 evidence 物件轉成好看的 HTML
-function renderEvidence(evd){
-  try{
-    if (evd == null) return '';
-    if (typeof evd === 'string') return evd;
-    if (typeof evd !== 'object') return String(evd);
-
-    const note = evd.note ? `<div>${_escapeHtml(evd.note)}</div>` : '';
-    const pretty = _escapeHtml(JSON.stringify(evd, null, 2));
-    return `${note}
-      <details style="margin-top:6px">
-        <summary class="mono" style="cursor:pointer">顯示完整 evidence JSON</summary>
-        <pre class="mono" style="white-space:pre-wrap;max-height:280px;overflow:auto">${pretty}</pre>
-      </details>`;
-  }catch(e){
-    return String(evd);
-  }
-}
-
-/**
- * 產生 2D 縮圖（SVG）顯示：黑=2.0cm、紅=2.2cm（上限）、藍=1.8cm（下限），
- * 並標示本次實測的四邊最小距（pt）。W/H/距離單位皆依 pdf.js viewport（scale=1）的座標系。
- */
-function buildMarginPreviewSVG({W, H, measLeft, measRight, measTop, measBottom}) {
-  // 頁面縮放到寬 240 px 的縮圖
-  const thumbW = 240;
-  const scale = thumbW / W;
-  const th = Math.round(H * scale);
-
-  const insetBlack = BASE_MARGIN_PT * scale;
-  const insetRed   = UPPER_MARGIN_PT * scale;
-  const insetBlue  = LOWER_MARGIN_PT * scale;
-
-  // 實測線：以「距離頁緣」的最小值畫 4 條內縮線
-  const mL = Math.max(0, (measLeft ?? 0)   * scale);
-  const mR = Math.max(0, (measRight ?? 0)  * scale);
-  const mT = Math.max(0, (measTop ?? 0)    * scale);
-  const mB = Math.max(0, (measBottom ?? 0) * scale);
-
-  const strokeMeasure = '#16a34a'; // 不指定色系也可，單純視覺辨識
-
-  const svg = `
+/* ========= 工具與量測常數 ========= */
+const SKIP_PAGE_TOKEN = /小論文評分表/;   // 含此字樣之頁，一律跳過所有檢查
+const CM_TO_PT = cm => cm * 72 / 2.54;
+
+const BASE_CM = 2.0;
+const TOL_CM  = 0.2;
+const MARGIN_PT    = CM_TO_PT(BASE_CM);         // 2.0 cm
+const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);// 1.8 cm（藍）
+const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);// 2.2 cm（紅）
+const MICRO_TOL_PT = 0.8;                       // 量測微誤差
+
+function within(v){ return isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT); }
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]);}
+
+/* ========= 視覺尺規（SVG） ========= */
+function buildMarginPreviewSVG({W,H,measLeft,measRight,measTop,measBottom}){
+  const thumbW=240, scale=thumbW/W, th=Math.round(H*scale);
+  const insetBlack=MARGIN_PT*scale, insetRed=RANGE_MAX_PT*scale, insetBlue=RANGE_MIN_PT*scale;
+  const mL=Math.max(0,(measLeft??0)*scale), mR=Math.max(0,(measRight??0)*scale), mT=Math.max(0,(measTop??0)*scale), mB=Math.max(0,(measBottom??0)*scale);
+  return `
+<div class="margin-preview">
 <svg width="${thumbW}" height="${th}" viewBox="0 0 ${thumbW} ${th}" xmlns="http://www.w3.org/2000/svg" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px">
-  <!-- 外框 -->
   <rect x="0.5" y="0.5" width="${thumbW-1}" height="${th-1}" fill="white" stroke="#9ca3af"/>
-
-  <!-- 黑 2.0cm -->
-  <rect x="${insetBlack}" y="${insetBlack}" width="${thumbW-2*insetBlack}" height="${th-2*insetBlack}"
-        fill="none" stroke="#111" stroke-width="2"/>
-
-  <!-- 紅 2.2cm（上限；虛線） -->
-  <rect x="${insetRed}" y="${insetRed}" width="${thumbW-2*insetRed}" height="${th-2*insetRed}"
-        fill="none" stroke="#be123c" stroke-width="2" stroke-dasharray="6 4"/>
-
-  <!-- 藍 1.8cm（下限；虛線） -->
-  <rect x="${insetBlue}" y="${insetBlue}" width="${thumbW-2*insetBlue}" height="${th-2*insetBlue}"
-        fill="none" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="6 4"/>
-
-  <!-- 實測線（綠） -->
-  ${Number.isFinite(mL) ? `<line x1="${mL}" y1="0" x2="${mL}" y2="${th}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
-  ${Number.isFinite(mR) ? `<line x1="${thumbW - mR}" y1="0" x2="${thumbW - mR}" y2="${th}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
-  ${Number.isFinite(mT) ? `<line x1="0" y1="${mT}" x2="${thumbW}" y2="${mT}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
-  ${Number.isFinite(mB) ? `<line x1="0" y1="${th - mB}" x2="${thumbW}" y2="${th - mB}" stroke="${strokeMeasure}" stroke-width="2"/>` : ''}
+  <rect x="${insetBlack}" y="${insetBlack}" width="${thumbW-2*insetBlack}" height="${th-2*insetBlack}" fill="none" stroke="#111" stroke-width="2"/>
+  <rect x="${insetRed}" y="${insetRed}" width="${thumbW-2*insetRed}" height="${th-2*insetRed}" fill="none" stroke="#be123c" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect x="${insetBlue}" y="${insetBlue}" width="${thumbW-2*insetBlue}" height="${th-2*insetBlue}" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="6 4"/>
+  ${Number.isFinite(mL)?`<line x1="${mL}" y1="0" x2="${mL}" y2="${th}" stroke="#16a34a" stroke-width="2"/>`:''}
+  ${Number.isFinite(mR)?`<line x1="${thumbW-mR}" y1="0" x2="${thumbW-mR}" y2="${th}" stroke="#16a34a" stroke-width="2"/>`:''}
+  ${Number.isFinite(mT)?`<line x1="0" y1="${mT}" x2="${thumbW}" y2="${mT}" stroke="#16a34a" stroke-width="2"/>`:''}
+  ${Number.isFinite(mB)?`<line x1="0" y1="${th-mB}" x2="${thumbW}" y2="${th-mB}" stroke="#16a34a" stroke-width="2"/>`:''}
 </svg>
 <div class="legend">
   <span class="dot"></span><span>黑：2.0 cm</span>
   <span class="dot red"></span><span>紅：2.2 cm（上限）</span>
   <span class="dot blue"></span><span>藍：1.8 cm（下限）</span>
+</div>
 </div>`;
-  return `<div class="margin-preview">${svg}</div>`;
 }
 
-// ✅ 新版 addRow：支援物件 evidence、展開 JSON、避免 [object Object]
-function addRow(rule,pass,evidence,suggestion){
+/* ========= 表格輸出 ========= */
+let _ruleCounter=0;
+function addRow(rule, pass, evidenceHtml, suggestionHtml){
   const tr=document.createElement('tr');
-  const badge=pass?'<span class="ok">通過</span>':'<span class="bad">未通過</span>';
-  const evdHtml = renderEvidence(evidence);
-  tr.innerHTML=`<td><span class="num">${++_ruleCounter}</span>${rule}</td><td>${badge}</td><td>${evdHtml}</td><td>${suggestion||''}</td>`;
+  const badge = pass ? '<span class="ok">通過</span>' : '<span class="bad">未通過</span>';
+  tr.innerHTML = `<td><span class="num">${++_ruleCounter}</span>${rule}</td>
+                  <td>${badge}</td>
+                  <td>${evidenceHtml||''}</td>
+                  <td>${suggestionHtml||''}</td>`;
   tbody.appendChild(tr);
-
-  // 以下是原本的對應表（原封不動保留）
-  const map={
-    '頁數 4–10':{rule_id:'file.pages',category:'檔案規格',severity:'critical'},
-    '首頁篇名需置中且落在距上緣 2 公分內':{rule_id:'header.topmargin_firstpage',category:'頁首',severity:'critical'},
-    '首頁頁碼需置中且落在距下緣 2 公分內':{rule_id:'footer.bottommargin_firstpage',category:'頁碼',severity:'critical'},
-    '檔案名稱與頁首篇名一致（不符判定淘汰）':{rule_id:'filename.title_consistency',category:'命名',severity:'critical'},
-    '每頁需有置中頁碼（底端帶）':{rule_id:'footer.pagenum',category:'頁碼',severity:'critical'},
-    '四周邊界 ≥ 2 公分（正文區推估）':{rule_id:'layout.margins',category:'版面',severity:'major'},
-    '不得有封面頁（4–10頁）':{rule_id:'file.coverpage',category:'檔案規格',severity:'critical'},
-    '不得含校名/姓名':{rule_id:'privacy.no_school_or_name',category:'隱私',severity:'critical'},
-    '六大段落依序':{rule_id:'structure.sections_order',category:'結構',severity:'critical'},
-    '內文引註採 作者-年份':{rule_id:'references.citation_style',category:'參考文獻',severity:'major'},
-    [`直接引文 ≤ ${RULES.quoteMaxChars} 字（不含標點與空白）`]:{rule_id:'quotes.limit',category:'引文',severity:'major'},
-    '圖表需有標號/標題與來源':{rule_id:'figures.tables',category:'圖表',severity:'major'},
-    '參考文獻 ≥ 3':{rule_id:'references.count',category:'參考文獻',severity:'critical'},
-    '參考文獻與內文引註一致性':{rule_id:'references.consistency',category:'參考文獻',severity:'critical'},
-    '參考文獻來源不可全為網路':{rule_id:'references.non_all_web',category:'參考文獻',severity:'critical'},
-    '字體/字型規範（需人工確認）':{rule_id:'style.font',category:'版面',severity:'major'},
-    '作品是否已於校外發表/得獎（需人工/GPT）':{rule_id:'external.duplicate_check',category:'人工檢查',severity:'minor'},
-    '頁數 4–10（DOCX）':{rule_id:'file.pages.docx',category:'檔案規格',severity:'minor'},
-    'Cloud Run 字體字型檢查':{rule_id:'fontcheck.cloudrun',category:'字體字型',severity:'major'}
-  };
-
-  const meta=map[rule]||{rule_id:'misc',category:'其他',severity:'minor'};
-  _rowsBuffer.push({
-    rule_id:meta.rule_id,
-    category:meta.category,
-    severity:meta.severity,
-    pass,
-    evidence:(typeof evidence==='string'?{note:evidence}:(evidence||null)),
-    suggestion:suggestion||null
-  });
 }
 
-function buildAndShowSummaryJSON({fileName='paper',pages=0,passFailRows=[]}={}){
-  const weight=x=>x.severity==='critical'?2:(x.severity==='major'?1:0.5);
-  const max=passFailRows.reduce((a,x)=>a+weight(x),0)||1; const score=Math.round(passFailRows.reduce((a,x)=>a+(x.pass?weight(x):0),0)/max*100);
-  const hasCriticalFail=passFailRows.some(x=>!x.pass && x.severity==='critical'); const status=hasCriticalFail?'revise':'pass';
-  const summary={meta:{report_id:(crypto.randomUUID?.()||String(Math.random()).slice(2)),generated_at:new Date().toISOString(),file:{name:fileName,pages,type:fileExt},rules_version:'v1.4'},
-    summary:{score,totals:{checks:passFailRows.length,pass:passFailRows.filter(x=>x.pass).length,fail:passFailRows.filter(x=>!x.pass).length},status},
-    checks:passFailRows.map(x=>({rule_id:x.rule_id,category:x.category,severity:x.severity,pass:x.pass,evidence:x.evidence||null,suggestion:x.suggestion||null}))};
-  lastSummaryJSON=summary; jsonPreview.textContent=JSON.stringify(summary,null,2);
-}
-function syncBasicFontRuleMirror(){
-  if(_fontCheckMirror){
-    addRow('字體/字型規範（需人工確認）', _fontCheckMirror.pass, `（同步進階檢查）${_fontCheckMirror.evidence||''}`, _fontCheckMirror.suggestion||'');
-  }else{
-    addRow('字體/字型規範（需人工確認）',true,'建議：中文新細明體 12pt；英文 Times New Roman 12pt；黑色字體。','若需精確檢查請使用「字體字型進階檢查」。');
-  }
-}
+/* ========= Cloud Run 字體字型進階檢查 ========= */
+fontBtn.addEventListener('click', async ()=>{
+  const picked = document.querySelector('#file')?.files?.[0];
+  const blob = picked || (arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null);
+  if(!blob){ alert('請先選擇 PDF 檔'); return; }
 
-// 將 YYYY、YYYY年M月、YYYY年M月D日 轉成「YYYY年M月D日」，否則回傳 null
-function asFullZhDate(y, m, d){
-  const yy = Number(y), mm = Number(m), dd = Number(d);
-  if (!yy || !mm || !dd) return null;
-  return `${yy}年${mm}月${dd}日`;
-}
-
-/* ===== 下載/複製 ===== */
-downloadHtmlBtn.addEventListener('click',()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告</title>'+document.querySelector('#resultCard').outerHTML;
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='paper-check-report.html';a.click();URL.revokeObjectURL(a.href);
-});
-copyBtn.addEventListener('click',async()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}await navigator.clipboard.writeText(JSON.stringify(lastSummaryJSON,null,2));alert('已複製檢查摘要 JSON，前往 AI助手 後直接貼上即可。')});
-downloadJsonBtn.addEventListener('click',()=>{if(!lastSummaryJSON){alert('尚未產生檢查摘要。');return;}const blob=new Blob([JSON.stringify(lastSummaryJSON,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download((lastSummaryJSON.meta?.file?.name||'paper')+'.summary.json');a.click();URL.revokeObjectURL(a.href);});
-
-/* ===== GAS 計數（GET 版） ===== */
-async function bumpCounterEveryTime(){
-  if (!ENABLE_COUNTER) return;
+  statusEl.textContent = '上傳至 Cloud Run 檢查中…';
   try{
-    // 改用 GET：避免預檢（OPTIONS）
-    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') +
-                'action=increment&ts=' + Date.now();
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
-    console.log('counter increment', res.status);
-  }catch(e){
-    console.warn('counter increment failed', e);
+    const fd = new FormData();
+    fd.append('file', blob, fileName||'upload.pdf'); // 常見後端欄位名
+    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), {
+      method:'POST', mode:'cors', cache:'no-store', body:fd
+    });
+    const text = await res.text();
+    if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
+    const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
+
+    const pass = (typeof data.pass==='boolean')?data.pass:(data.summary?.pass ?? data.ok ?? false);
+    const parts = [];
+    if(data.summary?.pages) parts.push(`頁數：${data.summary.pages}`);
+    if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
+    if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
+    if(data.layout?.per_page_margins?.length){
+      const f = data.layout.per_page_margins[0];
+      parts.push(`第1頁邊界量測：左${f.left} / 右${f.right} / 上${f.top} / 下${f.bottom} pt`);
+    }
+    addRow('Cloud Run 字體字型檢查', !!pass, esc(parts.join('｜')), pass?'OK（通過）':'請依規範修正字體。');
+    resultCard.style.display='block';
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`;
+    statusEl.textContent = 'Cloud Run 檢查完成。';
+  }catch(err){
+    addRow('Cloud Run 字體字型檢查', false, esc(String(err.message||err)), '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
+    resultCard.style.display='block';
+    statusEl.textContent = 'Cloud Run 檢查失敗。';
   }
-}
-
-async function fetchCounter() {
-  if (!ENABLE_COUNTER) return;
-  try {
-    const url = GAS_WEB_APP_URL + '?action=get&site=essayguard&ts=' + Date.now();
-    const res = await fetch(url, { cache: 'no-store' });
-    const data = await res.json().catch(() => ({}));
-    counterEl.textContent = data.count ?? '0';
-  } catch (e) {
-    console.warn('counter get failed', e);
-    counterEl.textContent = '0';
-  }
-}
-
-/* ===== 快取清理（避免 SW 舊檔） ===== */
-(async () => {
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const r of regs) { await r.unregister(); }
-    }
-    if (window.caches?.keys) {
-      const keys = await caches.keys();
-      for (const k of keys) { await caches.delete(k); }
-    }
-  } catch (e) {}
-})();
-
-// 逐條檢查：把不合格清單複製給 AI
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (!t || t.id !== 'btnCopyRefAudit') return;
-
-  const audit = window.__refAudit || {};
-  const items = Array.isArray(audit.items) ? audit.items : [];
-  const bad = items.filter(x => !x.ok).map(x => ({
-    idx: x.idx,
-    text: x.text,
-    reasons: x.reasons
-  }));
-
-  const payload = {
-    references: {
-      count: audit.stats?.total || 0,
-      pass: audit.stats?.pass || 0,
-      fail: audit.stats?.fail || 0,
-      nonweb: audit.stats?.nonweb || 0,
-      web: audit.stats?.web || 0,
-      not_ok: bad
-    }
-  };
-
-  const txt = JSON.stringify(payload, null, 2);
-  navigator.clipboard.writeText(txt)
-    .then(() => alert('✅ 已複製「不合格參考文獻清單」到剪貼簿，可直接貼給 AI 小助手。'))
-    .catch(() => alert('⚠️ 無法存取剪貼簿，請確認瀏覽器權限。'));
 });
 
+/* ========= #15 邊界主流程 ========= */
+startBtn.addEventListener('click', async ()=>{
+  if(!arrayBuffer) return;
+  tbody.innerHTML=''; _ruleCounter=0;
+  statusEl.textContent = '解析 PDF 中…';
+  try{
+    const {getDocument}=await window.loadPdfjs();
+    const pdf = await getDocument({data:arrayBuffer}).promise;
+    const numPages = pdf.numPages;
+
+    // 讀取每頁文字
+    const pageTexts = [];
+    for(let p=1;p<=numPages;p++){
+      const page = await pdf.getPage(p);
+      const tc = await page.getTextContent();
+      pageTexts[p] = tc.items.map(it=>it.str||'').join(' ');
+    }
+
+    // 找到要略過的頁（含「小論文評分表」）
+    const skipPages=new Set();
+    for(let i=1;i<=numPages;i++){
+      if(SKIP_PAGE_TOKEN.test(pageTexts[i]||'')) skipPages.add(i);
+    }
+    if(skipPages.size>0){
+      addRow('略過特定頁面', true,
+        `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
+        '此頁不納入內文、圖表、引註、參考文獻、頁數、頁碼、邊界等檢查。');
+    }
+
+    // 量測（以首頁〈壹、前言〉行為正文上緣基準；跳過評分表頁）
+    let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
+    let firstSectionY=null, firstSectionLeftX=Infinity, page1H=null, page1W=null;
+
+    for(let p=1;p<=numPages;p++){
+      if(skipPages.has(p)) continue;
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({scale:1});
+      const W=viewport.width, H=viewport.height;
+      if(p===1){ page1H=H; page1W=W; }
+      const tc = await page.getTextContent();
+
+      for(const it of tc.items){
+        const tr=it.transform, x=tr[4], y=tr[5], w=(typeof it.width==='number')?it.width:0;
+        const txt=(it.str||'').trim();
+
+        if(p===1 && txt && /^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)){
+          firstSectionY = y;
+          if (x < firstSectionLeftX) firstSectionLeftX = x;
+        }
+
+        // 正文區（排除上下 2cm）
+        const inBody = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
+        if(p===1 && inBody){
+          // 正文需位於〈壹、前言〉之下（抓不到則保守估）
+          const ok = firstSectionY ? (y < firstSectionY - 2) : (y < (H - MARGIN_PT - 40));
+          if(ok){
+            const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
+            if(distLeft   < minLeft)   minLeft   = distLeft;
+            if(distRight  < minRight)  minRight  = distRight;
+            if(distBottom < minBottom) minBottom = distBottom;
+            if(distTop    < minTop)    minTop    = distTop;
+          }
+        }
+      }
+    }
+
+    const leftForCheck = isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;
+    const topForCheck  = isFinite(page1H) && isFinite(firstSectionY) ? (page1H - firstSectionY) : minTop;
+    const pass = within(leftForCheck) && within(topForCheck);
+
+    const evText =
+      `（僅第1頁、以「壹、前言」為基準；略過頁：${skipPages.size}）主要量測（pt）：` +
+      `左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、` +
+      `上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${MICRO_TOL_PT}pt）｜` +
+      `參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
+
+    let svgHtml = '';
+    if (isFinite(page1W) && isFinite(page1H)) {
+      svgHtml = buildMarginPreviewSVG({
+        W: page1W, H: page1H,
+        measLeft: leftForCheck, measRight:minRight, measTop: topForCheck, measBottom:minBottom
+      });
+    }
+
+    addRow(
+      '四周邊界 2 公分（正文區推估）',
+      pass,
+      `<div>${esc(evText)}</div>${svgHtml}`,
+      `依老師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
+       規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格；超出紅框為不合格，完全落入藍框為過寬。`
+    );
+
+    // #10：外部檢索提示（交 GPT A）
+    const qTitle = encodeURIComponent((fileName||'小論文題名').replace(/\.[^.]+$/,''));
+    const searchList = `
+      <div class="hint" style="margin-top:6px">
+        建議用下列查詢交給 <b>AI 小助手（GPT A）</b> 進行彙整比對：
+        <ul style="margin:6px 0 0 18px">
+          <li class="mono"><a target="_blank" rel="noopener" href="https://scholar.google.com/scholar?hl=zh-TW&q=${qTitle}">Google Scholar：${esc(fileName)}</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+%E5%B0%8F%E8%AB%96%E6%96%87+%E5%BE%97%E7%8D%8E">Google：題名 + 小論文 得獎</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+site%3Ashs.edu.tw">Google 限站：site:shs.edu.tw</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+site%3Aedu.tw+%E5%B0%8F%E8%AB%96%E6%96%87">Google 限站：site:edu.tw 小論文</a></li>
+        </ul>
+        由 GPT 統整前 10 筆（標題、來源、年份、連結），並判斷是否疑似相同題名之公開發表或得獎紀錄。
+      </div>`;
+    addRow(
+      '作品是否已於校外發表/得獎（交 GPT 查證）',
+      true,
+      searchList,
+      '點上方「AI 小助手（GPT A）」按鈕，把查詢需求貼給 GPT，請其彙整並給結論。'
+    );
+
+    resultCard.style.display='block';
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；頁數：${numPages}（略過含「小論文評分表」之頁：${Array.from(skipPages).join(', ')||'無'}）`;
+    statusEl.textContent = '完成檢查。';
+
+  }catch(err){
+    statusEl.textContent = '解析失敗：請確認檔案是否有效。';
+    console.error(err);
+  }
+});
+
+/* ========= 下載結果（HTML） ========= */
+downloadHtmlBtn.addEventListener('click', ()=>{
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（簡化版 v=2025-10-30a）</title>'
+    + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}'
+    + 'table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}'
+    + 'th{background:#f9fafb}.ok{color:#065f46}.bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
+    + document.querySelector('#resultCard').outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='paper-check-report-simple.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 </script>
 </body>
 </html>
