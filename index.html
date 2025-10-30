@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30g）</title>
+<title>高中職小論文格式自檢（v=2025-10-30h）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -62,7 +62,7 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30g</span>
+      <span class="mono">｜v=2025-10-30h</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -93,11 +93,6 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
           <input id="file" type="file" accept=".pdf" disabled/>
           <p class="hint" id="status">請先勾選同意。</p>
         </div>
-
-          document.querySelector('label.file')?.addEventListener('click', e=>{
-          e.preventDefault();
-          if(!fileInput.disabled) fileInput.click();
-          });
 
         <p class="hint" style="color:#444;font-size:14px;margin-top:6px;line-height:1.6;">
           💡 建議流程：先做 <b>#15 邊界快速檢查</b>，再用 <b>Cloud Run 字體進階檢查</b> 與 <b>GPT B 全面分析</b>，三者互補。
@@ -290,6 +285,7 @@ startBtn.addEventListener('click', async ()=>{
     // 只針對第 1 頁正文量測（以〈壹、前言〉行當基準）
     let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
     let firstSectionY=null, firstSectionLeftX=Infinity, page1H=null, page1W=null;
+    let firstSectionFontH = null;
 
     for(let p=1;p<=numPages;p++){
       if(skipPages.has(p)) continue;
@@ -305,8 +301,10 @@ startBtn.addEventListener('click', async ()=>{
         const txt=(it.str||'').trim();
 
         if(p===1 && txt && /^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)){
+          firsif (p === 1 && txt && /^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)) {
           firstSectionY = y;
-          firstSectionFontH = Math.hypot(tr[
+         // 以字型變換矩陣近似字高；取不到就給 12pt 預設
+          firstSectionFontH = Math.hypot(tr[2] || 0, tr[3] || 0) || 12;
           if (x < firstSectionLeftX) firstSectionLeftX = x;
         }
 
@@ -343,10 +341,7 @@ startBtn.addEventListener('click', async ()=>{
 
 // 左邊維持原邏輯，若找不到〈壹、前言〉就用掃描到的最小左距
     const leftForCheck = Number.isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;
-
-    const topForCheck  = isFinite(page1H) && isFinite(firstSectionY) ? (page1H - firstSectionY) : minTop;
     const pass = within(leftForCheck) && within(topForCheck);
-
     const evText =
       `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：` +
       `左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、` +
@@ -419,7 +414,7 @@ fontBtn.addEventListener('click', async ()=>{
 
 /* ========= 下載結果 ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30d）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30g）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -454,6 +449,11 @@ async function bumpCounterEveryTime(){
   }catch(e){}
 }
 window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
+document.querySelector('label.file')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!fileInput.disabled) fileInput.click();
+});
+
 </script>
 </body>
 </html>
