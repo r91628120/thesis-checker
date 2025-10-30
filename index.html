@@ -1,12 +1,12 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-30j -->
+<!-- Version: v=2025-10-30k -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30j）</title>
+<title>高中職小論文格式自檢（v=2025-10-30k）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -14,7 +14,6 @@
 <style>
 :root{
   --bg:#f7f7fb; --card:#fff; --ink:#111827; --muted:#6b7280; --accent:#2563eb; --ok:#059669; --bad:#b91c1c; --bdr:#e5e7eb;
-  --vio:#7c3aed; --vio-b:#6d28d9; --vio-ink:#fff;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
@@ -27,9 +26,25 @@ header .meta{margin:0 0 12px;color:var(--muted);font-size:13px}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 button{padding:.7rem 1.05rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
 button.primary{background:var(--accent);color:#fff;border-color:transparent}
-button.violet{background:var(--vio);color:var(--vio-ink);border-color:var(--vio-b)}
 button:disabled{opacity:.5;cursor:not-allowed}
 a.btn-gpt{background:#f3e8ff;border:1px solid #e9d5ff;border-radius:10px;color:#3b0764;padding:.7rem 1.05rem;text-decoration:none;font-weight:600}
+
+/* ——— 新增：紅底清除鈕 ——— */
+button.danger{background:#dc2626;color:#fff;border-color:#b91c1c}
+button.danger:hover{filter:brightness(0.96)}
+
+/* ——— 新增：GPT A 紫色「有框＋淡底」按鈕 ——— */
+a.btn-violet{
+  background:#f3e8ff;
+  border:1.5px solid #c4b5fd;
+  color:#4c1d95;
+  border-radius:10px;
+  padding:.7rem 1.05rem;
+  text-decoration:none;
+  font-weight:700;
+}
+a.btn-violet:hover{background:#ede9fe;border-color:#a78bfa}
+
 .step{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
 .step .no{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#eef2ff;border:1px solid var(--bdr);font-weight:700}
 .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px;text-align:center;background:#fafafa;margin-top:8px}
@@ -69,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30j</span>
+      <span class="mono">｜v=2025-10-30k</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -119,7 +134,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
           <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
-          <a id="gptA" class="violet" style="text-decoration:none;display:inline-flex;align-items:center" target="_blank" rel="noopener"
+          <!-- 改為紫色框底 -->
+          <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">AI 小助手（GPT A）</a>
         </div>
         <p class="hint">🔎 含「小論文評分表」之頁將被<strong>完整略過</strong>：不納入全文、頁數、頁碼與邊界等任何檢查。</p>
@@ -136,7 +152,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
         <div id="fileTag" class="hint" style="margin:6px 0 12px"></div>
         <table>
           <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
-          <tbody id="tbody"></tbody>
+        <tbody id="tbody"></tbody>
         </table>
 
         <!-- 第 4 項：AI 小助手用摘要 JSON + 外部檢索助手 -->
@@ -144,7 +160,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <h4 style="margin:10px 0 6px">#4 外部檢索助手（給 AI 小助手）</h4>
           <div class="row">
             <button id="btnOpenAllSearch">一鍵開啟所有搜尋</button>
-            <button id="btnCopyGptPrompt" class="violet">複製查核提示（給 AI 小助手）</button>
+            <button id="btnCopyGptPrompt" class="btn-violet">複製查核提示（給 AI 小助手）</button>
           </div>
           <ol id="searchLinks" style="margin:10px 0 6px;padding-left:20px"></ol>
           <details style="margin-top:6px">
@@ -155,12 +171,14 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 
         <div class="row" style="margin-top:10px">
           <button id="downloadHtml">下載檢查結果（網頁）</button>
+          <!-- 新增清除鈕 -->
+          <button id="clearAll" class="danger">清除（回到初始畫面）</button>
         </div>
       </div>
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-30j</footer>
+  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-30k</footer>
 </div>
 
 <script>
@@ -245,7 +263,7 @@ const SKIP_PAGE_TOKEN = /小論文評分表/;        // 略過頁面
 const CM_TO_PT = cm => cm * 72 / 2.54;
 const BASE_CM = 2.0, TOL_CM = 0.2;
 const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM); // 1.8cm
-const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
+the RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
 const MICRO_TOL_PT = 0.8;                        // ±0.8 pt 容差
 const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -559,13 +577,46 @@ ${qs}`;
 
 /* ========= 下載結果 ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30j）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30k）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='paper-check-report.html'; a.click();
   URL.revokeObjectURL(a.href);
 });
+
+/* ========= 清除：回到初始狀態 ========= */
+function resetToInitial(){
+  // 狀態變數
+  arrayBuffer = null;
+  fileName = '';
+  lastSummaryJSON = null;
+
+  // 清空表格與面板
+  tbody.innerHTML = '';
+  _ruleCounter = 0;
+  resultCard.style.display = 'none';
+  extPanel.style.display = 'none';
+  searchLinksEl.innerHTML = '';
+  jsonPreviewEl.textContent = '';
+
+  // 檔案輸入清空
+  if (fileInput) fileInput.value = '';
+
+  // 狀態列與按鈕
+  statusEl.textContent = consent.checked ? '已同意，可選檔。' : '請先勾選同意。';
+  setEnabled(consent.checked);
+
+  // GPT A 連結還原（移除先前注入的 q 參數）
+  if (gptALink){
+    const base = gptALink.getAttribute('href').split('?')[0];
+    gptALink.setAttribute('href', base);
+  }
+
+  // 回到頁面頂端
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.addEventListener('click',(e)=>{ if(e.target && e.target.id==='clearAll'){ resetToInitial(); }});
 
 /* ========= GAS 人次：讀取 + 遞增 ========= */
 async function fetchCounter() {
