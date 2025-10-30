@@ -1,13 +1,9 @@
-<!-- 高中職小論文格式自檢系統（簡化版） -->
-<!-- Version: v=2025-10-30a -->
-<!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（簡化版 v=2025-10-30b）</title>
-
+<title>高中職小論文格式自檢（簡化版 v=2025-10-30c）</title>
 <style>
 :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
 *{box-sizing:border-box}
@@ -17,23 +13,25 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .hint{color:var(--muted);font-size:13px}
 .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
+.drop[aria-disabled="true"]{opacity:.7;filter:grayscale(.1)}
 input[type=file]{display:none}
 label.file{display:inline-flex;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
 button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
 button.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn-gpt{background:#f8c8dc;color:#333;border:1px solid #f5a6c4;border-radius:10px;padding:.7rem 1.1rem;font-weight:600;cursor:pointer;text-decoration:none}
 .ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
 .bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
 table{border-collapse:collapse;width:100%}
 th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
 th{background:#f9fafb}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
-.btn-gpt{background:#f8c8dc;color:#333;border:1px solid #f5a6c4;border-radius:10px;padding:.7rem 1.1rem;font-weight:600;cursor:pointer;text-decoration:none}
 .margin-preview .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:#374151;margin:6px 0}
 .margin-preview .dot{display:inline-block;width:10px;height:10px;border-radius:2px;border:2px solid #111}
 .margin-preview .dot.red{border-color:#be123c;border-style:dashed}
 .margin-preview .dot.blue{border-color:#1d4ed8;border-style:dashed}
 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
 footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
+.badge{display:inline-flex;gap:6px;align-items:center}
 </style>
 
 <!-- pdf.js loader -->
@@ -49,22 +47,21 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 <body>
 <div class="wrap">
   <h1 style="margin:0 0 6px">高中職小論文格式自檢（簡化版）</h1>
-  <!-- 放在 <h1>...</h1> 之後 -->
+
+  <!-- 人次計數 + 版權 -->
   <p class="hint" id="counterBox">
-  目前累積小論文格式自檢人次：<b id="counter">載入中…</b>
-  <span class="mono">｜v=2025-10-30a</span>
+    目前累積小論文格式自檢人次：<b id="counter">載入中…</b>
+    <span class="mono">｜v=2025-10-30c</span>
   </p>
   <p class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</p>
-  
+
   <p class="hint">
     本頁僅保留：#15 四周邊界、#10 校外發表檢索（交 GPT）、Cloud Run 字體字型進階檢查。
-    <strong>版本：v=2025-10-30a</strong>
   </p>
 
   <section class="card">
-    <div class="row">
-      <div class="hint">PDF（≤ 5 MB）</div>
-    </div>
+    <div class="row"><div class="hint">PDF（≤ 5 MB）</div></div>
+
     <div style="margin-top:8px">
       <input id="consent" type="checkbox"/>
       <label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
@@ -77,31 +74,27 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
       <p class="hint" id="status">請先勾選同意。</p>
     </div>
 
-<!-- 勾選同意區後面緊接著加上 -->
-<details style="margin-top:8px">
-  <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
-  <ul>
-    <li>僅做格式檢查，不做存證或投稿。</li>
-    <li>解析於瀏覽器記憶體，完成後即釋放；本站不保存。</li>
-    <li>請勿含個資（校名、姓名、班級）。</li>
-  </ul>
-</details>
+    <!-- 必讀與使用建議 -->
+    <details style="margin-top:8px">
+      <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
+      <ul>
+        <li>僅做格式檢查，不做存證或投稿。</li>
+        <li>解析於瀏覽器記憶體，完成後即釋放；本站不保存。</li>
+        <li>請勿含個資（校名、姓名、班級）。</li>
+      </ul>
+    </details>
+    <p class="hint" style="color:#444;font-size:14px;margin-top:6px;line-height:1.6;">
+      💡 <b>使用建議：</b>先用本頁進行 #15 邊界快速檢查，再按
+      <b>「單獨 GPT 檢查 PDF（GPT B）」</b> 做完整分析（含頁碼標註、圖表/文獻一致性等）。
+    </p>
 
-<p style="color:#444; font-size:14px; margin-top:6px; line-height:1.6;">
-  💡 <b>使用建議：</b>先用本頁進行 #15 邊界快速檢查，再按下方
-  <b>「單獨 GPT 檢查 PDF（GPT B）」</b> 做更完整分析（含頁碼標註、圖表/文獻一致性等）。
-  <br>🧩 兩者搭配使用，能獲得最準確的自檢結果。
-</p>
-
-
+    <!-- 動作列 -->
     <div class="row" style="margin-top:8px">
       <button id="start" class="primary" disabled>開始檢查（#15 邊界）</button>
       <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
       <a class="btn-gpt" id="gptB" target="_blank" rel="noopener"
          href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
-      <a class="primary" id="gptA" style="text-decoration:none" target="_blank" rel="noopener"
-         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong"><button id="gptAButton" class="primary" type="button">AI 小助手（GPT A）</button>
-      </a>
+      <button id="gptAButton" type="button" class="primary">AI 小助手（GPT A）</button>
     </div>
   </section>
 
@@ -117,18 +110,19 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30a</footer>
+  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30c</footer>
 </div>
 
-<button id="gptAButton" class="primary" type="button">AI 小助手（GPT A）</button>
-
-
-
 <script>
-/* ========= 常數與狀態 ========= */
+/* ========= 常數 ========= */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
+/* ★★★ 請換成你的 GAS Web App 連結 ★★★ */
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTtq4W2kf0MErBPoq_bCMzZBryMCf16ko_5tqAAw7nqq7yJAwjvQKEi/exec";
+const ENABLE_COUNTER = true;
+
+/* ========= 元件 ========= */
 const consent  = document.getElementById('consent');
 const fileInput= document.getElementById('file');
 const drop     = document.getElementById('drop');
@@ -139,20 +133,28 @@ const resultCard = document.getElementById('resultCard');
 const tbody    = document.getElementById('tbody');
 const fileTag  = document.getElementById('fileTag');
 const downloadHtmlBtn = document.getElementById('downloadHtml');
+const gptAButton = document.getElementById('gptAButton');
 
 let arrayBuffer=null, fileName='', fileExt='pdf';
 
-/* ========= 同意 → 啟用 ========= */
+/* ========= 啟用/停用（修正：同步 aria-disabled） ========= */
 function setEnabled(ok){
   fileInput.disabled = !ok;
   startBtn.disabled  = !ok || !arrayBuffer;
   fontBtn.disabled   = !ok || !arrayBuffer;
+  drop.setAttribute('aria-disabled', ok ? 'false' : 'true');
   statusEl.textContent = ok ? (arrayBuffer ? '已選擇檔案，準備開始。' : '已同意，可選檔。') : '請先勾選同意。';
 }
 setEnabled(false);
 consent.addEventListener('change', ()=>setEnabled(consent.checked));
 
-/* ========= 選檔/拖拉 ========= */
+/* ========= Label 保險觸發（解決某些瀏覽器點不到 input） ========= */
+document.querySelector('label.file')?.addEventListener('click', (e)=>{
+  if (fileInput.disabled) return;
+  fileInput.click();
+});
+
+/* ========= 拖拉/選檔 ========= */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();drop.classList.remove('drag');}));
 drop.addEventListener('drop',e=>{if(fileInput.disabled)return;const f=e.dataTransfer.files?.[0];if(f)handleFile(f);});
@@ -166,21 +168,18 @@ async function handleFile(f){
   setEnabled(consent.checked);
 }
 
-/* ========= 工具與量測常數 ========= */
-const SKIP_PAGE_TOKEN = /小論文評分表/;   // 含此字樣之頁，一律跳過所有檢查
+/* ========= 邊界量測常數 ========= */
+const SKIP_PAGE_TOKEN = /小論文評分表/;   // 含此字樣之頁，一律跳過
 const CM_TO_PT = cm => cm * 72 / 2.54;
+const BASE_CM = 2.0, TOL_CM = 0.2;
+const MARGIN_PT = CM_TO_PT(BASE_CM);
+const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
+const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
+const MICRO_TOL_PT = 0.8;
+const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-const BASE_CM = 2.0;
-const TOL_CM  = 0.2;
-const MARGIN_PT    = CM_TO_PT(BASE_CM);         // 2.0 cm
-const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);// 1.8 cm（藍）
-const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);// 2.2 cm（紅）
-const MICRO_TOL_PT = 0.8;                       // 量測微誤差
-
-function within(v){ return isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT); }
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]);}
-
-/* ========= 視覺尺規（SVG） ========= */
+/* ========= 邊界視覺化 ========= */
 function buildMarginPreviewSVG({W,H,measLeft,measRight,measTop,measBottom}){
   const thumbW=240, scale=thumbW/W, th=Math.round(H*scale);
   const insetBlack=MARGIN_PT*scale, insetRed=RANGE_MAX_PT*scale, insetBlue=RANGE_MIN_PT*scale;
@@ -226,10 +225,8 @@ fontBtn.addEventListener('click', async ()=>{
   statusEl.textContent = '上傳至 Cloud Run 檢查中…';
   try{
     const fd = new FormData();
-    fd.append('file', blob, fileName||'upload.pdf'); // 常見後端欄位名
-    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), {
-      method:'POST', mode:'cors', cache:'no-store', body:fd
-    });
+    fd.append('file', blob, fileName||'upload.pdf');
+    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), { method:'POST', mode:'cors', cache:'no-store', body:fd });
     const text = await res.text();
     if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
     const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
@@ -304,10 +301,8 @@ startBtn.addEventListener('click', async ()=>{
           if (x < firstSectionLeftX) firstSectionLeftX = x;
         }
 
-        // 正文區（排除上下 2cm）
         const inBody = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
         if(p===1 && inBody){
-          // 正文需位於〈壹、前言〉之下（抓不到則保守估）
           const ok = firstSectionY ? (y < firstSectionY - 2) : (y < (H - MARGIN_PT - 40));
           if(ok){
             const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
@@ -342,11 +337,11 @@ startBtn.addEventListener('click', async ()=>{
       '四周邊界 2 公分（正文區推估）',
       pass,
       `<div>${esc(evText)}</div>${svgHtml}`,
-      `依老師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
+      `依教師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
        規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格；超出紅框為不合格，完全落入藍框為過寬。`
     );
 
-    // #10：外部檢索提示（交 GPT A）
+    // #10：外部檢索（交 GPT）
     const qTitle = encodeURIComponent((fileName||'小論文題名').replace(/\.[^.]+$/,''));
     const searchList = `
       <div class="hint" style="margin-top:6px">
@@ -363,12 +358,15 @@ startBtn.addEventListener('click', async ()=>{
       '作品是否已於校外發表/得獎（交 GPT 查證）',
       true,
       searchList,
-      '點上方「AI 小助手（GPT A）」按鈕，把查詢需求貼給 GPT，請其彙整並給結論。'
+      '點頁面上方「AI 小助手（GPT A）」按鈕，把查詢需求貼給 GPT，請其彙整並給結論。'
     );
 
     resultCard.style.display='block';
     fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；頁數：${numPages}（略過含「小論文評分表」之頁：${Array.from(skipPages).join(', ')||'無'}）`;
     statusEl.textContent = '完成檢查。';
+
+    // 自檢成功即 +1
+    bumpCounterEveryTime(); fetchCounter();
 
   }catch(err){
     statusEl.textContent = '解析失敗：請確認檔案是否有效。';
@@ -378,18 +376,43 @@ startBtn.addEventListener('click', async ()=>{
 
 /* ========= 下載結果（HTML） ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（簡化版 v=2025-10-30a）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（簡化版 v=2025-10-30c）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}'
     + 'table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}'
     + 'th{background:#f9fafb}.ok{color:#065f46}.bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='paper-check-report-simple.html';
-  a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='paper-check-report-simple.html'; a.click();
   URL.revokeObjectURL(a.href);
 });
+
+/* ========= GPT A 按鈕（純按鈕、不再巢狀 a>button） ========= */
+gptAButton.addEventListener('click', ()=>{
+  window.open('https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong','_blank','noopener');
+});
+
+/* ========= GAS 人次：載入 + 遞增 ========= */
+async function fetchCounter() {
+  if (!ENABLE_COUNTER) return;
+  try {
+    const url = GAS_WEB_APP_URL + '?action=get&site=essayguard&ts=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    const counterEl = document.getElementById('counter');
+    if (counterEl) counterEl.textContent = data.count ?? '0';
+  } catch (e) {
+    const counterEl = document.getElementById('counter');
+    if (counterEl) counterEl.textContent = '0';
+  }
+}
+async function bumpCounterEveryTime(){
+  if (!ENABLE_COUNTER) return;
+  try{
+    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') + 'action=increment&ts=' + Date.now();
+    await fetch(url, { method: 'GET', cache: 'no-store' });
+  }catch(e){}
+}
+window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
 </script>
 </body>
 </html>
