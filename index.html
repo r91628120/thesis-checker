@@ -6,7 +6,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30k）</title>
+<title>高中職小論文格式自檢（v=2025-10-30l）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30k</span>
+      <span class="mono">｜v=2025-10-30l</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -130,7 +130,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
       <div>
         <h3 style="margin:4px 0 8px">執行檢查</h3>
         <div class="row">
-          <button id="start" class="primary" disabled>開始檢查（#15 邊界：Server 優先）</button>
+          <button id="start" class="primary" disabled>開始檢查（邊界：Server 優先）</button>
+          <button id="clearTop" class="danger">清除</button>
           <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
           <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
@@ -263,7 +264,7 @@ const SKIP_PAGE_TOKEN = /小論文評分表/;        // 略過頁面
 const CM_TO_PT = cm => cm * 72 / 2.54;
 const BASE_CM = 2.0, TOL_CM = 0.2;
 const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM); // 1.8cm
-the RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
+const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
 const MICRO_TOL_PT = 0.8;                        // ±0.8 pt 容差
 const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -617,7 +618,7 @@ function resetToInitial(){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.addEventListener('click',(e)=>{ if(e.target && e.target.id==='clearAll'){ resetToInitial(); }});
-
+document.getElementById('clearTop')?.addEventListener('click', resetToInitial);
 /* ========= GAS 人次：讀取 + 遞增 ========= */
 async function fetchCounter() {
   if (!ENABLE_COUNTER) return;
