@@ -6,7 +6,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（簡化版 v=2025-10-30a）</title>
+<title>高中職小論文格式自檢（簡化版 v=2025-10-30b）</title>
 
 <style>
 :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
@@ -49,6 +49,13 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 <body>
 <div class="wrap">
   <h1 style="margin:0 0 6px">高中職小論文格式自檢（簡化版）</h1>
+  <!-- 放在 <h1>...</h1> 之後 -->
+  <p class="hint" id="counterBox">
+  目前累積小論文格式自檢人次：<b id="counter">載入中…</b>
+  <span class="mono">｜v=2025-10-30a</span>
+  </p>
+  <p class="hint" style="margin-top:8px">© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw</p>
+  
   <p class="hint">
     本頁僅保留：#15 四周邊界、#10 校外發表檢索（交 GPT）、Cloud Run 字體字型進階檢查。
     <strong>版本：v=2025-10-30a</strong>
@@ -70,13 +77,31 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
       <p class="hint" id="status">請先勾選同意。</p>
     </div>
 
+<!-- 勾選同意區後面緊接著加上 -->
+<details style="margin-top:8px">
+  <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
+  <ul>
+    <li>僅做格式檢查，不做存證或投稿。</li>
+    <li>解析於瀏覽器記憶體，完成後即釋放；本站不保存。</li>
+    <li>請勿含個資（校名、姓名、班級）。</li>
+  </ul>
+</details>
+
+<p style="color:#444; font-size:14px; margin-top:6px; line-height:1.6;">
+  💡 <b>使用建議：</b>先用本頁進行 #15 邊界快速檢查，再按下方
+  <b>「單獨 GPT 檢查 PDF（GPT B）」</b> 做更完整分析（含頁碼標註、圖表/文獻一致性等）。
+  <br>🧩 兩者搭配使用，能獲得最準確的自檢結果。
+</p>
+
+
     <div class="row" style="margin-top:8px">
       <button id="start" class="primary" disabled>開始檢查（#15 邊界）</button>
       <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
       <a class="btn-gpt" id="gptB" target="_blank" rel="noopener"
          href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
       <a class="primary" id="gptA" style="text-decoration:none" target="_blank" rel="noopener"
-         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">AI 小助手（GPT A）</a>
+         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong"><button id="gptAButton" class="primary" type="button">AI 小助手（GPT A）</button>
+      </a>
     </div>
   </section>
 
@@ -94,6 +119,10 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 
   <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30a</footer>
 </div>
+
+<button id="gptAButton" class="primary" type="button">AI 小助手（GPT A）</button>
+
+
 
 <script>
 /* ========= 常數與狀態 ========= */
