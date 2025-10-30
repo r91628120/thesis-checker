@@ -1,52 +1,42 @@
+<!-- 高中職小論文格式自檢系統（簡化版） -->
+<!-- Version: v=2025-10-30a -->
+<!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30d）</title>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
+<title>高中職小論文格式自檢（簡化版 v=2025-10-30c）</title>
 
 <style>
-:root{
-  --bg:#f7f7fb; --card:#fff; --ink:#111827; --muted:#6b7280; --accent:#2563eb; --ok:#059669; --bad:#b91c1c; --bdr:#e5e7eb;
-  --pink:#f8c8dc; --pink-b:#f5a6c4;
-}
+:root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--accent:#2563eb;--border:#e5e7eb}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif}
-.wrap{max-width:980px;margin:auto;padding:24px}
-header h1{margin:0 0 6px;font-size:clamp(22px,4vw,28px)}
-header .meta{margin:0 0 12px;color:var(--muted);font-size:13px}
-.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:18px;margin-top:14px}
+.wrap{max-width:960px;margin:auto;padding:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .hint{color:var(--muted);font-size:13px}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
-button{padding:.7rem 1.05rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
-button.primary{background:var(--accent);color:#fff;border-color:transparent}
-button:disabled{opacity:.5;cursor:not-allowed}
-a.btn-gpt{background:var(--pink);border:1px solid var(--pink-b);border-radius:10px;color:#222;padding:.7rem 1.05rem;text-decoration:none;font-weight:600}
-.step{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
-.step .no{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#eef2ff;border:1px solid var(--bdr);font-weight:700}
-.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px;text-align:center;background:#fafafa;margin-top:8px}
-.drop[aria-disabled="true"]{opacity:.7;filter:grayscale(.1)}
+.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:#fafafa;margin-top:8px}
 input[type=file]{display:none}
-label.file{display:inline-flex;gap:.6rem;padding:.65rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
+label.file{display:inline-flex;gap:.6rem;padding:.7rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
+button{padding:.7rem 1.1rem;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:transparent}
+.ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.1rem .5rem;border-radius:999px;font-size:12px}
+.bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.1rem .5rem;border-radius:999px;font-size:12px}
 table{border-collapse:collapse;width:100%}
-th,td{border:1px solid var(--bdr);padding:8px 10px;text-align:left;vertical-align:top}
+th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}
 th{background:#f9fafb}
-.badge-ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.15rem .5rem;border-radius:999px;font-size:12px}
-.badge-bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.15rem .5rem;border-radius:999px;font-size:12px}
-.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid var(--bdr);font-size:12px;color:#374151;font-weight:600}
-footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
-.margin-preview{margin-top:8px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.btn-gpt{background:#f8c8dc;color:#333;border:1px solid #f5a6c4;border-radius:10px;padding:.7rem 1.1rem;font-weight:600;cursor:pointer;text-decoration:none}
 .margin-preview .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:#374151;margin:6px 0}
 .margin-preview .dot{display:inline-block;width:10px;height:10px;border-radius:2px;border:2px solid #111}
 .margin-preview .dot.red{border-color:#be123c;border-style:dashed}
 .margin-preview .dot.blue{border-color:#1d4ed8;border-style:dashed}
+.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
+footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </style>
 
-<!-- pdf.js（ESM） -->
+<!-- pdf.js loader -->
 <script type="module">
   window.loadPdfjs = async () => {
     const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
@@ -58,98 +48,58 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>高中職小論文格式自檢</h1>
-    <p class="meta">
-      目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30d</span>
-      ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
-    </p>
-  </header>
+  <h1 style="margin:0 0 6px">高中職小論文格式自檢（簡化版）</h1>
+  <p class="hint">
+    本頁僅保留：#15 四周邊界、#10 校外發表檢索（交 GPT）、Cloud Run 字體字型進階檢查。
+    <strong>版本：v=2025-10-30a</strong>
+  </p>
 
-  <!-- Step 1 -->
   <section class="card">
-    <div class="step">
-      <div class="no">1</div>
-      <div>
-        <h3 style="margin:4px 0 8px">同意與上傳</h3>
-        <details>
-          <summary><strong>上傳與資料保存政策（必讀）</strong></summary>
-          <ul>
-            <li>僅做格式檢查，不做存證或投稿。</li>
-            <li>解析於瀏覽器記憶體，完成後即釋放；本站不保存。</li>
-            <li>請勿含個資（校名、姓名、班級）。</li>
-          </ul>
-        </details>
+    <div class="row">
+      <div class="hint">PDF（≤ 5 MB）</div>
+    </div>
+    <div style="margin-top:8px">
+      <input id="consent" type="checkbox"/>
+      <label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
+    </div>
 
-        <div class="row" style="margin-top:8px">
-          <input id="consent" type="checkbox"/>
-          <label for="consent">我已閱讀並同意，且確認檔案不含 <span class="mono">校名/姓名</span>。</label>
-        </div>
+    <div id="drop" class="drop" aria-disabled="true">
+      <p><strong>拖拉 PDF 到這裡</strong></p>
+      <label for="file" class="file">選擇檔案</label>
+      <input id="file" type="file" accept=".pdf" disabled/>
+      <p class="hint" id="status">請先勾選同意。</p>
+    </div>
 
-        <div id="drop" class="drop" aria-disabled="true">
-          <p><strong>拖拉 PDF 到這裡</strong></p>
-          <label for="file" class="file">選擇檔案</label>
-          <input id="file" type="file" accept=".pdf" disabled/>
-          <p class="hint" id="status">請先勾選同意。</p>
-        </div>
-
-        <p class="hint" style="color:#444;font-size:14px;margin-top:6px;line-height:1.6;">
-          💡 建議流程：先做 <b>#15 邊界快速檢查</b>，再用 <b>Cloud Run 字體進階檢查</b> 與 <b>GPT B 全面分析</b>，三者互補。
-        </p>
-      </div>
+    <div class="row" style="margin-top:8px">
+      <button id="start" class="primary" disabled>開始檢查（#15 邊界）</button>
+      <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+      <a class="btn-gpt" id="gptB" target="_blank" rel="noopener"
+         href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
+      <a class="primary" id="gptA" style="text-decoration:none" target="_blank" rel="noopener"
+         href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">AI 小助手（GPT A）</a>
     </div>
   </section>
 
-  <!-- Step 2 -->
-  <section class="card">
-    <div class="step">
-      <div class="no">2</div>
-      <div>
-        <h3 style="margin:4px 0 8px">執行檢查</h3>
-        <div class="row">
-          <button id="start" class="primary" disabled>開始檢查（#15 邊界）</button>
-          <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
-          <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
-             href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
-          <button id="gptAButton" type="button" class="primary">AI 小助手（GPT A）</button>
-        </div>
-        <p class="hint">🔎 本系統會自動略過檢測含「小論文評分表」之頁，不把它納入內文/圖表/文獻等全文檢查（仍計入頁數/頁碼規則）。</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 3 -->
   <section class="card" id="resultCard" style="display:none">
-    <div class="step">
-      <div class="no">3</div>
-      <div>
-        <h3 style="margin:4px 0 8px">檢查結果</h3>
-        <div id="fileTag" class="hint" style="margin:6px 0 12px"></div>
-        <table>
-          <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
-        <div class="row" style="margin-top:10px">
-          <button id="downloadHtml">下載檢查結果（網頁）</button>
-        </div>
-      </div>
+    <h3>檢查結果</h3>
+    <div id="fileTag" class="hint" style="margin:6px 0 12px"></div>
+    <table>
+      <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="row" style="margin-top:10px">
+      <button id="downloadHtml">下載檢查結果（網頁）</button>
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30d</footer>
+  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30a</footer>
 </div>
 
 <script>
-/* ========= 常數 ========= */
+/* ========= 常數與狀態 ========= */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
 
-/* ★★★ 請換成你的 GAS Web App /exec 連結 ★★★ */
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTtq4W2kf0MErBPoq_bCMzZBryMCf16ko_5tqAAw7nqq7yJAwjvQKEi/exec";
-const ENABLE_COUNTER = true;
-
-/* ========= 元件 ========= */
 const consent  = document.getElementById('consent');
 const fileInput= document.getElementById('file');
 const drop     = document.getElementById('drop');
@@ -160,23 +110,20 @@ const resultCard = document.getElementById('resultCard');
 const tbody    = document.getElementById('tbody');
 const fileTag  = document.getElementById('fileTag');
 const downloadHtmlBtn = document.getElementById('downloadHtml');
-const gptAButton = document.getElementById('gptAButton');
 
 let arrayBuffer=null, fileName='', fileExt='pdf';
 
-/* ========= 啟用/停用（含 aria 與保險觸發） ========= */
+/* ========= 同意 → 啟用 ========= */
 function setEnabled(ok){
   fileInput.disabled = !ok;
   startBtn.disabled  = !ok || !arrayBuffer;
   fontBtn.disabled   = !ok || !arrayBuffer;
-  drop.setAttribute('aria-disabled', ok ? 'false' : 'true');
   statusEl.textContent = ok ? (arrayBuffer ? '已選擇檔案，準備開始。' : '已同意，可選檔。') : '請先勾選同意。';
 }
 setEnabled(false);
 consent.addEventListener('change', ()=>setEnabled(consent.checked));
-document.querySelector('label.file')?.addEventListener('click', ()=>{ if(!fileInput.disabled) fileInput.click(); });
 
-/* ========= DnD / 選檔 ========= */
+/* ========= 選檔/拖拉 ========= */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();drop.classList.remove('drag');}));
 drop.addEventListener('drop',e=>{if(fileInput.disabled)return;const f=e.dataTransfer.files?.[0];if(f)handleFile(f);});
@@ -190,17 +137,21 @@ async function handleFile(f){
   setEnabled(consent.checked);
 }
 
-/* ========= 邊界量測（#15） ========= */
-const SKIP_PAGE_TOKEN = /小論文評分表/; // 略過之頁
+/* ========= 工具與量測常數 ========= */
+const SKIP_PAGE_TOKEN = /小論文評分表/;   // 含此字樣之頁，一律跳過所有檢查
 const CM_TO_PT = cm => cm * 72 / 2.54;
-const BASE_CM = 2.0, TOL_CM = 0.2;
-const MARGIN_PT = CM_TO_PT(BASE_CM);
-const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
-const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
-const MICRO_TOL_PT = 0.8; // 轉檔/抽字容差
-const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
-const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
+const BASE_CM = 2.0;
+const TOL_CM  = 0.2;
+const MARGIN_PT    = CM_TO_PT(BASE_CM);         // 2.0 cm
+const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);// 1.8 cm（藍）
+const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);// 2.2 cm（紅）
+const MICRO_TOL_PT = 0.8;                       // 量測微誤差
+
+function within(v){ return isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT); }
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]);}
+
+/* ========= 視覺尺規（SVG） ========= */
 function buildMarginPreviewSVG({W,H,measLeft,measRight,measTop,measBottom}){
   const thumbW=240, scale=thumbW/W, th=Math.round(H*scale);
   const insetBlack=MARGIN_PT*scale, insetRed=RANGE_MAX_PT*scale, insetBlue=RANGE_MIN_PT*scale;
@@ -225,10 +176,11 @@ function buildMarginPreviewSVG({W,H,measLeft,measRight,measTop,measBottom}){
 </div>`;
 }
 
+/* ========= 表格輸出 ========= */
 let _ruleCounter=0;
 function addRow(rule, pass, evidenceHtml, suggestionHtml){
   const tr=document.createElement('tr');
-  const badge = pass ? '<span class="badge-ok">通過</span>' : '<span class="badge-bad">未通過</span>';
+  const badge = pass ? '<span class="ok">通過</span>' : '<span class="bad">未通過</span>';
   tr.innerHTML = `<td><span class="num">${++_ruleCounter}</span>${rule}</td>
                   <td>${badge}</td>
                   <td>${evidenceHtml||''}</td>
@@ -236,16 +188,54 @@ function addRow(rule, pass, evidenceHtml, suggestionHtml){
   tbody.appendChild(tr);
 }
 
+/* ========= Cloud Run 字體字型進階檢查 ========= */
+fontBtn.addEventListener('click', async ()=>{
+  const picked = document.querySelector('#file')?.files?.[0];
+  const blob = picked || (arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null);
+  if(!blob){ alert('請先選擇 PDF 檔'); return; }
+
+  statusEl.textContent = '上傳至 Cloud Run 檢查中…';
+  try{
+    const fd = new FormData();
+    fd.append('file', blob, fileName||'upload.pdf'); // 常見後端欄位名
+    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), {
+      method:'POST', mode:'cors', cache:'no-store', body:fd
+    });
+    const text = await res.text();
+    if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
+    const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
+
+    const pass = (typeof data.pass==='boolean')?data.pass:(data.summary?.pass ?? data.ok ?? false);
+    const parts = [];
+    if(data.summary?.pages) parts.push(`頁數：${data.summary.pages}`);
+    if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
+    if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
+    if(data.layout?.per_page_margins?.length){
+      const f = data.layout.per_page_margins[0];
+      parts.push(`第1頁邊界量測：左${f.left} / 右${f.right} / 上${f.top} / 下${f.bottom} pt`);
+    }
+    addRow('Cloud Run 字體字型檢查', !!pass, esc(parts.join('｜')), pass?'OK（通過）':'請依規範修正字體。');
+    resultCard.style.display='block';
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`;
+    statusEl.textContent = 'Cloud Run 檢查完成。';
+  }catch(err){
+    addRow('Cloud Run 字體字型檢查', false, esc(String(err.message||err)), '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
+    resultCard.style.display='block';
+    statusEl.textContent = 'Cloud Run 檢查失敗。';
+  }
+});
+
+/* ========= #15 邊界主流程 ========= */
 startBtn.addEventListener('click', async ()=>{
   if(!arrayBuffer) return;
-  tbody.innerHTML=''; _ruleCounter=0; resultCard.style.display='none';
-  statusEl.textContent='解析 PDF 中…';
+  tbody.innerHTML=''; _ruleCounter=0;
+  statusEl.textContent = '解析 PDF 中…';
   try{
     const {getDocument}=await window.loadPdfjs();
     const pdf = await getDocument({data:arrayBuffer}).promise;
     const numPages = pdf.numPages;
 
-    // 先擷取每頁文字
+    // 讀取每頁文字
     const pageTexts = [];
     for(let p=1;p<=numPages;p++){
       const page = await pdf.getPage(p);
@@ -253,7 +243,7 @@ startBtn.addEventListener('click', async ()=>{
       pageTexts[p] = tc.items.map(it=>it.str||'').join(' ');
     }
 
-    // 找出需略過之頁（評分表）
+    // 找到要略過的頁（含「小論文評分表」）
     const skipPages=new Set();
     for(let i=1;i<=numPages;i++){
       if(SKIP_PAGE_TOKEN.test(pageTexts[i]||'')) skipPages.add(i);
@@ -261,11 +251,10 @@ startBtn.addEventListener('click', async ()=>{
     if(skipPages.size>0){
       addRow('略過特定頁面', true,
         `偵測到含「小論文評分表」頁次：${[...skipPages].join(', ')}`,
-        '此頁不納入內文、圖表、引註、參考文獻、頁數、頁碼、邊界等檢查。'
-      );
+        '此頁不納入內文、圖表、引註、參考文獻、頁數、頁碼、邊界等檢查。');
     }
 
-    // 只針對第 1 頁正文量測（以〈壹、前言〉行當基準）
+    // 量測（以首頁〈壹、前言〉行為正文上緣基準；跳過評分表頁）
     let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
     let firstSectionY=null, firstSectionLeftX=Infinity, page1H=null, page1W=null;
 
@@ -275,9 +264,8 @@ startBtn.addEventListener('click', async ()=>{
       const viewport = page.getViewport({scale:1});
       const W=viewport.width, H=viewport.height;
       if(p===1){ page1H=H; page1W=W; }
-      const tc=await page.getTextContent();
+      const tc = await page.getTextContent();
 
-      const MARGIN= MARGIN_PT;
       for(const it of tc.items){
         const tr=it.transform, x=tr[4], y=tr[5], w=(typeof it.width==='number')?it.width:0;
         const txt=(it.str||'').trim();
@@ -287,18 +275,18 @@ startBtn.addEventListener('click', async ()=>{
           if (x < firstSectionLeftX) firstSectionLeftX = x;
         }
 
-        const inBody = (y > MARGIN) && (y < (H - MARGIN));
-        let isFirstPageBody = false;
-        if (p===1 && inBody) {
-          if (firstSectionY != null) isFirstPageBody = (y < firstSectionY - 2);
-          else isFirstPageBody = (y < (H - MARGIN - 40));
-        }
-        if (isFirstPageBody){
-          const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
-          if(distLeft   < minLeft)   minLeft   = distLeft;
-          if(distRight  < minRight)  minRight  = distRight;
-          if(distBottom < minBottom) minBottom = distBottom;
-          if(distTop    < minTop)    minTop    = distTop;
+        // 正文區（排除上下 2cm）
+        const inBody = (y > MARGIN_PT) && (y < (H - MARGIN_PT));
+        if(p===1 && inBody){
+          // 正文需位於〈壹、前言〉之下（抓不到則保守估）
+          const ok = firstSectionY ? (y < firstSectionY - 2) : (y < (H - MARGIN_PT - 40));
+          if(ok){
+            const distLeft=x, distRight=W-(x+w), distBottom=y, distTop=H-y;
+            if(distLeft   < minLeft)   minLeft   = distLeft;
+            if(distRight  < minRight)  minRight  = distRight;
+            if(distBottom < minBottom) minBottom = distBottom;
+            if(distTop    < minTop)    minTop    = distTop;
+          }
         }
       }
     }
@@ -308,7 +296,7 @@ startBtn.addEventListener('click', async ()=>{
     const pass = within(leftForCheck) && within(topForCheck);
 
     const evText =
-      `（僅第1頁、以「壹、前言」為基準）主要量測（pt）：` +
+      `（僅第1頁、以「壹、前言」為基準；略過頁：${skipPages.size}）主要量測（pt）：` +
       `左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、` +
       `上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${MICRO_TOL_PT}pt）｜` +
       `參考值（略檢）：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
@@ -325,16 +313,33 @@ startBtn.addEventListener('click', async ()=>{
       '四周邊界 2 公分（正文區推估）',
       pass,
       `<div>${esc(evText)}</div>${svgHtml}`,
-      `以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
-       規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格。`
+      `依老師判準：以首頁〈壹、前言〉行作為正文上緣基準，檢「左/上」為主；右/下僅略檢。
+       規範 2.0cm，轉檔誤差 ±0.2cm（1.8–2.2cm）視為合格；超出紅框為不合格，完全落入藍框為過寬。`
+    );
+
+    // #10：外部檢索提示（交 GPT A）
+    const qTitle = encodeURIComponent((fileName||'小論文題名').replace(/\.[^.]+$/,''));
+    const searchList = `
+      <div class="hint" style="margin-top:6px">
+        建議用下列查詢交給 <b>AI 小助手（GPT A）</b> 進行彙整比對：
+        <ul style="margin:6px 0 0 18px">
+          <li class="mono"><a target="_blank" rel="noopener" href="https://scholar.google.com/scholar?hl=zh-TW&q=${qTitle}">Google Scholar：${esc(fileName)}</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+%E5%B0%8F%E8%AB%96%E6%96%87+%E5%BE%97%E7%8D%8E">Google：題名 + 小論文 得獎</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+site%3Ashs.edu.tw">Google 限站：site:shs.edu.tw</a></li>
+          <li class="mono"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qTitle}+site%3Aedu.tw+%E5%B0%8F%E8%AB%96%E6%96%87">Google 限站：site:edu.tw 小論文</a></li>
+        </ul>
+        由 GPT 統整前 10 筆（標題、來源、年份、連結），並判斷是否疑似相同題名之公開發表或得獎紀錄。
+      </div>`;
+    addRow(
+      '作品是否已於校外發表/得獎（交 GPT 查證）',
+      true,
+      searchList,
+      '點上方「AI 小助手（GPT A）」按鈕，把查詢需求貼給 GPT，請其彙整並給結論。'
     );
 
     resultCard.style.display='block';
-    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；頁數：${numPages}（略過：${Array.from(skipPages).join(', ')||'無'}）`;
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；頁數：${numPages}（略過含「小論文評分表」之頁：${Array.from(skipPages).join(', ')||'無'}）`;
     statusEl.textContent = '完成檢查。';
-
-    // 成功即 +1
-    bumpCounterEveryTime(); fetchCounter();
 
   }catch(err){
     statusEl.textContent = '解析失敗：請確認檔案是否有效。';
@@ -342,74 +347,20 @@ startBtn.addEventListener('click', async ()=>{
   }
 });
 
-/* ========= Cloud Run 字體字型進階檢查 ========= */
-fontBtn.addEventListener('click', async ()=>{
-  const picked = document.querySelector('#file')?.files?.[0];
-  const blob = picked || (arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null);
-  if(!blob){ alert('請先選擇 PDF 檔'); return; }
-
-  statusEl.textContent = '上傳至 Cloud Run 檢查中…';
-  try{
-    const fd = new FormData(); fd.append('file', blob, fileName||'upload.pdf'); fd.append('upload', blob, fileName||'upload.pdf');
-    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), { method:'POST', mode:'cors', cache:'no-store', body:fd });
-    const text = await res.text();
-    if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
-    let data; try{data=JSON.parse(text);}catch{data={ok:true,raw:text};}
-
-    const pass = (typeof data.pass==='boolean')?data.pass:(data.summary?.pass ?? data.ok ?? false);
-    const parts=[];
-    if(data.summary?.pages) parts.push(`頁數：${data.summary.pages}`);
-    if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
-    if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
-    if(data.layout?.per_page_margins?.length){const f=data.layout.per_page_margins[0];parts.push(`第1頁邊界量測：左${f.left} / 右${f.right} / 上${f.top} / 下${f.bottom} pt`);}
-    addRow('Cloud Run 字體字型檢查', !!pass, esc(parts.join('｜')), pass?'OK（通過）':'請依規範修正字體。');
-    resultCard.style.display='block';
-    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`;
-    statusEl.textContent = 'Cloud Run 檢查完成。';
-  }catch(err){
-    addRow('Cloud Run 字體字型檢查', false, esc(String(err.message||err)), '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
-    resultCard.style.display='block';
-    statusEl.textContent = 'Cloud Run 檢查失敗。';
-  }
-});
-
-/* ========= 下載結果 ========= */
+/* ========= 下載結果（HTML） ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30d）</title>'
-    + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（簡化版 v=2025-10-30a）</title>'
+    + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}'
+    + 'table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}'
+    + 'th{background:#f9fafb}.ok{color:#065f46}.bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='paper-check-report.html'; a.click();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='paper-check-report-simple.html';
+  a.click();
   URL.revokeObjectURL(a.href);
 });
-
-/* ========= GPT A 按鈕 ========= */
-gptAButton.addEventListener('click', ()=>{
-  window.open('https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong','_blank','noopener');
-});
-
-/* ========= GAS 人次：讀取 + 遞增 ========= */
-async function fetchCounter() {
-  if (!ENABLE_COUNTER) return;
-  try {
-    const url = GAS_WEB_APP_URL + '?action=get&site=essayguard&ts=' + Date.now();
-    const res = await fetch(url, { cache: 'no-store' });
-    const data = await res.json().catch(() => ({}));
-    const counterEl = document.getElementById('counter');
-    if (counterEl) counterEl.textContent = data.count ?? '0';
-  } catch (e) {
-    const counterEl = document.getElementById('counter');
-    if (counterEl) counterEl.textContent = '0';
-  }
-}
-async function bumpCounterEveryTime(){
-  if (!ENABLE_COUNTER) return;
-  try{
-    const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') + 'action=increment&ts=' + Date.now();
-    await fetch(url, { method: 'GET', cache: 'no-store' });
-  }catch(e){}
-}
-window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
 </script>
 </body>
 </html>
