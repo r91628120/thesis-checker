@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30e）</title>
+<title>高中職小論文格式自檢（v=2025-10-30f）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -62,7 +62,7 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30e</span>
+      <span class="mono">｜v=2025-10-30f</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -137,7 +137,7 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 ｜ v=2025-10-30d</footer>
+  <footer>© 2025 CTVS 凡事皆正面 </footer>
 </div>
 
 <script>
@@ -289,6 +289,7 @@ startBtn.addEventListener('click', async ()=>{
 
         if(p===1 && txt && /^\s*(壹|一|1)\s*[、．\.]\s*前言\s*$/.test(txt)){
           firstSectionY = y;
+          firstSectionFontH = Math.hypot(tr[
           if (x < firstSectionLeftX) firstSectionLeftX = x;
         }
 
@@ -308,7 +309,24 @@ startBtn.addEventListener('click', async ()=>{
       }
     }
 
-    const leftForCheck = isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;
+    // 估算〈壹、前言〉上緣到紙張上緣的距離（以字高修正基線）
+    const fontH = Number.isFinite(firstSectionY) ? (typeof firstSectionFontH === 'number' ? firstSectionFontH : 12) : 12;
+// 頂邊候選一：依〈壹、前言〉行（用字高校正基線）
+// 注意：部分 PDF 文字基線 y 會是 0 或失真，這時候這個值會很大或很小
+   const topByHeader = (isFinite(page1H) && isFinite(firstSectionY)) 
+     ? Math.max(0, Math.min(page1H, page1H - (firstSectionY + fontH * 0.85)))
+     : NaN;
+
+// 頂邊候選二：以正文最靠上的文字距離上緣（H - y_top）
+    const topByScan = minTop; // 你上面已經用 H - y 算過 minTop
+
+// 最終採用較合理者，超過 200pt（≈7cm）或 < 0 當失真，回退用掃描值
+    let topForCheck = Number.isFinite(topByHeader) ? topByHeader : topByScan;
+    if (topForCheck > 200 || topForCheck < 0) topForCheck = topByScan;
+
+// 左邊維持原邏輯，若找不到〈壹、前言〉就用掃描到的最小左距
+    const leftForCheck = Number.isFinite(firstSectionLeftX) ? firstSectionLeftX : minLeft;
+
     const topForCheck  = isFinite(page1H) && isFinite(firstSectionY) ? (page1H - firstSectionY) : minTop;
     const pass = within(leftForCheck) && within(topForCheck);
 
