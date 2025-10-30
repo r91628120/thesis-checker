@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30f）</title>
+<title>高中職小論文格式自檢（v=2025-10-30g）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -62,7 +62,7 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30f</span>
+      <span class="mono">｜v=2025-10-30g</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -93,6 +93,11 @@ footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
           <input id="file" type="file" accept=".pdf" disabled/>
           <p class="hint" id="status">請先勾選同意。</p>
         </div>
+
+          document.querySelector('label.file')?.addEventListener('click', e=>{
+          e.preventDefault();
+          if(!fileInput.disabled) fileInput.click();
+          });
 
         <p class="hint" style="color:#444;font-size:14px;margin-top:6px;line-height:1.6;">
           💡 建議流程：先做 <b>#15 邊界快速檢查</b>，再用 <b>Cloud Run 字體進階檢查</b> 與 <b>GPT B 全面分析</b>，三者互補。
@@ -170,11 +175,23 @@ function setEnabled(ok){
   startBtn.disabled  = !ok || !arrayBuffer;
   fontBtn.disabled   = !ok || !arrayBuffer;
   drop.setAttribute('aria-disabled', ok ? 'false' : 'true');
-  statusEl.textContent = ok ? (arrayBuffer ? '已選擇檔案，準備開始。' : '已同意，可選檔。') : '請先勾選同意。';
+  statusEl.textContent = ok
+    ? (arrayBuffer ? '已選擇檔案，準備開始。' : '已同意，可選檔。')
+    : '請先勾選同意。';
 }
-setEnabled(false);
-consent.addEventListener('change', ()=>setEnabled(consent.checked));
-document.querySelector('label.file')?.addEventListener('click', ()=>{ if(!fileInput.disabled) fileInput.click(); });
+
+// 頁面載入完後綁定監聽
+window.addEventListener('DOMContentLoaded', ()=>{
+  setEnabled(false);
+  consent.addEventListener('change', ()=>{
+    setEnabled(consent.checked);
+    // 若已同意且先前選過檔案，立即啟用按鈕
+    if(consent.checked && arrayBuffer){
+      startBtn.disabled = false;
+      fontBtn.disabled = false;
+    }
+  });
+});
 
 /* ========= DnD / 選檔 ========= */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
