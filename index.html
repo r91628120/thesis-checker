@@ -1,12 +1,12 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-30k -->
+<!-- Version: v=2025-10-31a -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-30m）</title>
+<title>高中職小論文格式自檢（v=2025-10-31a）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-30m</span>
+      <span class="mono">｜v=2025-10-31a</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -183,6 +183,16 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </div>
 
 <script>
+
+/* ========= 常數 ========= */
+/* ① 逐頁邊界 API（你原本的 Cloud Run 幾何量測服務）*/
+const MARGIN_API = "https://https://font-check-api-1009467346209.asia-east1.run.app/check";
+
+/* ② 字體佔比 API（這次新增的 font_check.py）*/
+const FONT_API   = "https://https://font-check-api-1009467346209.asia-east1.run.app/check";
+
+/* …其餘常數保留… */
+
 /* ========= 常數 ========= */
 const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
 const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
@@ -319,8 +329,8 @@ startBtn.addEventListener('click', async ()=>{
     const blob = new Blob([arrayBuffer], {type:"application/pdf"});
     fd.append('file', blob, fileName || 'upload.pdf');
 
-    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), {
-      method:'POST', mode:'cors', cache:'no-store', body:fd
+    const res = await fetch(MARGIN_API + '?v=' + Date.now(), {
+    method:'POST', mode:'cors', cache:'no-store', body:fd
     });
     const text = await res.text();
     if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
@@ -500,36 +510,65 @@ startBtn.addEventListener('click', async ()=>{
 });
 
 /* ========= Cloud Run 字體字型進階檢查 ========= */
+/* ========= Cloud Run 字體字型進階檢查（font_check.py 新版欄位） ========= */
 fontBtn.addEventListener('click', async ()=>{
   const blob = arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null;
   if(!blob){ alert('請先選擇 PDF 檔'); return; }
 
-  statusEl.textContent = '上傳至 Cloud Run 檢查中…';
+  statusEl.textContent = '上傳至 Cloud Run（字體佔比）檢查中…';
   try{
     const fd = new FormData();
     fd.append('file', blob, fileName||'upload.pdf');
-    const res = await fetch(CLOUD_RUN_ENDPOINT + '?v=' + Date.now(), { method:'POST', mode:'cors', cache:'no-store', body:fd });
-    const text = await res.text();
-    if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
-    const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
 
-    const pass = (typeof data.pass==='boolean')?data.pass:(data.summary?.pass ?? data.ok ?? false);
-    const parts=[];
-    if(data.summary?.pages) parts.push(`頁數：${data.summary.pages}`);
-    if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
-    if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
-    if(data.layout?.per_page_margins?.length){
-      const f=data.layout.per_page_margins[0];
-      parts.push(`第1頁邊界量測（API）：左${f.left} / 右${f.right} / 上${f.top} / 下${f.bottom} pt`);
-    }
-    addRow('Cloud Run 字體字型檢查', !!pass, esc(parts.join('｜')), pass?'OK（通過）':'請依規範修正字體。');
+    // ✅ 改這裡：打到 font_check.py 的 /check
+    const res = await fetch(FONT_API + '?threshold=80&size=12&tol=1&v=' + Date.now(), {
+      method:'POST', mode:'cors', cache:'no-store', body:fd
+    });
+
+    const data = await res.json();
+    if(!res.ok) throw new Error(JSON.stringify(data));
+
+    // 依 font_check.py 的回傳欄位組結果
+    const pass      = !!(data?.summary?.pass);
+    const coverage  = (data?.summary?.main_coverage_pct ?? 0).toFixed(2);
+    const families  = (data?.rules?.families_considered_main || []).join('、');
+    const pagesEff  = data?.file?.pages_effective ?? data?.file?.pages ?? null;
+    const skipped   = Array.isArray(data?.file?.skipped_pages) ? data.file.skipped_pages : [];
+
+    // 取前 5 名字體 (family/size/percent)
+    const top = (data?.distribution || []).slice(0,5)
+      .map(r => `${r.family} ${r.size}pt ${r.percent}%`).join('、');
+
+    const ev = [
+      pagesEff?`有效頁數：${pagesEff}`:null,
+      `主字體 coverage（12±1pt；${families}）：${coverage}%`,
+      top?`常見字體（前5）：${top}`:null,
+    ].filter(Boolean).join('｜');
+
+    addRow('Cloud Run 字體字型檢查（字體佔比）', pass, esc(ev),
+      pass ? 'OK（主要字體 coverage ≥ 80%）'
+           : '主要字體 coverage 未達 80%，請調整字體與字級。');
+
+    // 也把摘要併入 #4 給 AI 小助手看的 JSON
+    lastSummaryJSON = lastSummaryJSON || {};
+    lastSummaryJSON.fonts = {
+      main_pass: pass,
+      main_coverage_pct: Number(coverage),
+      top_distribution: (data?.distribution || []).slice(0,10)
+    };
+    jsonPreviewEl.textContent = JSON.stringify(lastSummaryJSON, null, 2);
+
     resultCard.style.display='block';
-    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`;
-    statusEl.textContent = 'Cloud Run 檢查完成。';
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`
+      + (skipped.length? `（略過頁：${skipped.join(', ')}）` : '');
+    statusEl.textContent = '字體佔比檢查完成。';
+
   }catch(err){
-    addRow('Cloud Run 字體字型檢查', false, esc(String(err.message||err)), '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
+    addRow('Cloud Run 字體字型檢查（字體佔比）', false,
+      esc(err?.message || String(err)),
+      '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
     resultCard.style.display='block';
-    statusEl.textContent = 'Cloud Run 檢查失敗。';
+    statusEl.textContent = '字體佔比檢查失敗。';
   }
 });
 
