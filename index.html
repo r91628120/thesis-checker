@@ -1,12 +1,12 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31b -->
+<!-- Version: v=2025-10-31d -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-31c）</title>
+<title>高中職小論文格式自檢（v=2025-10-31d）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31c</span>
+      <span class="mono">｜v=2025-10-31d</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -185,6 +185,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 <script>
 
 /* ========= 常數 ========= */
+
 /* ① 逐頁邊界 API（你原本的 Cloud Run 幾何量測服務）*/
 const MARGIN_API = "https://font-check-api-1009467346209.asia-east1.run.app/check";
 
@@ -387,6 +388,34 @@ startBtn.addEventListener('click', async ()=>{
       const ev2 = `第 1 頁量測（cm）：左 ${fmtCM(per[0]?.left)}｜右 ${fmtCM(per[0]?.right)}｜上 ${fmtCM(per[0]?.top)}｜下 ${fmtCM(per[0]?.bottom)}`;
       addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`,
              '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
+
+       // 第 3 項：章節模式邊界檢查（壹測左+上，其餘測左）
+       try {
+         const fd2 = new FormData();
+         fd2.append("file", blob, fileName);
+         const res2 = await fetch(MARGIN_API, { method:"POST", body: fd2 });
+         const data2 = await res2.json();
+
+         if (data2.ok) {
+           const per = data2.per_page || [];
+           const ev3 = per.map(p =>
+             `第 ${p.page} 頁：左 ${fmtCM(p.left)} cm${p.top ? `｜上 ${fmtCM(p.top)} cm` : "（無上邊距檢測）"}`
+           ).join("<br/>");
+           addRow("正文起算邊界檢查（章節模式）", true, ev3,
+                  "第 1 頁檢查左＋上，其餘頁僅檢查左。");
+        }
+      } catch (err) {
+        addRow("正文起算邊界檢查（章節模式）", false, esc(err.message),
+               "無法連線至 margin-check API。");
+      }
+
+       // 第 3 項：正文起算邊界（章節模式）
+      const ev3 = per_text?.map(p => {
+        const left = fmtCM(p.left);
+        const top = p.top ? fmtCM(p.top) : '—';
+        return `第 ${p.page} 頁：左 ${left} cm${p.top ? `｜上 ${top} cm` : '（無上邊距檢測）'}`;
+      }).join('<br/>');
+      addRow('正文起算邊界檢查（章節模式）', true, ev3, '第 1 頁檢查左＋上，其餘頁僅檢查左。');
 
       const parts=[];
       if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
