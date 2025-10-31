@@ -1,6 +1,5 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31g -->
-<!-- Build date: 2025-10-30 -->
+<!-- Version: v=2025-10-31h -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -29,11 +28,11 @@ button.primary{background:var(--accent);color:#fff;border-color:transparent}
 button:disabled{opacity:.5;cursor:not-allowed}
 a.btn-gpt{background:#f3e8ff;border:1px solid #e9d5ff;border-radius:10px;color:#3b0764;padding:.7rem 1.05rem;text-decoration:none;font-weight:600}
 
-/* ——— 新增：紅底清除鈕 ——— */
+/* 紅底清除鈕 */
 button.danger{background:#dc2626;color:#fff;border-color:#b91c1c}
 button.danger:hover{filter:brightness(0.96)}
 
-/* ——— 新增：GPT A 紫色「有框＋淡底」按鈕 ——— */
+/* GPT A 紫色「有框＋淡底」按鈕 */
 a.btn-violet{
   background:#f3e8ff;
   border:1.5px solid #c4b5fd;
@@ -81,10 +80,10 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 <body>
 <div class="wrap">
   <header>
-    <h1>高中職小論文格式自檢</h1>
+    <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31g</span>
+      <span class="mono">｜v=2025-10-31h</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -134,11 +133,10 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
           <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
-          <!-- 改為紫色框底 -->
           <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">AI 小助手（GPT A）</a>
           <button id="clearTop" class="danger">清除</button>
-          </div>
+        </div>
         <p class="hint">🔎 含「小論文評分表」之頁將被<strong>完整略過</strong>：不納入全文、頁數、頁碼與邊界等任何檢查。</p>
       </div>
     </div>
@@ -153,7 +151,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
         <div id="fileTag" class="hint" style="margin:6px 0 12px"></div>
         <table>
           <thead><tr><th>規則</th><th>結果</th><th>證據 / 說明</th><th>建議</th></tr></thead>
-        <tbody id="tbody"></tbody>
+          <tbody id="tbody"></tbody>
         </table>
 
         <!-- 第 4 項：AI 小助手用摘要 JSON + 外部檢索助手 -->
@@ -172,96 +170,42 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 
         <div class="row" style="margin-top:10px">
           <button id="downloadHtml">下載檢查結果（網頁）</button>
-          <!-- 新增清除鈕 -->
           <button id="clearAll" class="danger">清除（回到初始畫面）</button>
         </div>
       </div>
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-30k</footer>
+  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-31h</footer>
 </div>
 
 <script>
-
 /* ========= 常數 ========= */
+const MARGIN_API = "https://margin-check-service-1009467346209.asia-east1.run.app/check"; // 逐頁邊界
+const FONT_API   = "https://font-check-api-1009467346209.asia-east1.run.app/check";        // 字體佔比
 
-/* ① 逐頁邊界 API（你原本的 Cloud Run 幾何量測服務）*/
-const MARGIN_API = "https://margin-check-service-1009467346209.asia-east1.run.app/check";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTtq4W2kf0MErBPoq_bCMzZBryMCf16ko_5tqAAw7nqq7yJAwjvQKEi/exec";
+const ENABLE_COUNTER = true;
 
-/* 小工具：指定秒數的 fetch 超時 */
+/* 小工具：fetch 超時 */
 async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
+    return await fetch(url, { ...options, signal: controller.signal });
   } finally {
     clearTimeout(id);
   }
 }
-
-/* 小工具：把 pt 轉 cm（前端顯示用，跟後端一致） */
-function ptToCm(pt){ return Math.round((pt * 2.54 / 72) * 100) / 100; }
-
-/* === 2) 上傳 PDF → 呼叫 Cloud Run 逐頁邊界檢查（含超時、錯誤處理、備援） === */
-// 這段放在你原本「上傳至 Cloud Run 進行逐頁邊界檢查…」那個 try/catch 的位置，整段替換
-async function runMarginCheck(arrayBuffer, fileName) {
-  const statusEl = document.querySelector('#status'); // 你畫面上的狀態文字元素（依你的 id 調整）
-  statusEl.textContent = '上傳至 Cloud Run 進行逐頁邊界檢查…';
-
-  // 組 FormData
-  const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-  const fd = new FormData();
-  fd.append('file', blob, fileName);
-
-  try {
-    // 20 秒超時；若 CORS/混合內容/未開匿名導致請求被瀏覽器擋，這裡就會 abort 而不是永遠卡住
-    const res = await fetchWithTimeout(MARGIN_API, { method: 'POST', body: fd }, 20000);
-
-    if (!res.ok) {
-      // 有回應但不是 200，直接丟錯讓 catch 顯示
-      const t = await res.text().catch(()=>'');
-      throw new Error(`Cloud Run 回應非 200（${res.status}）：${t.slice(0,200)}`);
-    }
-
-    const data = await res.json();
-
-    // 正常回來就顯示結果（範例：把 per_page 渲染到結果第 1/2 項）
-    const per = data.per_page || data.per_page || data.perPage || [];
-    const ev1 = per.map(p =>
-      `第 ${p.page} 頁：左 ${p.left!=null? (ptToCm(p.left)+' cm'):'—'}｜上 ${p.top!=null? (ptToCm(p.top)+' cm'):'—'}`
-    ).join('<br/>');
-
-    addRow('四周邊界 2 公分（逐頁章節檢）', true, ev1,
-           '第 1 頁量測左+上，其餘量測左；容許範圍 2.0±0.2 cm');
-
-    statusEl.textContent = 'Cloud Run 檢查完成。';
-    return true;
-
-  } catch (err) {
-    // 失敗就顯示錯誤，並啟用前端備援（你原本的邊界估測邏輯）
-    console.warn('Cloud Run 邊界檢查失敗，啟用前端備援。', err);
-    addRow('四周邊界 2 公分（Cloud Run）', false,
-           (err&&err.message)||'呼叫失敗', '請確認服務允許匿名、已開 CORS，且網址使用 https。');
-    statusEl.textContent = 'Cloud Run 不可用，改用前端備援…';
-
-    await runFrontEndFallback(arrayBuffer, fileName); // ← 這是你原有的前端估測函式
-    return false;
-  }
-}
-
-/* ② 字體佔比 API（這次新增的 font_check.py）*/
-const FONT_API   = "https://font-check-api-1009467346209.asia-east1.run.app/check";
-
-/* …其餘常數保留… */
-
-/* ========= 常數 ========= */
-const CLOUD_RUN_BASE = "https://font-check-api-1009467346209.asia-east1.run.app";
-const CLOUD_RUN_ENDPOINT = CLOUD_RUN_BASE + "/check";
-
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTtq4W2kf0MErBPoq_bCMzZBryMCf16ko_5tqAAw7nqq7yJAwjvQKEi/exec";
-const ENABLE_COUNTER = true;
+const ptToCm = (pt)=> Math.round((pt * 2.54 / 72) * 100) / 100;
+const CM_TO_PT = (cm)=> cm * 72 / 2.54;
+const PT_TO_CM = (pt)=> pt * 2.54 / 72;
+const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(2) : '—');
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const BASE_CM = 2.0, TOL_CM = 0.2, MICRO_TOL_PT = 0.8;
+const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
+const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
+const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
 
 /* ========= 元件 ========= */
 const consent  = document.getElementById('consent');
@@ -319,7 +263,7 @@ async function handleFile(f){
   fileName = f.name;
   setEnabled(consent.checked);
 
-  // 更新 GPT A 預設提示（以檔名推測題名）
+  // 對 GPT A 注入預設檢索提示
   const base = gptALink.getAttribute('href').split('?')[0];
   const prompt = [
     '請幫我檢索此題名是否曾公開發表或得獎，列出相同/近似題名之來源、年份、連結與關鍵詞，最後給整體結論：',
@@ -328,22 +272,8 @@ async function handleFile(f){
   ].join('\n');
   gptALink.href = base + '?q=' + encodeURIComponent(prompt);
 
-  // 初始化外部檢索連結
   initExternalSearchAssist((fileName||'小論文篇名').replace(/\.[^.]+$/,''));
 }
-
-/* ========= 工具/常數 ========= */
-const SKIP_PAGE_TOKEN = /小論文評分表/;        // 略過頁面
-const CM_TO_PT = cm => cm * 72 / 2.54;
-const BASE_CM = 2.0, TOL_CM = 0.2;
-const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM); // 1.8cm
-const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
-const MICRO_TOL_PT = 0.8;                        // ±0.8 pt 容差
-const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
-const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-// 將 pt 轉成 cm 並漂亮輸出
-const PT_TO_CM = v => (isFinite(v) ? (v * 2.54 / 72) : NaN);
-const fmtCM = v => (isFinite(v) ? PT_TO_CM(v).toFixed(2) : '—'); // 2 位小數 cm
 
 /* ========= 尺規（以 API 第 1 頁值疊圖） ========= */
 function marginPreviewSVG({W,H,left,right,top,bottom}){
@@ -382,7 +312,7 @@ function addRow(rule, pass, evidenceHtml, suggestionHtml){
   tbody.appendChild(tr);
 }
 
-/* ========= Server-first 邊界主流程 (#15) ========= */
+/* ========= Server-first 邊界主流程 ========= */
 startBtn.addEventListener('click', async ()=>{
   if(!arrayBuffer) return;
   tbody.innerHTML=''; _ruleCounter=0; resultCard.style.display='none'; extPanel.style.display='none';
@@ -395,23 +325,15 @@ startBtn.addEventListener('click', async ()=>{
     const blob = new Blob([arrayBuffer], {type:"application/pdf"});
     fd.append('file', blob, fileName || 'upload.pdf');
 
-    const res = await fetchWithTimeout(
-      const res2 = await fetch(MARGIN_API + "?v=" + Date.now(), {
-        method: "POST",
-        mode: "cors",
-        cache: "no-store",
-        body: fd2
-      });
-
-      { method:'POST', mode:'cors', cache:'no-store', body:fd },
-      20000 // 20 秒
-    );
+    const res = await fetchWithTimeout(MARGIN_API + "?v=" + Date.now(), {
+      method:'POST', mode:'cors', cache:'no-store', body:fd
+    }, 20000);
 
     const text = await res.text();
     if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
     const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
 
-    const per = data?.layout?.per_page_margins || [];
+    const per = data?.layout?.per_page_margins || data?.per_page || [];
     const pages = Number(data?.summary?.pages || data?.pages || per.length || 0);
     const skip = new Set(Array.isArray(data?.skip_pages)?data.skip_pages:[]);
     const effPages = [...Array(pages).keys()].map(i=>i+1).filter(p=>!skip.has(p));
@@ -443,55 +365,31 @@ startBtn.addEventListener('click', async ()=>{
       }
 
       const passAll = badPages.length===0;
-      // 第 1 項：逐頁最小值 → 顯示為 cm
-      const ev1 = `逐頁最小值（cm）：左 ${fmtCM(globalMin.left)}、`+
-                  `右 ${fmtCM(globalMin.right)}、`+
-                  `上 ${fmtCM(globalMin.top)}、`+
-                  `下 ${fmtCM(globalMin.bottom)}`+
-                  (badPages.length
-                  ? `<br/>不合格頁次：<span class="mono">${badPages.join(', ')}</span>`
-                  : '<br/>全數頁面於 2.0±0.2 cm（含 ±0.8pt 微誤差）內。'
-                );
-      addRow('四周邊界 2 公分（逐頁嚴格 · Cloud Run）', passAll, ev1,
-             '以伺服器幾何量測為準；若有不合格頁請回 Word 版面調整。');
+      // 第1項：逐頁最小值（顯示 cm）
+      const ev1 = `逐頁最小值（cm）：左 ${fmtCM(globalMin.left)}、右 ${fmtCM(globalMin.right)}、上 ${fmtCM(globalMin.top)}、下 ${fmtCM(globalMin.bottom)}`
+        + (badPages.length ? `<br/>不合格頁次：<span class="mono">${badPages.join(', ')}</span>`
+                           : '<br/>全數頁面於 2.0±0.2 cm（含 ±0.8pt 微誤差）內。');
+      addRow('四周邊界 2 公分（逐頁嚴格 · Cloud Run）', passAll, ev1, '以伺服器幾何量測為準；若有不合格頁請回 Word 版面調整。');
 
-       // 第 2 項：第 1 頁量測 → 顯示為 cm（並保留下方 SVG 尺規）
+      // 第2項：第1頁視覺尺規（顯示 cm）
       const ev2 = `第 1 頁量測（cm）：左 ${fmtCM(per[0]?.left)}｜右 ${fmtCM(per[0]?.right)}｜上 ${fmtCM(per[0]?.top)}｜下 ${fmtCM(per[0]?.bottom)}`;
-      addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`,
-             '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
+      addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`, '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
 
-       // 第 3 項：章節模式邊界檢查（壹測左+上，其餘測左）
-       try {
-         const fd2 = new FormData();
-         fd2.append("file", blob, fileName);
-         const res2 = await fetch(MARGIN_API, {
-           method: "POST",
-           mode: "cors",
-           cache: "no-store",
-           body: fd2
-         });
-
-         const data2 = await res2.json();
-
-         if (data2.ok) {
-           const per = data2.per_page || [];
-           const ev3 = per.map(p =>
-             `第 ${p.page} 頁：左 ${fmtCM(p.left)} cm${p.top ? `｜上 ${fmtCM(p.top)} cm` : "（無上邊距檢測）"}`
-           ).join("<br/>");
-           addRow("正文起算邊界檢查（章節模式）", true, ev3,
-                  "第 1 頁檢查左＋上，其餘頁僅檢查左。");
-        }
-      } catch (err) {
-        addRow("正文起算邊界檢查（章節模式）", false, esc(err.message),
-               "無法連線至 margin-check API。");
+      // 第3項：章節模式（壹測左+上，其餘測左）——可用同一支 API 回傳的 per_page
+      if(Array.isArray(data?.per_page) && data.per_page.length){
+        const ev3 = data.per_page.map(p=>
+          `第 ${p.page} 頁：左 ${fmtCM(p.left)} cm${p.top ? `｜上 ${fmtCM(p.top)} cm` : "（無上邊距檢測）"}`
+        ).join('<br/>');
+        addRow('正文起算邊界檢查（章節模式）', true, ev3, '第 1 頁檢查左＋上，其餘頁僅檢查左。');
       }
 
+      // 字體摘要（若後端有提供）
       const parts=[];
       if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
       if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
       if(parts.length) addRow('字體/字型摘要（Cloud Run）', true, esc(parts.join('｜')), '如需更完整的字體檢查，請點下方「字體字型進階檢查」。');
 
-      // ---- 產生 #4 給 AI 小助手的摘要 JSON ----
+      // #4 給 AI 小助手
       summaryForAI = {
         file: { name: fileName||'(未命名)', pages_total: pages, pages_effective: effPages.length, skipped_pages: [...skip] },
         margins: {
@@ -503,10 +401,6 @@ startBtn.addEventListener('click', async ()=>{
             bottom: isFinite(globalMin.bottom)?Number(globalMin.bottom.toFixed(2)):null
           },
           bad_pages: badPages
-        },
-        fonts: {
-          dominant: data.summary?.dominant_fonts||[],
-          common: (data.top_fonts||[]).slice(0,10)
         }
       };
       jsonPreviewEl.textContent = JSON.stringify(summaryForAI, null, 2);
@@ -541,7 +435,7 @@ startBtn.addEventListener('click', async ()=>{
       pageTexts[p] = tc.items.map(it=>it.str||'').join(' ');
     }
     const skipPages=new Set();
-    for(let i=1;i<=numPages;i++){ if(SKIP_PAGE_TOKEN.test(pageTexts[i]||'')) skipPages.add(i); }
+    for(let i=1;i<=numPages;i++){ if(/小論文評分表/.test(pageTexts[i]||'')) skipPages.add(i); }
 
     const MARGIN_PT = CM_TO_PT(2.0);
     let minLeft=Infinity,minRight=Infinity,minTop=Infinity,minBottom=Infinity;
@@ -591,12 +485,10 @@ startBtn.addEventListener('click', async ()=>{
     if (isFinite(page1W) && isFinite(page1H)) {
       svgHtml = marginPreviewSVG({ W: page1W, H: page1H, left:leftForCheck, right:minRight, top:topForCheck, bottom:minBottom });
     }
-    const ev = `（備援 · 僅第1頁、以「壹、前言」為基準）主要量測（pt）：左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、`+
-               `上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${MICRO_TOL_PT}pt）｜參考：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
+    const ev = `（備援 · 僅第1頁、以「壹、前言」為基準）主要量測（pt）：左 ${isFinite(leftForCheck)?leftForCheck.toFixed(1):'—'}、上 ${isFinite(topForCheck)?topForCheck.toFixed(1):'—'}（允許誤差±${MICRO_TOL_PT}pt）｜參考：右 ${isFinite(minRight)?minRight.toFixed(1):'—'}、下 ${isFinite(minBottom)?minBottom.toFixed(1):'—'}`;
 
     addRow('四周邊界 2 公分（前端備援：首頁推估）', pass, `<div>${ev}</div>${svgHtml}`, 'Server 異常時之臨時估測；正式送審仍建議以 Cloud Run 結果為準。');
 
-    // 產生簡化 JSON 供 AI 小助手
     lastSummaryJSON = {
       file: { name: fileName||'(未命名)', pages_total: numPages, pages_effective: numPages - skipPages.size, skipped_pages: [...skipPages] },
       margins_fallback_firstpage_pt: { left: +leftForCheck.toFixed?.(2)||null, top: +topForCheck.toFixed?.(2)||null, right: isFinite(minRight)?+minRight.toFixed(2):null, bottom: isFinite(minBottom)?+minBottom.toFixed(2):null }
@@ -606,8 +498,8 @@ startBtn.addEventListener('click', async ()=>{
     extPanel.style.display='block';
 
     resultCard.style.display='block';
-    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；總頁數：${numPages}；有效頁數：${numPages - skipPages.size}`+
-                          `${skipPages.size ? `（略過頁：${[...skipPages].join(', ')}）` : ''}`;
+    fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；總頁數：${numPages}；有效頁數：${numPages - skipPages.size}`
+      + `${skipPages.size ? `（略過頁：${[...skipPages].join(', ')}）` : ''}`;
     statusEl.textContent = '前端備援完成（建議改用 Cloud Run 再試）。';
     bumpCounterEveryTime(); fetchCounter();
   }catch(err){
@@ -617,7 +509,6 @@ startBtn.addEventListener('click', async ()=>{
 });
 
 /* ========= Cloud Run 字體字型進階檢查 ========= */
-/* ========= Cloud Run 字體字型進階檢查（font_check.py 新版欄位） ========= */
 fontBtn.addEventListener('click', async ()=>{
   const blob = arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null;
   if(!blob){ alert('請先選擇 PDF 檔'); return; }
@@ -627,7 +518,6 @@ fontBtn.addEventListener('click', async ()=>{
     const fd = new FormData();
     fd.append('file', blob, fileName||'upload.pdf');
 
-    // ✅ 改這裡：打到 font_check.py 的 /check
     const res = await fetch(FONT_API + '?threshold=80&size=12&tol=1&v=' + Date.now(), {
       method:'POST', mode:'cors', cache:'no-store', body:fd
     });
@@ -635,14 +525,12 @@ fontBtn.addEventListener('click', async ()=>{
     const data = await res.json();
     if(!res.ok) throw new Error(JSON.stringify(data));
 
-    // 依 font_check.py 的回傳欄位組結果
     const pass      = !!(data?.summary?.pass);
     const coverage  = (data?.summary?.main_coverage_pct ?? 0).toFixed(2);
     const families  = (data?.rules?.families_considered_main || []).join('、');
     const pagesEff  = data?.file?.pages_effective ?? data?.file?.pages ?? null;
     const skipped   = Array.isArray(data?.file?.skipped_pages) ? data.file.skipped_pages : [];
 
-    // 取前 5 名字體 (family/size/percent)
     const top = (data?.distribution || []).slice(0,5)
       .map(r => `${r.family} ${r.size}pt ${r.percent}%`).join('、');
 
@@ -656,7 +544,6 @@ fontBtn.addEventListener('click', async ()=>{
       pass ? 'OK（主要字體 coverage ≥ 80%）'
            : '主要字體 coverage 未達 80%，請調整字體與字級。');
 
-    // 也把摘要併入 #4 給 AI 小助手看的 JSON
     lastSummaryJSON = lastSummaryJSON || {};
     lastSummaryJSON.fonts = {
       main_pass: pass,
@@ -724,7 +611,7 @@ ${qs}`;
 
 /* ========= 下載結果 ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-30k）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-31h）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -734,38 +621,28 @@ downloadHtmlBtn.addEventListener('click', ()=>{
 
 /* ========= 清除：回到初始狀態 ========= */
 function resetToInitial(){
-  // 狀態變數
   arrayBuffer = null;
   fileName = '';
   lastSummaryJSON = null;
-
-  // 清空表格與面板
   tbody.innerHTML = '';
   _ruleCounter = 0;
   resultCard.style.display = 'none';
   extPanel.style.display = 'none';
   searchLinksEl.innerHTML = '';
   jsonPreviewEl.textContent = '';
-
-  // 檔案輸入清空
   if (fileInput) fileInput.value = '';
-
-  // 狀態列與按鈕
   statusEl.textContent = consent.checked ? '已同意，可選檔。' : '請先勾選同意。';
   setEnabled(consent.checked);
-
-  // GPT A 連結還原（移除先前注入的 q 參數）
   if (gptALink){
     const base = gptALink.getAttribute('href').split('?')[0];
     gptALink.setAttribute('href', base);
   }
-
-  // 回到頁面頂端
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.addEventListener('click',(e)=>{ if(e.target && e.target.id==='clearAll'){ resetToInitial(); }});
 document.getElementById('clearTop')?.addEventListener('click', resetToInitial);
-/* ========= GAS 人次：讀取 + 遞增 ========= */
+
+/* ========= 人次計數 ========= */
 async function fetchCounter() {
   if (!ENABLE_COUNTER) return;
   try {
@@ -774,7 +651,7 @@ async function fetchCounter() {
     const data = await res.json().catch(() => ({}));
     const counterEl = document.getElementById('counter');
     if (counterEl) counterEl.textContent = data.count ?? '0';
-  } catch (e) {
+  } catch {
     const counterEl = document.getElementById('counter');
     if (counterEl) counterEl.textContent = '0';
   }
@@ -784,7 +661,7 @@ async function bumpCounterEveryTime(){
   try{
     const url = GAS_WEB_APP_URL + (GAS_WEB_APP_URL.includes('?') ? '&' : '?') + 'action=increment&ts=' + Date.now();
     await fetch(url, { method: 'GET', cache: 'no-store' });
-  }catch(e){}
+  }catch{}
 }
 window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
 </script>
