@@ -1,5 +1,5 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31h -->
+<!-- Version: v=2025-10-31j -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -83,7 +83,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31h</span>
+      <span class="mono">｜v=2025-10-31j</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -274,6 +274,12 @@ async function handleFile(f){
 
   initExternalSearchAssist((fileName||'小論文篇名').replace(/\.[^.]+$/,''));
 }
+
+  // 以檔名（去副檔名）推測題名，先建立外部檢索連結並顯示面板
+  const guessTitle = (fileName || '小論文篇名').replace(/\.[^.]+$/, '');
+  buildExternalSearchEvidence(guessTitle);
+  extPanel.style.display = 'block';
+
 
 /* ========= 尺規（以 API 第 1 頁值疊圖） ========= */
 function marginPreviewSVG({W,H,left,right,top,bottom}){
@@ -664,6 +670,24 @@ async function bumpCounterEveryTime(){
   }catch{}
 }
 window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
+
+/* ========= 自動更新網址版本參數（避免快取） ========= */
+(function(){
+  try {
+    const versionTag = document.querySelector('header .mono')?.textContent.match(/v[=：]([\w.-]+)/);
+    const version = versionTag ? versionTag[1] : null;
+    if (version) document.title += `｜${version}`;
+    const url = new URL(window.location.href);
+    const hasParam = url.searchParams.has('v');
+    if (version && !hasParam) {
+      url.searchParams.set('v', version);
+      window.location.replace(url.toString());
+    }
+  } catch (err) {
+    console.warn('版本號自動附加失敗', err);
+  }
+})();
+
 </script>
 </body>
 </html>
