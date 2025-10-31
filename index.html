@@ -1,5 +1,5 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31f -->
+<!-- Version: v=2025-10-31g -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31f</span>
+      <span class="mono">｜v=2025-10-31g</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -396,7 +396,13 @@ startBtn.addEventListener('click', async ()=>{
     fd.append('file', blob, fileName || 'upload.pdf');
 
     const res = await fetchWithTimeout(
-      MARGIN_API + '?v=' + Date.now(),
+      const res2 = await fetch(MARGIN_API + "?v=" + Date.now(), {
+        method: "POST",
+        mode: "cors",
+        cache: "no-store",
+        body: fd2
+      });
+
       { method:'POST', mode:'cors', cache:'no-store', body:fd },
       20000 // 20 秒
     );
@@ -458,7 +464,13 @@ startBtn.addEventListener('click', async ()=>{
        try {
          const fd2 = new FormData();
          fd2.append("file", blob, fileName);
-         const res2 = await fetch(MARGIN_API, { method:"POST", body: fd2 });
+         const res2 = await fetch(MARGIN_API, {
+           method: "POST",
+           mode: "cors",
+           cache: "no-store",
+           body: fd2
+         });
+
          const data2 = await res2.json();
 
          if (data2.ok) {
