@@ -1,12 +1,12 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31a -->
+<!-- Version: v=2025-10-31b -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-31b）</title>
+<title>高中職小論文格式自檢（v=2025-10-31c）</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31b</span>
+      <span class="mono">｜v=2025-10-31c</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -278,6 +278,9 @@ const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM); // 2.2cm
 const MICRO_TOL_PT = 0.8;                        // ±0.8 pt 容差
 const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+// 將 pt 轉成 cm 並漂亮輸出
+const PT_TO_CM = v => (isFinite(v) ? (v * 2.54 / 72) : NaN);
+const fmtCM = v => (isFinite(v) ? PT_TO_CM(v).toFixed(2) : '—'); // 2 位小數 cm
 
 /* ========= 尺規（以 API 第 1 頁值疊圖） ========= */
 function marginPreviewSVG({W,H,left,right,top,bottom}){
@@ -368,16 +371,22 @@ startBtn.addEventListener('click', async ()=>{
       }
 
       const passAll = badPages.length===0;
-      const ev1 = `逐頁最小值（pt）：左 ${isFinite(globalMin.left)?globalMin.left.toFixed(1):'—'}、`+
-                  `右 ${isFinite(globalMin.right)?globalMin.right.toFixed(1):'—'}、`+
-                  `上 ${isFinite(globalMin.top)?globalMin.top.toFixed(1):'—'}、`+
-                  `下 ${isFinite(globalMin.bottom)?globalMin.bottom.toFixed(1):'—'}`+
-                  (badPages.length?`<br/>不合格頁次：<span class="mono">${badPages.join(', ')}</span>`:'<br/>全數頁面於 2.0±0.2 cm（含 ±0.8pt 微誤差）內。');
+      // 第 1 項：逐頁最小值 → 顯示為 cm
+      const ev1 = `逐頁最小值（cm）：左 ${fmtCM(globalMin.left)}、`+
+                  `右 ${fmtCM(globalMin.right)}、`+
+                  `上 ${fmtCM(globalMin.top)}、`+
+                  `下 ${fmtCM(globalMin.bottom)}`+
+                  (badPages.length
+                  ? `<br/>不合格頁次：<span class="mono">${badPages.join(', ')}</span>`
+                  : '<br/>全數頁面於 2.0±0.2 cm（含 ±0.8pt 微誤差）內。'
+                );
+      addRow('四周邊界 2 公分（逐頁嚴格 · Cloud Run）', passAll, ev1,
+             '以伺服器幾何量測為準；若有不合格頁請回 Word 版面調整。');
 
-      addRow('四周邊界 2 公分（逐頁嚴格 · Cloud Run）', passAll, ev1, '以伺服器幾何量測為準；若有不合格頁請回 Word 版面調整。');
-
-      const ev2 = `第1頁量測（pt）：左 ${per[0]?.left?.toFixed?.(1)??'—'}｜右 ${per[0]?.right?.toFixed?.(1)??'—'}｜上 ${per[0]?.top?.toFixed?.(1)??'—'}｜下 ${per[0]?.bottom?.toFixed?.(1)??'—'}`;
-      addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`, '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
+       // 第 2 項：第 1 頁量測 → 顯示為 cm（並保留下方 SVG 尺規）
+      const ev2 = `第 1 頁量測（cm）：左 ${fmtCM(per[0]?.left)}｜右 ${fmtCM(per[0]?.right)}｜上 ${fmtCM(per[0]?.top)}｜下 ${fmtCM(per[0]?.bottom)}`;
+      addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`,
+             '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
 
       const parts=[];
       if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
