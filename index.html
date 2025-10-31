@@ -1,12 +1,12 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31d -->
+<!-- Version: v=2025-10-31e -->
 <!-- Build date: 2025-10-30 -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>高中職小論文格式自檢（v=2025-10-31d）</title>
+<title>高中職小論文格式自檢系統</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -84,7 +84,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31d</span>
+      <span class="mono">｜v=2025-10-31e</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -187,7 +187,69 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 /* ========= 常數 ========= */
 
 /* ① 逐頁邊界 API（你原本的 Cloud Run 幾何量測服務）*/
-const MARGIN_API = "https://font-check-api-1009467346209.asia-east1.run.app/check";
+const MARGIN_API = "https://margin-check-service-1009467346209.asia-east1.run.app/check";
+
+/* 小工具：指定秒數的 fetch 超時 */
+async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+/* 小工具：把 pt 轉 cm（前端顯示用，跟後端一致） */
+function ptToCm(pt){ return Math.round((pt * 2.54 / 72) * 100) / 100; }
+
+/* === 2) 上傳 PDF → 呼叫 Cloud Run 逐頁邊界檢查（含超時、錯誤處理、備援） === */
+// 這段放在你原本「上傳至 Cloud Run 進行逐頁邊界檢查…」那個 try/catch 的位置，整段替換
+async function runMarginCheck(arrayBuffer, fileName) {
+  const statusEl = document.querySelector('#status'); // 你畫面上的狀態文字元素（依你的 id 調整）
+  statusEl.textContent = '上傳至 Cloud Run 進行逐頁邊界檢查…';
+
+  // 組 FormData
+  const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+  const fd = new FormData();
+  fd.append('file', blob, fileName);
+
+  try {
+    // 20 秒超時；若 CORS/混合內容/未開匿名導致請求被瀏覽器擋，這裡就會 abort 而不是永遠卡住
+    const res = await fetchWithTimeout(MARGIN_API, { method: 'POST', body: fd }, 20000);
+
+    if (!res.ok) {
+      // 有回應但不是 200，直接丟錯讓 catch 顯示
+      const t = await res.text().catch(()=>'');
+      throw new Error(`Cloud Run 回應非 200（${res.status}）：${t.slice(0,200)}`);
+    }
+
+    const data = await res.json();
+
+    // 正常回來就顯示結果（範例：把 per_page 渲染到結果第 1/2 項）
+    const per = data.per_page || data.per_page || data.perPage || [];
+    const ev1 = per.map(p =>
+      `第 ${p.page} 頁：左 ${p.left!=null? (ptToCm(p.left)+' cm'):'—'}｜上 ${p.top!=null? (ptToCm(p.top)+' cm'):'—'}`
+    ).join('<br/>');
+
+    addRow('四周邊界 2 公分（逐頁章節檢）', true, ev1,
+           '第 1 頁量測左+上，其餘量測左；容許範圍 2.0±0.2 cm');
+
+    statusEl.textContent = 'Cloud Run 檢查完成。';
+    return true;
+
+  } catch (err) {
+    // 失敗就顯示錯誤，並啟用前端備援（你原本的邊界估測邏輯）
+    console.warn('Cloud Run 邊界檢查失敗，啟用前端備援。', err);
+    addRow('四周邊界 2 公分（Cloud Run）', false,
+           (err&&err.message)||'呼叫失敗', '請確認服務允許匿名、已開 CORS，且網址使用 https。');
+    statusEl.textContent = 'Cloud Run 不可用，改用前端備援…';
+
+    await runFrontEndFallback(arrayBuffer, fileName); // ← 這是你原有的前端估測函式
+    return false;
+  }
+}
 
 /* ② 字體佔比 API（這次新增的 font_check.py）*/
 const FONT_API   = "https://font-check-api-1009467346209.asia-east1.run.app/check";
@@ -333,9 +395,12 @@ startBtn.addEventListener('click', async ()=>{
     const blob = new Blob([arrayBuffer], {type:"application/pdf"});
     fd.append('file', blob, fileName || 'upload.pdf');
 
-    const res = await fetch(MARGIN_API + '?v=' + Date.now(), {
-    method:'POST', mode:'cors', cache:'no-store', body:fd
-    });
+    const res = await fetchWithTimeout(
+      MARGIN_API + '?v=' + Date.now(),
+      { method:'POST', mode:'cors', cache:'no-store', body:fd },
+      20000 // 20 秒
+    );
+
     const text = await res.text();
     if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
     const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
@@ -408,14 +473,6 @@ startBtn.addEventListener('click', async ()=>{
         addRow("正文起算邊界檢查（章節模式）", false, esc(err.message),
                "無法連線至 margin-check API。");
       }
-
-       // 第 3 項：正文起算邊界（章節模式）
-      const ev3 = per_text?.map(p => {
-        const left = fmtCM(p.left);
-        const top = p.top ? fmtCM(p.top) : '—';
-        return `第 ${p.page} 頁：左 ${left} cm${p.top ? `｜上 ${top} cm` : '（無上邊距檢測）'}`;
-      }).join('<br/>');
-      addRow('正文起算邊界檢查（章節模式）', true, ev3, '第 1 頁檢查左＋上，其餘頁僅檢查左。');
 
       const parts=[];
       if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
