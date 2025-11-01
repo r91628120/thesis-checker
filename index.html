@@ -1,5 +1,5 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-10-31k -->
+<!-- Version: v=2025-11-02c -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -83,7 +83,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-01b</span>
+      <span class="mono">｜v=2025-11-02c</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -176,7 +176,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-31k</footer>
+  <footer>© 2025 CTVS 凡事皆正面 · v=2025-11-02c</footer>
 </div>
 
 <script>
@@ -197,11 +197,48 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
 }
 const CM_TO_PT = (cm)=> cm * 72 / 2.54;
 const PT_TO_CM = (pt)=> pt * 2.54 / 72;
-const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(3) : '—');
+const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(3) : '—'); // 邊界顯示三位小數
 const BASE_CM = 2.0, TOL_CM = 0.2, MICRO_TOL_PT = 0.8;
 const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
 const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
 const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
+
+/* ===== 字體中英文對照表 + 輔助函式（前端補充顯示用） ===== */
+const FONT_ZH_ALIAS = {
+  // 中文系常見
+  "PMingLiU": "新細明體",
+  "PMingLiU-ExtB": "新細明體-擴展B",
+  "MingLiU": "細明體",
+  "MingLiU-ExtB": "細明體-擴展B",
+  "Microsoft JhengHei": "微軟正黑體",
+  "MicrosoftJhengHeiRegular": "微軟正黑體",
+  "MicrosoftJhengHeiBold": "微軟正黑體-粗體",
+  "DFKaiShu-SB-Estd-BF": "標楷體（B 次集）",
+  "DFKaiShu-SB-Estd-B5": "標楷體（B5 次集）",
+  // 英文字體
+  "ArialMT": "Arial（英文字體）",
+  "Arial": "Arial（英文字體）",
+  "TimesNewRomanPSMT": "Times New Roman（英文字體）",
+  "Times New Roman": "Times New Roman（英文字體）",
+  "Calibri": "Calibri（英文字體）",
+  "Cambria": "Cambria（英文字體）",
+  // 數學 / 科學常見
+  "CambriaMath": "Cambria Math（數學字體）",
+  // 日文字體（有時 PDF 會抽到）
+  "MS-Gothic": "MS Gothic（日文等寬）",
+  "MS-Mincho": "MS 明朝（日文字體）",
+  // 思源家族
+  "Noto Sans CJK TC": "思源黑體（繁）",
+  "Noto Serif CJK TC": "思源宋體（繁）",
+};
+/** 將英文字體名替換為「英名（中文別名）」 */
+function withZhFontAlias(str) {
+  return Object.entries(FONT_ZH_ALIAS).reduce((acc, [en, zh]) => {
+    const esc = en.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'); // escape regex
+    const re  = new RegExp(`\\b${esc}\\b`, 'g');
+    return acc.replace(re, `${en}（${zh}）`);
+  }, str);
+}
 
 /* ========= 元件 ========= */
 const consent  = document.getElementById('consent');
@@ -523,30 +560,44 @@ fontBtn.addEventListener('click', async ()=>{
     const data = await res.json();
     if(!res.ok) throw new Error(JSON.stringify(data));
 
-    const pass      = !!(data?.summary?.pass);
-    const coverage  = (data?.summary?.main_coverage_pct ?? 0).toFixed(2);
-    const families  = (data?.rules?.families_considered_main || []).join('、');
+    // 讀取新版欄位（coverage_main 與 top_fonts）
+    const cov = (data?.summary?.coverage_main) || {};
+    const combined = ((cov.combined ?? 0) * 100).toFixed(2);
+    const zh = ((cov.zh_main ?? 0) * 100).toFixed(2);
+    const en = ((cov.en_main ?? 0) * 100).toFixed(2);
+
+    const families = (data?.rules?.families_considered_main || []).join('、');
     const pagesEff  = data?.file?.pages_effective ?? data?.file?.pages ?? null;
     const skipped   = Array.isArray(data?.file?.skipped_pages) ? data.file.skipped_pages : [];
+    const pass      = !!(cov.combined >= 0.80);
 
-    const top = (data?.distribution || []).slice(0,5)
-      .map(r => `${r.family} ${r.size}pt ${r.percent}%`).join('、');
+    // 前 10 名清單（後端已含中文名）
+    const topList = (data?.top_fonts || []).slice(0,10)
+      .map(x => `• ${x.name}：${(x.pct * 100).toFixed(2)}%`)
+      .join('<br/>');
 
-    const ev = [
+    // 主體說明（兩位小數）
+    const lines = [
       pagesEff?`有效頁數：${pagesEff}`:null,
-      `主字體 coverage（12±1pt；${families}）：${coverage}%`,
-      top?`常見字體（前5）：${top}`:null,
+      `主字體 coverage（12±1pt；${families}）：${combined}%`,
+      `‧ 新細明體（中文 12 級）：${zh}%`,
+      `‧ Times New Roman（英文 12pt）：${en}%`
     ].filter(Boolean).join('｜');
 
-    addRow('Cloud Run 字體字型檢查（字體佔比）', pass, ev.replace(/</g,'&lt;').replace(/>/g,'&gt;'),
-      pass ? 'OK（主要字體 coverage ≥ 80%）'
-           : '主要字體 coverage 未達 80%，請調整字體與字級。');
+    // 套用前端中文別名（保險起見；top_fonts 已含中文）
+    const linesWithAlias = withZhFontAlias(lines);
+    const detailHtml = topList ? (linesWithAlias + '<br/>' + topList) : linesWithAlias;
+
+    addRow('Cloud Run 字體字型檢查（字體佔比）', pass,
+      detailHtml.replace(/</g,'&lt;').replace(/>/g,'&gt;'),
+      pass ? '主要字體 coverage 達標（≥80%）' : '主要字體 coverage 未達 80%，請調整字體與字級。'
+    );
 
     lastSummaryJSON = lastSummaryJSON || {};
     lastSummaryJSON.fonts = {
       main_pass: pass,
-      main_coverage_pct: Number(coverage),
-      top_distribution: (data?.distribution || []).slice(0,10)
+      coverage_main: cov,
+      top_fonts: (data?.top_fonts || []).slice(0,10)
     };
     jsonPreviewEl.textContent = JSON.stringify(lastSummaryJSON, null, 2);
 
@@ -609,7 +660,7 @@ ${qs}`;
 
 /* ========= 下載結果 ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-31k）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-11-02c）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
