@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02d</span>
+      <span class="mono">｜v=2025-11-02e</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -119,6 +119,23 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <input type="radio" name="fontMode" id="modeStrict" value="strict">
            嚴格模式（只認新細明體／Times）
           </label>
+
+          <details style="margin-top:8px; font-size:13px; color:#374151">
+            <summary>什麼是「混合模式」？（點我展開說明）</summary>
+            <div style="padding:8px 0 0 2px; line-height:1.7">
+               <b>目的：</b>考量各校/各軟體把 Word 轉成 PDF 後，字體名稱可能被替換（但視覺上仍等價）。
+               「混合模式」除正式規範字族外，<u>也接受常見替代字族</u>，避免因工具差異而誤判。<br/>
+               <b>三種最常見的 Word→PDF 產生型態</b>（僅摘要；完整脈絡會顯示在 AI 摘要中）：
+               <ol style="margin:6px 0 0 18px">
+                 <li><b>另存新檔 → PDF</b>：通常已嵌字，西文字族常見 <code>Times New Roman / Cambria</code> 等。</li>
+                 <li><b>印表機 → Microsoft Print to PDF</b>：有時用 <code>Microsoft JhengHei</code> 代替中文明體。</li>
+                 <li><b>雲端/WPS/Google</b>：常見 <code>Cambria / Arial / HeiseiMin / MSung</code> 等等。</li>
+               </ol>
+               <b>判定邏輯：</b>混合模式會把上述等價族群納入「主字體 coverage」；<b>嚴格模式</b>只認
+                「<code>新細明體（PMingLiU 系）</code>＋<code>Times New Roman</code>」兩大族。
+            </div>
+          </details>
+
           <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
           <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
@@ -168,7 +185,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-11-03b</footer>
+  <footer>© 2025 CTVS 凡事皆正面 · v=2025-11-03</footer>
 </div>
 
 <script>
@@ -450,6 +467,8 @@ fontBtn.addEventListener('click', async ()=>{
         combined: combined==null? null : combined/100
       },
       top_fonts: (data?.top_fonts || [])
+      strict_mode: !!data?.strict_mode,       // ← 新增：嚴格 or 混合
+      rules: data?.rules || null              // ← 新增：後端回傳規則摘要
     };
     lastSummaryJSON.file = lastSummaryJSON.file || { name:fileName||'(未命名)' };
     jsonPreviewEl.textContent = JSON.stringify(lastSummaryJSON, null, 2);
@@ -486,6 +505,17 @@ function updateAiReadableSummary(){
       txt+=`　主字體覆蓋率：${((c.combined??0)*100).toFixed(2)}%（合格門檻：≥80%）\n`;
       txt+=`　新細明體（中文 12 級）：${((c.zh_main??0)*100).toFixed(2)}%｜Times New Roman（英文 12pt）：${((c.en_main??0)*100).toFixed(2)}%\n`;
       txt+=j.fonts.main_pass?`　✅ 主要字體覆蓋率達標。\n`:`　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
+    
+         // === 新增：模式與緣由說明 ===
+      const strict = !!j.fonts.strict_mode;
+      txt+=`\n　本次檢測模式：${strict ? '嚴格模式（只認「新細明體」與「Times New Roman」）' : '混合模式（接受常見替代字族，避免各種轉檔造成的名稱差異）'}。\n`;
+      txt+=`　常見 Word→PDF 產生型態：\n`;
+      txt+=`　 1) 另存新檔 PDF：多半已嵌字，西文常見 Cambria/Times。\n`;
+      txt+=`　 2) Microsoft Print to PDF：可能以正黑體等代用中文明體。\n`;
+      txt+=`　 3) 雲端/WPS/Google：常見 Cambria/Arial/HeiseiMin/MSung 等。\n`;
+      if (j.fonts.rules && j.fonts.rules.families_considered_main) {
+        txt+=`　 本模式主字體視為：${(j.fonts.rules.families_considered_main||[]).join('、')}。\n`;
+      }
     }
     box.textContent=txt.trim();
   }catch(e){ box.textContent='生成摘要時發生錯誤：'+e.message; }
