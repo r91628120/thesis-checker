@@ -26,7 +26,7 @@ button.danger{background:#dc2626;color:#fff;border-color:#b91c1c}
 a.btn-violet{background:#f3e8ff;border:1.5px solid #c4b5fd;color:#4c1d95;border-radius:10px;padding:.7rem 1.05rem;text-decoration:none;font-weight:700}
 a.btn-violet:hover{background:#ede9fe;border-color:#a78bfa}
 .step{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
-.step .no{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#eef2ff;border:1px solid var(--bdr);font-weight:700}
+.step .no{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#eef2ff;border:1px solid(var(--bdr));font-weight:700}
 .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px;text-align:center;background:#fafafa;margin-top:8px}
 .drop[aria-disabled="true"]{opacity:.7;filter:grayscale(.1)}
 input[type=file]{display:none}
@@ -36,7 +36,7 @@ th,td{border:1px solid var(--bdr);padding:8px 10px;text-align:left;vertical-alig
 th{background:#f9fafb}
 .badge-ok{color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:.15rem .5rem;border-radius:999px;font-size:12px}
 .badge-bad{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:.15rem .5rem;border-radius:999px;font-size:12px}
-.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid var(--bdr);font-size:12px;color:#374151;font-weight:600}
+.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7eb;font-size:12px;color:#374151;font-weight:600}
 footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 .margin-preview{margin-top:8px}
 .margin-preview .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:#374151;margin:6px 0}
@@ -48,7 +48,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 .extsearch a[data-extlink]{text-decoration:none}
 </style>
 
-<!-- pdf.js 備援 -->
+<!-- pdf.js 備援（目前先不啟用細節） -->
 <script type="module">
   window.loadPdfjs = async () => {
     const base = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/";
@@ -64,7 +64,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03a</span>
+      <span class="mono">｜v=2025-11-02a</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -155,13 +155,44 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </div>
 
 <script>
-/* ====== 依你實際部署調整 ====== */
+// ===== utils =====
+async function postPDF(url, blob) {
+  const fd = new FormData();
+  fd.append('file', blob, 'upload.pdf');
+  const res = await fetch(url, {
+    method: 'POST',
+    body: fd,
+    mode: 'cors',
+    cache: 'no-store'
+  });
+  const txt = await res.text();
+  let data = {};
+  try { data = txt ? JSON.parse(txt) : {}; } catch(e) {
+    throw new Error('Server 回傳非 JSON：' + txt.slice(0,200));
+  }
+  if (!res.ok && data && data.error) throw new Error(data.error);
+  return data;
+}
+const pct2 = v => (Math.round(Number(v) * 100) / 100).toFixed(2);
+
+// top_fonts 英文名加中文別名（後端若已含中文則直接顯示）
+function withZhName(name) {
+  const n = (name||'').toLowerCase();
+  if (n.includes('pmingliu')) return `新細明體（中文 12 級）｜${name}`;
+  if (n.includes('mingliu'))  return `細明體（中文 12 級）｜${name}`;
+  if (n.includes('times new roman') || n.includes('timesnewroman')) return `Times New Roman（英文 12pt）｜${name}`;
+  if (n.includes('cambria'))  return `Cambria（英文）｜${name}`;
+  if (n.includes('microsoft jhenghei')) return `微軟正黑體（中文）｜${name}`;
+  return name;
+}
+
+/* ====== 依你實際部署調整（請改成你的 Cloud Run URL） ====== */
 const MARGIN_API = "https://margin-check-service-xxxxx.asia-east1.run.app/check";
 const FONT_API   = "https://font-check-api-xxxxx.asia-east1.run.app/check";
-const GAS_WEB_APP_URL = ""; // 若不用人次統計可留空
+const GAS_WEB_APP_URL = "";  // 若不用人次統計可留空
 const ENABLE_COUNTER = false;
 
-/* 小工具 */
+/* 基本工具 */
 async function fetchWithTimeout(url, options = {}, timeoutMs = 20000){
   const c = new AbortController(); const id = setTimeout(()=>c.abort(), timeoutMs);
   try{ return await fetch(url,{...options,signal:c.signal}); } finally{ clearTimeout(id); }
@@ -173,7 +204,7 @@ const BASE_CM=2.0, TOL_CM=0.2, MICRO_TOL_PT=0.8;
 const RANGE_MIN_PT=CM_TO_PT(BASE_CM - TOL_CM), RANGE_MAX_PT=CM_TO_PT(BASE_CM + TOL_CM);
 const within = v => isFinite(v) && v >= (RANGE_MIN_PT - MICRO_TOL_PT) && v <= (RANGE_MAX_PT + MICRO_TOL_PT);
 
-/* 字體中文別名（前端顯示用） */
+/* 中文別名（用於說明欄位） */
 const FONT_ZH_ALIAS = {
   "PMingLiU":"新細明體","PMingLiU-ExtB":"新細明體-擴展B","MingLiU":"細明體","MingLiU-ExtB":"細明體-擴展B",
   "Microsoft JhengHei":"微軟正黑體","MicrosoftJhengHeiRegular":"微軟正黑體","MicrosoftJhengHeiBold":"微軟正黑體-粗體",
@@ -235,7 +266,7 @@ async function handleFile(f){
   if(f.size>10*1024*1024){statusEl.textContent='超過 10MB 上限';return;}
   arrayBuffer = await f.arrayBuffer(); fileName = f.name; setEnabled(consent.checked);
 
-  // GPT 鍵入預設提示（簡化）
+  // GPT 連結先放空白（你可換成固定對話）
   const baseA="https://chat.openai.com/"; gptALink.href=baseA;
   const baseB="https://chat.openai.com/"; gptBLink.href=baseB;
 
@@ -244,7 +275,7 @@ async function handleFile(f){
   extPanel.style.display='block';
 }
 
-/* 邊界：視覺尺規圖 */
+/* 第 1 頁視覺尺規圖（縮圖） */
 function marginPreviewSVG({W,H,left,right,top,bottom}){
   const thumbW=240, scale=thumbW/W, th=Math.round(H*scale);
   const insetBlack=CM_TO_PT(2.0)*scale, insetRed=CM_TO_PT(2.2)*scale, insetBlue=CM_TO_PT(1.8)*scale;
@@ -280,7 +311,7 @@ function addRow(rule, pass, evidenceHtml, suggestionHtml){
   tbody.appendChild(tr);
 }
 
-/* 邊界：Server-first */
+/* ===== 邊界：Server-first ===== */
 startBtn.addEventListener('click', async ()=>{
   if(!arrayBuffer) return;
   tbody.innerHTML=''; _ruleCounter=0; resultCard.style.display='none'; extPanel.style.display='none';
@@ -365,12 +396,11 @@ startBtn.addEventListener('click', async ()=>{
 
   if(serverOK){ bumpCounterEveryTime(); fetchCounter(); return; }
 
-  // 備援（略）：可保留你原先的 pdf.js 首頁推估程式；此處省略
   statusEl.textContent='Cloud Run 不可用（本次略過備援）。';
   resultCard.style.display='block';
 });
 
-/* 字體字型進階檢查（相容新舊欄位 + 嚴格模式開關） */
+/* ===== 字體字型進階檢查（相容新舊欄位 + 嚴格模式） ===== */
 fontBtn.addEventListener('click', async ()=>{
   const blob = arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null;
   if(!blob){ alert('請先選擇 PDF 檔'); return; }
@@ -485,7 +515,7 @@ function updateAiReadableSummary(){
   }catch(e){ box.textContent='生成摘要時發生錯誤：'+e.message; }
 }
 
-/* 外部檢索助手（簡化） */
+/* 外部檢索助手 */
 function buildExternalSearchEvidence(baseTitle){
   const t=(baseTitle||'小論文篇名').trim(), mk=s=>encodeURIComponent(s);
   const items=[
@@ -548,7 +578,7 @@ async function fetchCounter(){ if(!ENABLE_COUNTER) return; try{ const u=GAS_WEB_
 async function bumpCounterEveryTime(){ if(!ENABLE_COUNTER) return; try{ const u=GAS_WEB_APP_URL+(GAS_WEB_APP_URL.includes('?')?'&':'?')+'action=increment&ts='+Date.now(); await fetch(u,{method:'GET',cache:'no-store'});}catch{} }
 window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter,400));
 
-/* 自動帶版本參數（避免快取） */
+/* 自動帶版本參數以破快取 */
 (function(){
   try{
     const tag=document.querySelector('header .mono')?.textContent.match(/v[=：]([\w.-]+)/); const v=tag?tag[1]:null;
