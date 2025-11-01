@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02c</span>
+      <span class="mono">｜v=2025-11-02d</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -111,6 +111,14 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
         <div class="row">
           <button id="start" class="primary" disabled>開始檢查（邊界：Server 優先）</button>
           <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+          <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.5rem;font-size:13px">
+          <input type="radio" name="fontMode" id="modeMixed" value="mixed" checked>
+           混合模式（接受常見替代字族）
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.6rem;font-size:13px">
+          <input type="radio" name="fontMode" id="modeStrict" value="strict">
+           嚴格模式（只認新細明體／Times）
+          </label>
           <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
              href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-ge-shi-ji-he-yuan-copy">單獨 GPT 檢查 PDF（GPT B）</a>
           <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
@@ -375,50 +383,72 @@ fontBtn.addEventListener('click', async ()=>{
   const blob = arrayBuffer ? new Blob([arrayBuffer], {type:"application/pdf"}) : null;
   if(!blob){ alert('請先選擇 PDF 檔'); return; }
 
+  // 讀取模式（嚴格／混合）→ 後端用 strict=1/0
+  const strict = document.getElementById('modeStrict')?.checked ? '1' : '0';
+  const url = FONT_API + '?strict=' + strict + '&v=' + Date.now();
+
   statusEl.textContent = '上傳至 Cloud Run 檢查中…';
   try{
     const fd = new FormData(); fd.append('file', blob, fileName||'upload.pdf');
-    const res = await fetch(FONT_API + '?v=' + Date.now(), { method:'POST', mode:'cors', cache:'no-store', body:fd });
+    const res = await fetch(url, { method:'POST', mode:'cors', cache:'no-store', body:fd });
     const text = await res.text();
     if(!res.ok) throw new Error(`API ${res.status} ${res.statusText} ${text}`);
     const data = (()=>{ try{return JSON.parse(text);}catch{return { ok:true, raw:text }; } })();
 
-    // 新版欄位 coverage_main（0~1），舊版 main_coverage_pct（%）
-    let zh=0,en=0,combined=0, pass=false;
+    // 兼容新舊欄位：新 coverage_main（0~1）；舊 main_coverage_pct（%）
+    let zh=null, en=null, combined=null, pass=false;
+
     if (data?.summary?.coverage_main){
       const c=data.summary.coverage_main;
-      zh=(c.zh_main||0)*100; en=(c.en_main||0)*100; combined=(c.combined||0)*100;
-      pass=!!data.summary.pass || (c.combined>=0.8);
+      combined = (c.combined ?? 0) * 100;
+      if ('zh_main' in c) zh = (c.zh_main ?? 0) * 100;
+      if ('en_main' in c) en = (c.en_main ?? 0) * 100;
+      pass = !!data.summary.pass || (c.combined >= 0.8);
     }else if (typeof data?.summary?.main_coverage_pct === 'number'){
-      combined = data.summary.main_coverage_pct; pass = combined >= 80;
+      combined = data.summary.main_coverage_pct;
+      pass = combined >= 80;
     }
+
+    // 顯示時：有數字才顯示，沒有就顯示「—」
+    const fmt = v => (v==null ? '—' : v.toFixed(2)+'%');
+    const combinedStr = fmt(combined);
+    const zhStr  = fmt(zh);
+    const enStr  = fmt(en);
 
     const pagesEff = data?.file?.pages_effective ?? data?.summary?.pages ?? null;
     const parts = [
       pagesEff?`有效頁數：${pagesEff}`:null,
-      `主字體 coverage（12±1pt；新細明體＋Times New Roman）：${combined.toFixed(2)}%`,
-      `‧ 新細明體（中文 12 級）：${zh.toFixed(2)}%`,
-      `‧ Times New Roman（英文 12pt）：${en.toFixed(2)}%`
+      `主字體 coverage（12±1pt；新細明體＋Times New Roman）：${combinedStr}`,
+      `‧ 新細明體（中文 12 級）：${zhStr}`,
+      `‧ Times New Roman（英文 12pt）：${enStr}`
     ].filter(Boolean).join('｜');
 
-    // top list（相容新舊）
+    // 前 10 名（相容新舊）
     let topList='';
     if(Array.isArray(data?.top_fonts) && data.top_fonts.length){
-      topList=data.top_fonts.slice(0,10).map(x=>`• ${x.name}：${(x.pct*100).toFixed(2)}%`).join('<br/>');
+      topList=data.top_fonts.slice(0,10)
+        .map(x=>`• ${x.name}：${((x.pct||0)*100).toFixed(2)}%`).join('<br/>');
     }else if(Array.isArray(data?.distribution) && data.distribution.length){
-      topList=data.distribution.slice(0,10).map(r=>`• ${r.family} ${r.size}pt：${(+r.percent||0).toFixed(2)}%`).join('<br/>');
+      topList=data.distribution.slice(0,10)
+        .map(r=>`• ${r.family} ${r.size}pt：${(+r.percent||0).toFixed(2)}%`).join('<br/>');
     }
 
-    addRow('Cloud Run 字體字型檢查（字體佔比）', pass,
+    addRow(
+      'Cloud Run 字體字型檢查（字體佔比）',
+      pass,
       (parts + (topList?('<br/>'+topList):'')).replace(/</g,'&lt;'),
       pass ? '主要字體 coverage 達標（≥80%）' : '主要字體 coverage 未達 80%，請調整字體與字級。'
     );
 
-    // 摘要 JSON（字體部份）
+    // 摘要 JSON（字體部份）— 允許 null，AI 摘要會顯示「—」
     lastSummaryJSON = lastSummaryJSON || {};
     lastSummaryJSON.fonts = {
       main_pass: pass,
-      coverage_main: data?.summary?.coverage_main || { zh_main: zh/100, en_main: en/100, combined: combined/100 },
+      coverage_main: {
+        zh_main: zh==null? null : zh/100,
+        en_main: en==null? null : en/100,
+        combined: combined==null? null : combined/100
+      },
       top_fonts: (data?.top_fonts || [])
     };
     lastSummaryJSON.file = lastSummaryJSON.file || { name:fileName||'(未命名)' };
@@ -451,6 +481,7 @@ function updateAiReadableSummary(){
     }
     if(j.fonts){
       const c=j.fonts.coverage_main||{};
+      const fmt = v => (v==null ? '—' : (v*100).toFixed(2)+'%');
       txt+=`\n【字體字型檢查】\n`;
       txt+=`　主字體覆蓋率：${((c.combined??0)*100).toFixed(2)}%（合格門檻：≥80%）\n`;
       txt+=`　新細明體（中文 12 級）：${((c.zh_main??0)*100).toFixed(2)}%｜Times New Roman（英文 12pt）：${((c.en_main??0)*100).toFixed(2)}%\n`;
