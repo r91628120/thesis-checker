@@ -83,7 +83,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-01a</span>
+      <span class="mono">｜v=2025-11-01b</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -197,7 +197,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
 }
 const CM_TO_PT = (cm)=> cm * 72 / 2.54;
 const PT_TO_CM = (pt)=> pt * 2.54 / 72;
-const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(2) : '—');
+const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(3) : '—');
 const BASE_CM = 2.0, TOL_CM = 0.2, MICRO_TOL_PT = 0.8;
 const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
 const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
