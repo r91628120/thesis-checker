@@ -83,7 +83,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-10-31k</span>
+      <span class="mono">｜v=2025-11-01a</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -176,7 +176,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-31h</footer>
+  <footer>© 2025 CTVS 凡事皆正面 · v=2025-10-31k</footer>
 </div>
 
 <script>
@@ -193,15 +193,11 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(id);
-  }
+  } finally { clearTimeout(id); }
 }
-const ptToCm = (pt)=> Math.round((pt * 2.54 / 72) * 100) / 100;
 const CM_TO_PT = (cm)=> cm * 72 / 2.54;
 const PT_TO_CM = (pt)=> pt * 2.54 / 72;
 const fmtCM = (v)=> (isFinite(v) ? PT_TO_CM(v).toFixed(2) : '—');
-const esc = s => String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const BASE_CM = 2.0, TOL_CM = 0.2, MICRO_TOL_PT = 0.8;
 const RANGE_MIN_PT = CM_TO_PT(BASE_CM - TOL_CM);
 const RANGE_MAX_PT = CM_TO_PT(BASE_CM + TOL_CM);
@@ -263,7 +259,7 @@ async function handleFile(f){
   fileName = f.name;
   setEnabled(consent.checked);
 
-  // 對 GPT A 注入預設檢索提示
+  // 對 GPT A 注入預設檢索提示（檔名推測題名）
   const base = gptALink.getAttribute('href').split('?')[0];
   const prompt = [
     '請幫我檢索此題名是否曾公開發表或得獎，列出相同/近似題名之來源、年份、連結與關鍵詞，最後給整體結論：',
@@ -273,13 +269,9 @@ async function handleFile(f){
   gptALink.href = base + '?q=' + encodeURIComponent(prompt);
 
   initExternalSearchAssist((fileName||'小論文篇名').replace(/\.[^.]+$/,''));
-}
-
-  // 以檔名（去副檔名）推測題名，先建立外部檢索連結並顯示面板
-  const guessTitle = (fileName || '小論文篇名').replace(/\.[^.]+$/, '');
-  buildExternalSearchEvidence(guessTitle);
+  buildExternalSearchEvidence((fileName||'小論文篇名').replace(/\.[^.]+$/,''));
   extPanel.style.display = 'block';
-
+}
 
 /* ========= 尺規（以 API 第 1 頁值疊圖） ========= */
 function marginPreviewSVG({W,H,left,right,top,bottom}){
@@ -381,7 +373,7 @@ startBtn.addEventListener('click', async ()=>{
       const ev2 = `第 1 頁量測（cm）：左 ${fmtCM(per[0]?.left)}｜右 ${fmtCM(per[0]?.right)}｜上 ${fmtCM(per[0]?.top)}｜下 ${fmtCM(per[0]?.bottom)}`;
       addRow('第 1 頁視覺尺規（參考圖）', true, `<div>${ev2}</div>${svg||''}`, '黑=2.0cm、紅=2.2cm、藍=1.8cm。');
 
-      // 第3項：章節模式（壹測左+上，其餘測左）——可用同一支 API 回傳的 per_page
+      // 第3項：章節模式（壹測左+上，其餘測左）
       if(Array.isArray(data?.per_page) && data.per_page.length){
         const ev3 = data.per_page.map(p=>
           `第 ${p.page} 頁：左 ${fmtCM(p.left)} cm${p.top ? `｜上 ${fmtCM(p.top)} cm` : "（無上邊距檢測）"}`
@@ -393,7 +385,7 @@ startBtn.addEventListener('click', async ()=>{
       const parts=[];
       if(data.summary?.dominant_fonts) parts.push(`主要字體：${data.summary.dominant_fonts.join('、')}`);
       if(Array.isArray(data.top_fonts)) parts.push('常見字體：'+data.top_fonts.slice(0,6).join('、'));
-      if(parts.length) addRow('字體/字型摘要（Cloud Run）', true, esc(parts.join('｜')), '如需更完整的字體檢查，請點下方「字體字型進階檢查」。');
+      if(parts.length) addRow('字體/字型摘要（Cloud Run）', true, (parts.join('｜')).replace(/</g,'&lt;').replace(/>/g,'&gt;'), '如需更完整的字體檢查，請點下方「字體字型進階檢查」。');
 
       // #4 給 AI 小助手
       summaryForAI = {
@@ -546,7 +538,7 @@ fontBtn.addEventListener('click', async ()=>{
       top?`常見字體（前5）：${top}`:null,
     ].filter(Boolean).join('｜');
 
-    addRow('Cloud Run 字體字型檢查（字體佔比）', pass, esc(ev),
+    addRow('Cloud Run 字體字型檢查（字體佔比）', pass, ev.replace(/</g,'&lt;').replace(/>/g,'&gt;'),
       pass ? 'OK（主要字體 coverage ≥ 80%）'
            : '主要字體 coverage 未達 80%，請調整字體與字級。');
 
@@ -565,7 +557,7 @@ fontBtn.addEventListener('click', async ()=>{
 
   }catch(err){
     addRow('Cloud Run 字體字型檢查（字體佔比）', false,
-      esc(err?.message || String(err)),
+      (err?.message || String(err)).replace(/</g,'&lt;').replace(/>/g,'&gt;'),
       '請確認後端允許匿名、已開 CORS，且前端確實送出檔案。');
     resultCard.style.display='block';
     statusEl.textContent = '字體佔比檢查失敗。';
@@ -617,7 +609,7 @@ ${qs}`;
 
 /* ========= 下載結果 ========= */
 downloadHtmlBtn.addEventListener('click', ()=>{
-  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-31h）</title>'
+  const html='<!doctype html><meta charset="utf-8"><title>小論文檢查報告（v=2025-10-31k）</title>'
     + '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;margin:24px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f9fafb}.badge-ok{color:#065f46}.badge-bad{color:#991b1b}.hint{color:#6b7280;font-size:13px}</style>'
     + document.querySelector('#resultCard').outerHTML;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -687,7 +679,6 @@ window.addEventListener('DOMContentLoaded', ()=> setTimeout(fetchCounter, 400));
     console.warn('版本號自動附加失敗', err);
   }
 })();
-
 </script>
 </body>
 </html>
