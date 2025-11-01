@@ -1,5 +1,5 @@
 <!-- 高中職小論文格式自檢（Server-first 邊界檢查版 + 外部檢索助手） -->
-<!-- Version: v=2025-11-02c -->
+<!-- Version: v=2025-11-02e -->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -83,7 +83,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02c</span>
+      <span class="mono">｜v=2025-11-02e</span>
       ｜© 2025 CTVS 凡事皆正面 · r91628120@ctvs.ptc.edu.tw
     </p>
   </header>
@@ -165,6 +165,11 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <details style="margin-top:6px">
             <summary>顯示本次檢查摘要 JSON（會一併複製給 GPT）</summary>
             <pre id="jsonPreview" class="mono" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:10px;max-height:280px;overflow:auto"></pre>
+          </details>
+            <!-- 🔍 新增：AI 小助手可讀的結果摘要（解釋版） -->
+          <details open style="margin-top:10px;border-top:1px dashed #ddd;padding-top:8px">
+            <summary><b>AI 小助手結果摘要（解釋版）</b></summary>
+           <div id="aiSummaryReadable" style="white-space:pre-wrap;font-size:13px;line-height:1.6;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;"></div>
           </details>
         </div>
 
@@ -446,6 +451,7 @@ startBtn.addEventListener('click', async ()=>{
       resultCard.style.display='block';
       fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}；總頁數：${pages}；有效頁數：${effPages.length}${skipped}`;
       statusEl.textContent = 'Cloud Run 檢查完成。';
+      updateAiReadableSummary();
     }
   }catch(e){
     console.warn('Cloud Run 邊界檢查失敗，將啟用前端備援。', e);
@@ -605,6 +611,7 @@ fontBtn.addEventListener('click', async ()=>{
     fileTag.textContent = `此次檢查檔案：${fileName||'(未命名)'}`
       + (skipped.length? `（略過頁：${skipped.join(', ')}）` : '');
     statusEl.textContent = '字體佔比檢查完成。';
+    updateAiReadableSummary();
 
   }catch(err){
     addRow('Cloud Run 字體字型檢查（字體佔比）', false,
@@ -614,6 +621,56 @@ fontBtn.addEventListener('click', async ()=>{
     statusEl.textContent = '字體佔比檢查失敗。';
   }
 });
+
+/* ========= 產生 AI 小助手可讀摘要 ========= */
+function updateAiReadableSummary() {
+  const box = document.getElementById('aiSummaryReadable');
+  if (!box) return;
+  if (!lastSummaryJSON) { box.textContent = '尚無結果。'; return; }
+
+  try {
+    const j = lastSummaryJSON;
+    let txt = `📄 小論文檢查摘要：${j?.file?.name || '(未命名)'}\n`;
+
+    // 頁數與邊界檢查
+    if (j.margins) {
+      const bads = j.margins.bad_pages || [];
+      txt += `\n【邊界檢查】\n`;
+      txt += `　基準邊界：2.0±0.2 公分（容許 ±0.8pt）\n`;
+      txt += `　逐頁最小邊界（pt）：左 ${j.margins.global_min_pt?.left ?? '—'}、右 ${j.margins.global_min_pt?.right ?? '—'}、上 ${j.margins.global_min_pt?.top ?? '—'}、下 ${j.margins.global_min_pt?.bottom ?? '—'}。\n`;
+      if (bads.length) {
+        txt += `　❌ 不合格頁次：${bads.join(', ')}。\n`;
+        txt += `　→ 請回 Word 檔檢查這些頁的邊界設定是否確實為 2 公分。\n`;
+      } else {
+        txt += `　✅ 所有頁面皆符合 2 公分 ±0.2 的要求。\n`;
+      }
+    }
+
+    // 字體字型檢查
+    if (j.fonts) {
+      const cov = j.fonts.coverage_main || {};
+      const top = j.fonts.top_fonts || [];
+      txt += `\n【字體字型檢查】\n`;
+      txt += `　主字體覆蓋率：${((cov.combined ?? 0)*100).toFixed(2)}%（合格門檻：≥80%）\n`;
+      txt += `　新細明體（中文 12 級）：${((cov.zh_main ?? 0)*100).toFixed(2)}%｜Times New Roman（英文 12pt）：${((cov.en_main ?? 0)*100).toFixed(2)}%\n`;
+
+      if (j.fonts.main_pass) {
+        txt += `　✅ 主要字體覆蓋率達標，文件整體字型正確。\n`;
+      } else {
+        txt += `　❌ 未通過。文件中主要使用的字型可能為：\n`;
+        top.slice(0,5).forEach(f => {
+          txt += `　　• ${f.name}：${(f.pct*100).toFixed(2)}%\n`;
+        });
+        txt += `　→ 請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
+      }
+    }
+
+    box.textContent = txt.trim();
+  } catch(err) {
+    box.textContent = '生成摘要時發生錯誤：' + err.message;
+  }
+}
+
 
 /* ========= 外部檢索助手 ========= */
 function buildExternalSearchEvidence(baseTitle){
