@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02e</span>
+      <span class="mono">｜v=2025-11-02f</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -488,37 +488,41 @@ fontBtn.addEventListener('click', async ()=>{
 
 /* ====== AI 小助手可讀摘要 ====== */
 function updateAiReadableSummary(){
-  const box=document.getElementById('aiSummaryReadable');
-  if(!box) return; if(!lastSummaryJSON){ box.textContent='尚無結果。'; return; }
   try{
-    const j=lastSummaryJSON; let txt=`📄 小論文檢查摘要：${j?.file?.name||'(未命名)'}\n`;
-    if(j.margins){
-      const bads=j.margins.bad_pages||[];
-      txt+=`\n【邊界檢查】\n　基準邊界：2.0±0.2 公分（容許 ±0.8pt）\n`;
-      txt+=`　逐頁最小邊界（pt）：左 ${j.margins.global_min_pt?.left??'—'}、右 ${j.margins.global_min_pt?.right??'—'}、上 ${j.margins.global_min_pt?.top??'—'}、下 ${j.margins.global_min_pt?.bottom??'—'}。\n`;
-      txt+=bads.length?`　❌ 不合格頁次：${bads.join(', ')}。\n`:`　✅ 所有頁面皆符合 2 公分 ±0.2 的要求。\n`;
+    if(!j?.fonts){
+      box.textContent = '（本檢查未回傳字體分析結果）';
+      return;
     }
-    if(j.fonts){
-      const c=j.fonts.coverage_main||{};
-      const fmt = v => (v==null ? '—' : (v*100).toFixed(2)+'%');
-      txt+=`\n【字體字型檢查】\n`;
-      txt+=`　主字體覆蓋率：${((c.combined??0)*100).toFixed(2)}%（合格門檻：≥80%）\n`;
-      txt+=`　新細明體（中文 12 級）：${((c.zh_main??0)*100).toFixed(2)}%｜Times New Roman（英文 12pt）：${((c.en_main??0)*100).toFixed(2)}%\n`;
-      txt+=j.fonts.main_pass?`　✅ 主要字體覆蓋率達標。\n`:`　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
-    
-         // === 新增：模式與緣由說明 ===
-      const strict = !!j.fonts.strict_mode;
-      txt+=`\n　本次檢測模式：${strict ? '嚴格模式（只認「新細明體」與「Times New Roman」）' : '混合模式（接受常見替代字族，避免各種轉檔造成的名稱差異）'}。\n`;
-      txt+=`　常見 Word→PDF 產生型態：\n`;
-      txt+=`　 1) 另存新檔 PDF：多半已嵌字，西文常見 Cambria/Times。\n`;
-      txt+=`　 2) Microsoft Print to PDF：可能以正黑體等代用中文明體。\n`;
-      txt+=`　 3) 雲端/WPS/Google：常見 Cambria/Arial/HeiseiMin/MSung 等。\n`;
-      if (j.fonts.rules && j.fonts.rules.families_considered_main) {
-        txt+=`　 本模式主字體視為：${(j.fonts.rules.families_considered_main||[]).join('、')}。\n`;
-      }
+
+    const c = j.fonts.coverage_main || {};
+    const fm = v => (v == null ? '—' : (v*100).toFixed(2) + '%');
+
+    let txt  = '【字體字型檢查】\n';
+    txt += `　主字體覆蓋率：${fm(c.combined)}（合格門檻：≥80%）\n`;
+    txt += `　新細明體（中文 12 級）：${fm(c.zh_main)}｜Times New Roman（英文 12pt）：${fm(c.en_main)}\n`;
+    txt += j.fonts.main_pass
+      ? '　✅ 主要字體覆蓋率達標。\n'
+      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
+
+    // === 新增：模式與緣由說明 ===
+    const strict = !!j.fonts.strict_mode; // 嚴格:true；混合:false
+    txt += `\n—— 本次檢測模式：${strict
+      ? '嚴格模式（只認「新細明體」與「Times New Roman」）'
+      : '混合模式（接受常見替代字族，避免各種轉檔造成的名稱差異誤判）'}\n`;
+
+    txt += '　常見 Word→PDF 產生型態：\n';
+    txt += '　1）另存新檔 PDF：多半正常；西文常見 Cambria/Times。\n';
+    txt += '　2）Microsoft 列印成 PDF：可能以 CJK 明體/黑體呈現。\n';
+    txt += '　3）雲端/UPS/Google：常見 Cambria/Arial/HeiseiMin/MSung 等。\n';
+
+    if (j.fonts.rules?.families_considered_main?.length) {
+      txt += `　本檢測主字體視為：${j.fonts.rules.families_considered_main.join('、')}\n`;
     }
-    box.textContent=txt.trim();
-  }catch(e){ box.textContent='生成摘要時發生錯誤：'+e.message; }
+
+    box.textContent = txt.trim();
+  }catch(e){
+    box.textContent = '生成摘要時發生錯誤：' + e.message;
+  }
 }
 
 /* ====== 外部檢索助手 ====== */
