@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02g</span>
+      <span class="mono">｜v=2025-11-02h</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -198,7 +198,7 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMjhNj9wJmXeTt
 const ENABLE_COUNTER = true;
 
 /* ====== 小工具 ====== */
-async function fetchWithTimeout(url, options = {}, timeoutMs = 20000){
+async function fetchWithTimeout(url, options = {}, timeoutMs = 30000){
   const c = new AbortController(); const id = setTimeout(()=>c.abort(), timeoutMs);
   try{ return await fetch(url,{...options,signal:c.signal}); } finally{ clearTimeout(id); }
 }
@@ -225,6 +225,8 @@ const gptBLink = document.getElementById('gptB');
 const extPanel = document.getElementById('extSearchPanel');
 const searchLinksEl = document.getElementById('searchLinks');
 const jsonPreviewEl = document.getElementById('jsonPreview');
+const aiSummaryBox = document.getElementById('aiSummaryReadable'); // AI 摘要容器
+// lastSummaryJSON 已在檔內其他處宣告： let arrayBuffer=null, fileName='', lastSummaryJSON=null;
 
 let arrayBuffer=null, fileName='', lastSummaryJSON=null;
 
@@ -488,14 +490,18 @@ fontBtn.addEventListener('click', async ()=>{
 
 /* ====== AI 小助手可讀摘要 ====== */
 function updateAiReadableSummary(){
-  try{
-    if(!j?.fonts){
+  const box = aiSummaryBox;
+  if (!box) return;
+
+  try {
+    const j = lastSummaryJSON || {};
+    if (!j.fonts) {
       box.textContent = '（本檢查未回傳字體分析結果）';
       return;
     }
 
-    const c = j.fonts.coverage_main || {};
-    const fm = v => (v == null ? '—' : (v*100).toFixed(2) + '%');
+    const c  = j.fonts.coverage_main || {};
+    const fm = v => (v == null ? '—' : (v * 100).toFixed(2) + '%');
 
     let txt  = '【字體字型檢查】\n';
     txt += `　主字體覆蓋率：${fm(c.combined)}（合格門檻：≥80%）\n`;
@@ -504,7 +510,7 @@ function updateAiReadableSummary(){
       ? '　✅ 主要字體覆蓋率達標。\n'
       : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
 
-    // === 新增：模式與緣由說明 ===
+    // 模式與背景說明（你要求的「混合模式」解說）
     const strict = !!j.fonts.strict_mode; // 嚴格:true；混合:false
     txt += `\n—— 本次檢測模式：${strict
       ? '嚴格模式（只認「新細明體」與「Times New Roman」）'
@@ -513,14 +519,14 @@ function updateAiReadableSummary(){
     txt += '　常見 Word→PDF 產生型態：\n';
     txt += '　1）另存新檔 PDF：多半正常；西文常見 Cambria/Times。\n';
     txt += '　2）Microsoft 列印成 PDF：可能以 CJK 明體/黑體呈現。\n';
-    txt += '　3）雲端/UPS/Google：常見 Cambria/Arial/HeiseiMin/MSung 等。\n';
+    txt += '　3）雲端/WPS/Google：常見 Cambria/Arial/HeiseiMin/MSung 等。\n';
 
     if (j.fonts.rules?.families_considered_main?.length) {
       txt += `　本檢測主字體視為：${j.fonts.rules.families_considered_main.join('、')}\n`;
     }
 
     box.textContent = txt.trim();
-  }catch(e){
+  } catch (e) {
     box.textContent = '生成摘要時發生錯誤：' + e.message;
   }
 }
