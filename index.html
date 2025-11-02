@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03b</span>
+      <span class="mono">｜v=2025-11-03c</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -251,8 +251,11 @@ window.addEventListener('DOMContentLoaded', ()=>{
   });
 });
 document.querySelector('label.file')?.addEventListener('click',(e)=>{
-  e.preventDefault();
-  if(!fileInput.disabled) fileInput.click();
+  if (fileInput.disabled) {
+    // 還沒勾同意就不要打開選檔
+    e.preventDefault();
+  }
+  // 勾同意後交給瀏覽器的原生行為觸發 file input
 });
 
 /* ====== DnD / 選檔 ====== */
@@ -458,7 +461,7 @@ fontBtn.addEventListener('click', async ()=>{
     addRow(
       'Cloud Run 字體字型檢查（字體佔比）',
       pass,
-      (parts + (topList?('<br/>'+topList):'')).replace(/</g,'&lt;'),
+      (parts + (topList?('<br/>'+topList):'')),
       pass ? '主要字體 coverage 達標（≥80%）' : '主要字體 coverage 未達 80%，請調整字體與字級。'
     );
 
@@ -511,8 +514,8 @@ function updateAiReadableSummary(){
     txt += `　新細明體（中文 12 級）：${fm(c.zh_main)}｜Times New Roman（英文 12pt）：${fm(c.en_main)}\n`;
     txt += j.fonts.main_pass
       ? '　✅ 主要字體覆蓋率達標。\n'
-      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
-
+      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
+    
     // 模式與背景說明
     const strict = !!j.fonts.strict_mode; // 嚴格:true；混合:false
     txt += `\n—— 本次檢測模式：${strict
