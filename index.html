@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03d</span>
+      <span class="mono">｜v=2025-11-03e</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -473,14 +473,16 @@ fontBtn.addEventListener('click', async ()=>{
     lastSummaryJSON.fonts = {
       main_pass: pass,
       coverage_main: {
-        zh_main: zh==null? null : zh/100,
-        en_main: en==null? null : en/100,
-        combined: combined==null? null : combined/100
-      },
-      top_fonts: (data?.top_fonts || []),
-      strict_mode: !!data?.strict_mode,       // 嚴格 or 混合
-      rules: data?.rules || null              // 後端回傳規則摘要
+        zh_main: zh==null ? null : zh/100,
+        en_main: en==null ? null : en/100,
+        combined: combined==null ? null : combined/100
+     },
+     top_fonts: (data?.top_fonts || []),
+     // 以目前前端勾選為主；後端有回傳也一併容錯
+     strict_mode: strictChecked || !!data?.strict_mode,
+     rules: data?.rules || null
     };
+
     lastSummaryJSON.file = lastSummaryJSON.file || { name:fileName||'(未命名)' };
     jsonPreviewEl.textContent = JSON.stringify(lastSummaryJSON, null, 2);
 
@@ -509,19 +511,19 @@ function updateAiReadableSummary(){
       return;
     }
 
-    const c  = j.fonts.coverage_main || {};
+    const c = j.fonts.coverage_main || {};
     const fm = v => (v == null ? '—' : (v * 100).toFixed(2) + '%');
+    const isStrict = !!j.fonts.strict_mode;   // ← 先決定模式
 
-    let txt  = '【字體字型檢查】\n';
+    let txt = '【字體字型檢查】\n';
     txt += `　主字體覆蓋率：${fm(c.combined)}（合格門檻：≥80%）\n`;
     txt += `　新細明體（中文 12 級）：${fm(c.zh_main)}｜Times New Roman（英文 12pt）：${fm(c.en_main)}\n`;
     txt += j.fonts.main_pass
       ? '　✅ 主要字體覆蓋率達標。\n'
-      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
-    
+      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
+
     // 模式與背景說明
-    const strict = !!j.fonts.strict_mode; // 嚴格:true；混合:false
-    txt += `\n—— 本次檢測模式：${strict
+    txt += `\n—— 本次檢測模式：${isStrict
       ? '嚴格模式（只認「新細明體」與「Times New Roman」）'
       : '混合模式（接受常見替代字族，避免各種轉檔造成的名稱差異誤判）'}\n`;
 
