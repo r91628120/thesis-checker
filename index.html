@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02h</span>
+      <span class="mono">｜v=2025-11-03b</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -111,13 +111,14 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
         <div class="row">
           <button id="start" class="primary" disabled>開始檢查（邊界：Server 優先）</button>
           <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+
           <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.5rem;font-size:13px">
-          <input type="radio" name="fontMode" id="modeMixed" value="mixed" checked>
-           混合模式（接受常見替代字族）
+            <input type="radio" name="fontMode" id="modeMixed" value="mixed" checked>
+            混合模式（接受常見替代字族）
           </label>
           <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.6rem;font-size:13px">
-          <input type="radio" name="fontMode" id="modeStrict" value="strict">
-           嚴格模式（只認新細明體／Times）
+            <input type="radio" name="fontMode" id="modeStrict" value="strict">
+            嚴格模式（只認新細明體／Times）
           </label>
 
           <details style="margin-top:8px; font-size:13px; color:#374151">
@@ -225,8 +226,7 @@ const gptBLink = document.getElementById('gptB');
 const extPanel = document.getElementById('extSearchPanel');
 const searchLinksEl = document.getElementById('searchLinks');
 const jsonPreviewEl = document.getElementById('jsonPreview');
-const aiSummaryBox = document.getElementById('aiSummaryReadable'); // AI 摘要容器
-// lastSummaryJSON 已在檔內其他處宣告： let arrayBuffer=null, fileName='', lastSummaryJSON=null;
+const aiSummaryBox = document.getElementById('aiSummaryReadable');
 
 let arrayBuffer=null, fileName='', lastSummaryJSON=null;
 
@@ -267,6 +267,9 @@ async function handleFile(f){
   arrayBuffer = await f.arrayBuffer();
   fileName = f.name;
   setEnabled(consent.checked);
+
+  // 每次選檔就 +1（解決人次卡住）
+  bumpCounterEveryTime();
 
   // 初始化外部檢索連結
   const baseTitle=(fileName||'小論文篇名').replace(/\.[^.]+$/,'');
@@ -469,8 +472,8 @@ fontBtn.addEventListener('click', async ()=>{
         combined: combined==null? null : combined/100
       },
       top_fonts: (data?.top_fonts || []),
-      strict_mode: !!data?.strict_mode,       // ← 新增：嚴格 or 混合
-      rules: data?.rules || null              // ← 新增：後端回傳規則摘要
+      strict_mode: !!data?.strict_mode,       // 嚴格 or 混合
+      rules: data?.rules || null              // 後端回傳規則摘要
     };
     lastSummaryJSON.file = lastSummaryJSON.file || { name:fileName||'(未命名)' };
     jsonPreviewEl.textContent = JSON.stringify(lastSummaryJSON, null, 2);
@@ -508,9 +511,9 @@ function updateAiReadableSummary(){
     txt += `　新細明體（中文 12 級）：${fm(c.zh_main)}｜Times New Roman（英文 12pt）：${fm(c.en_main)}\n`;
     txt += j.fonts.main_pass
       ? '　✅ 主要字體覆蓋率達標。\n'
-      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
+      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
 
-    // 模式與背景說明（你要求的「混合模式」解說）
+    // 模式與背景說明
     const strict = !!j.fonts.strict_mode; // 嚴格:true；混合:false
     txt += `\n—— 本次檢測模式：${strict
       ? '嚴格模式（只認「新細明體」與「Times New Roman」）'
