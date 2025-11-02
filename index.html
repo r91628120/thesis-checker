@@ -250,6 +250,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
   });
 });
+
 document.querySelector('label.file')?.addEventListener('click',(e)=>{
   if (fileInput.disabled) {
     // 還沒勾同意就不要打開選檔
@@ -257,6 +258,33 @@ document.querySelector('label.file')?.addEventListener('click',(e)=>{
   }
   // 勾同意後交給瀏覽器的原生行為觸發 file input
 });
+
+document.querySelector('label.file')?.addEventListener('click',(e)=>{
+  if (fileInput.disabled) {
+    e.preventDefault();
+  }
+  // 勾同意後交給瀏覽器的原生行為觸發 file input
+});
+
+// 讓「選擇檔案」一定能打得開（同意前則阻擋並提示）
+const fileLabel = document.querySelector('label.file');
+if (fileLabel) {
+  fileLabel.addEventListener('click', (e) => {
+    if (!consent.checked) {
+      e.preventDefault();
+      statusEl.textContent = '請先勾選同意。';
+      return;
+    }
+    fileInput.removeAttribute('disabled');
+    setTimeout(() => fileInput.click(), 0);
+  });
+}
+
+// 也讓整個拖拉區（drop）可點開檔案（同意後）
+drop.addEventListener('click', () => {
+  if (consent.checked && !fileInput.disabled) fileInput.click();
+});
+
 
 /* ====== DnD / 選檔 ====== */
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(!fileInput.disabled)drop.classList.add('drag');}));
@@ -520,7 +548,7 @@ function updateAiReadableSummary(){
     txt += `　新細明體（中文 12 級）：${fm(c.zh_main)}｜Times New Roman（英文 12pt）：${fm(c.en_main)}\n`;
     txt += j.fonts.main_pass
       ? '　✅ 主要字體覆蓋率達標。\n'
-      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n`;
+      : '　❌ 未通過。請在 Word 全選文字後，設定「中文：新細明體」「英文：Times New Roman」並重匯 PDF。\n';
 
     // 模式與背景說明
     txt += `\n—— 本次檢測模式：${isStrict
