@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02f</span>
+      <span class="mono">｜v=2025-11-02g</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -466,7 +466,7 @@ fontBtn.addEventListener('click', async ()=>{
         en_main: en==null? null : en/100,
         combined: combined==null? null : combined/100
       },
-      top_fonts: (data?.top_fonts || [])
+      top_fonts: (data?.top_fonts || []),
       strict_mode: !!data?.strict_mode,       // ← 新增：嚴格 or 混合
       rules: data?.rules || null              // ← 新增：後端回傳規則摘要
     };
