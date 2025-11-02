@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-02i</span>
+      <span class="mono">｜v=2025-11-02j</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -566,20 +566,37 @@ function updateAiReadableSummary(){
 
 /* ====== 外部檢索助手 ====== */
 function buildExternalSearchEvidence(baseTitle){
-  const t=(baseTitle||'小論文篇名').trim(), mk=s=>encodeURIComponent(s);
-  const items=[
-    {label:'Google Scholar（繁中）',href:`https://scholar.google.com/scholar?hl=zh-TW&q=${mk(t)}`,q:`${t}`},
-    {label:'Google：題名 + 小論文 得獎',href:`https://www.google.com/search?q=${mk(t+' 小論文 得獎')}`,q:`${t} 小論文 得獎`},
-    {label:'Google：題名 + 專題製作 比賽 歷屆 作品',href:`https://www.google.com/search?q=${mk(t+' 專題製作 比賽 歷屆 作品')}`,q:`${t} 專題製作 比賽 歷屆 作品`},
-    {label:'Google：題名 + site:shs.edu.tw',href:`https://www.google.com/search?q=${mk(t+' site:shs.edu.tw')}`,q:`${t} site:shs.edu.tw`},
-    {label:'Google：題名 + site:edu.tw 小論文',href:`https://www.google.com/search?q=${mk(t+' site:edu.tw 小論文')}`,q:`${t} site:edu.tw 小論文`}
+  const t = (baseTitle || '小論文篇名').trim(), mk = s => encodeURIComponent(s);
+  const items = [
+    {label:'Google Scholar（繁中）', href:`https://scholar.google.com/scholar?hl=zh-TW&q=${mk(t)}`, q:`${t}`},
+    {label:'Google：題名 + 小論文 得獎', href:`https://www.google.com/search?q=${mk(t+' 小論文 得獎')}`, q:`${t} 小論文 得獎`},
+    {label:'Google：題名 + 專題製作 比賽 歷屆 作品', href:`https://www.google.com/search?q=${mk(t+' 專題製作 比賽 歷屆 作品')}`, q:`${t} 專題製作 比賽 歷屆 作品`},
+    {label:'Google：題名 + site:shs.edu.tw', href:`https://www.google.com/search?q=${mk(t+' site:shs.edu.tw')}`, q:`${t} site:shs.edu.tw`},
+    {label:'Google：題名 + site:edu.tw 小論文', href:`https://www.google.com/search?q=${mk(t+' site:edu.tw 小論文')}`, q:`${t} site:edu.tw 小論文`}
   ];
-  searchLinksEl.innerHTML = items.map((it,i)=>`<li class="mono">#${i+1} <a data-extlink href="${it.href}" target="_blank" rel="noopener">${it.q}</a></li>`).join('');
-  document.getElementById('btnOpenAllSearch')?.addEventListener('click',()=>{document.querySelectorAll('a[data-extlink]').forEach(a=>window.open(a.href,'_blank','noopener'));});
-  document.getElementById('btnCopyGptPrompt')?.addEventListener('click',async()=>{
-    const qsEls=document.querySelectorAll('a[data-extlink]'); const qs=[...qsEls].map((a,i)=>`(${i+1}) ${a.textContent} -> ${a.href}`).join('\n');
-    const summary=(typeof lastSummaryJSON==='object'&&lastSummaryJSON)?JSON.stringify(lastSummaryJSON,null,2):(jsonPreviewEl?.textContent||'');
-    const prompt=`請協助進行「校外發表／得獎」外部檢索確認：
+  searchLinksEl.innerHTML = items.map((it,i)=>
+    `<li class="mono">#${i+1} <a data-extlink href="${it.href}" target="_blank" rel="noopener">${it.q}</a></li>`
+  ).join('');
+
+  // 改成 onclick（覆蓋舊 handler），避免重複綁定
+  const openBtn = document.getElementById('btnOpenAllSearch');
+  if (openBtn) {
+    openBtn.onclick = () => {
+      document.querySelectorAll('a[data-extlink]').forEach(a =>
+        window.open(a.href, '_blank', 'noopener')
+      );
+    };
+  }
+
+  const copyBtn = document.getElementById('btnCopyGptPrompt');
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      const qsEls = document.querySelectorAll('a[data-extlink]');
+      const qs = [...qsEls].map((a,i)=>`(${i+1}) ${a.textContent} -> ${a.href}`).join('\n');
+      const summary = (typeof lastSummaryJSON==='object' && lastSummaryJSON)
+        ? JSON.stringify(lastSummaryJSON,null,2)
+        : (jsonPreviewEl?.textContent || '');
+      const prompt = `請協助進行「校外發表／得獎」外部檢索確認：
 題名/檔名：${t}
 
 請到以下來源檢索並彙整前 10 筆結果（標題、來源、年份、連結），同時判斷是否疑似相同題名之公開發表或得獎紀錄：
@@ -590,12 +607,18 @@ function buildExternalSearchEvidence(baseTitle){
 請用表格＋條列輸出；最後給「是否查到疑似相同題名」結論與理由，並附上實際使用的查詢字串清單。
 
 （附：本次檢查摘要 JSON）
-${summary||'(若空白可忽略)'}
+${summary || '(若空白可忽略)'}
 
 （查詢字串與連結預覽）
 ${qs}`;
-    try{await navigator.clipboard.writeText(prompt);alert('已複製查核提示，請點「AI 小助手（GPT A）」並貼上。');}catch{alert('無法存取剪貼簿，請手動複製。');}
-  });
+      try {
+        await navigator.clipboard.writeText(prompt);
+        alert('已複製查核提示，請點「AI 小助手（GPT A）」並貼上。');
+      } catch {
+        alert('無法存取剪貼簿，請手動複製。');
+      }
+    };
+  }
 }
 
 /* ====== 下載結果（簡版） ====== */
