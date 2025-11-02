@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03c</span>
+      <span class="mono">｜v=2025-11-03d</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -411,6 +411,9 @@ fontBtn.addEventListener('click', async ()=>{
   // 讀取模式（嚴格／混合）→ 後端用 strict=1/0
   const strict = document.getElementById('modeStrict')?.checked ? '1' : '0';
   const url = FONT_API + '?strict=' + strict + '&v=' + Date.now();
+  // 讀取當下模式
+  const strictChecked = document.getElementById('modeStrict')?.checked;
+  const modeLabel = strictChecked ? '嚴格模式' : '混合模式';
 
   statusEl.textContent = '上傳至 Cloud Run 檢查中…';
   try{
@@ -458,12 +461,12 @@ fontBtn.addEventListener('click', async ()=>{
         .map(r=>`• ${r.family} ${r.size}pt：${(+r.percent||0).toFixed(2)}%`).join('<br/>');
     }
 
-    addRow(
-      'Cloud Run 字體字型檢查（字體佔比）',
-      pass,
-      (parts + (topList?('<br/>'+topList):'')),
-      pass ? '主要字體 coverage 達標（≥80%）' : '主要字體 coverage 未達 80%，請調整字體與字級。'
-    );
+    // 原本：addRow('Cloud Run 字體字型檢查（字體佔比）', pass, parts + topListHtml, ...)
+    addRow(`Cloud Run 字體字型檢查（字體佔比｜${modeLabel}）`,
+           pass,
+           parts + (topList ? ('<br/>' + topList) : ''),
+           pass ? '主要字體 coverage 達標（≥80%）' : '主要字體 coverage 未達 80%，請調整字體與字級。');
+           const partsWithMode = `${parts}｜<span class="mono">（模式：${modeLabel}）</span>`;
 
     // 摘要 JSON（字體部份）— 允許 null，AI 摘要會顯示「—」
     lastSummaryJSON = lastSummaryJSON || {};
