@@ -66,7 +66,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03f</span>
+      <span class="mono">｜v=2025-11-03g</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
@@ -249,21 +249,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       fontBtn.disabled  = false;
     }
   });
-});
-
-document.querySelector('label.file')?.addEventListener('click',(e)=>{
-  if (fileInput.disabled) {
-    // 還沒勾同意就不要打開選檔
-    e.preventDefault();
-  }
-  // 勾同意後交給瀏覽器的原生行為觸發 file input
-});
-
-document.querySelector('label.file')?.addEventListener('click',(e)=>{
-  if (fileInput.disabled) {
-    e.preventDefault();
-  }
-  // 勾同意後交給瀏覽器的原生行為觸發 file input
 });
 
 // 讓「選擇檔案」一定能打得開（同意前則阻擋並提示）
