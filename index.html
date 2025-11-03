@@ -66,10 +66,29 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2025-11-03a</span>
+      <span class="mono">｜v=2025-11-04a</span>
       ｜© 2025 CTVS 凡事皆正面
     </p>
   </header>
+
+<!-- 正式版聲明與版本資訊 -->
+<section class="card" id="release-note">
+  <h3 style="margin-top:0;">📢 正式版聲明</h3>
+  <p style="margin:6px 0 10px; line-height:1.6;">
+    本系統為「高中職小論文格式自檢系統」正式對外示範版，提供教師與學生於校內教學、自我檢核使用，檢查結果僅供參考，仍需承辦單位或指導老師覆核。
+  </p>
+  <ul style="margin:0 0 10px 18px; line-height:1.5; color:#374151;">
+    <li>前端檔案載入後於瀏覽器內記憶體運算，完成即釋放，不另行保存。</li>
+    <li>若使用「字體字型進階檢查」或「邊界 Cloud Run 檢查」等雲端服務，將僅把當次 PDF 送往後端服務進行分析，作為版面判讀之用。</li>
+    <li>請勿上傳含校名、姓名、班級等個資之檔案。</li>
+  </ul>
+  <p class="hint" style="margin:4px 0 0;">
+    版本資訊：<b>v=2025-11-03</b>（與頁尾一致）｜若看到舊版畫面，請重新整理或在網址後加 <code>?v=2025-11-03</code>
+  </p>
+  <p style="margin:6px 0 0; font-size:13px;">
+    🔒 <a href="#privacy" style="color:#2563eb; text-decoration:none;">查看本站「隱私說明」</a> ｜ 🤖 <a href="#gpt-privacy" style="color:#c2185b; text-decoration:none;">查看「GPT 的隱私說明」</a>
+  </p>
+</section>
 
   <!-- Step 1 -->
   <section class="card">
@@ -186,7 +205,49 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <footer>© 2025 CTVS 凡事皆正面 · v=2025-11-03</footer>
+<!-- 隱私說明 -->
+<section class="card" id="privacy">
+  <h3 style="margin-top:0;">🔒 隱私說明（本站）</h3>
+  <p class="hint" style="margin:0 0 8px;">本段說明本網頁（前端介面與雲端檢查 Cloud Run）對上傳檔案的處理方式。</p>
+  <ol style="margin:0 0 10px 18px; line-height:1.6; color:#111827;">
+    <li><b>前端運算：</b>一般格式檢查（頁數、邊界、字體、字型等）均在使用者的瀏覽器記憶體中完成，檔案不會自動上傳至本 GitHub Pages／Hosting 伺服器，當頁面關閉或重新整理後即自動釋放記憶體，不留任何紀錄。</li>
+    <li><b>請勿含個資：</b>建議僅使用不含學校名稱、學生姓名、班級、學號等個人或單位識別資訊的檔案，以避免於外部比賽、公開發表或第三方平台操作時產生個資疑慮。</li>
+    <li><b>雲端檢查例外：</b>若你主動按下「字體字型進階檢查」或「邊界：Server 優先」這類需要送往 <code>*Google Cloud.run.app</code> 的服務，系統會於當次請求中將 PDF 傳至 Google Cloud Run API 進行分析，分析結束後依程式設定即刪除暫存檔，不進行長期保存。</li>
+    <li><b>教學用途：</b>本工具為教學與自我檢核之輔助系統，檢查結果僅供參考；若需正式送交比賽或校外單位，仍應由指導老師或承辦單位最終覆核確認格式與內容是否合規。</li>
+  </ol>
+  <p class="hint" style="margin:6px 0 0;">
+    ⚠️ 重要公告：本自檢工具不會保存您的檔案。若要使用 AI／GPT 小助理功能，請務必閱讀
+    <a href="#gpt-privacy" style="color:#c2185b; text-decoration:none;">🤖 GPT 的隱私說明</a>，
+    以充分了解 AI 助理的資料處理方式與重要注意事項。
+  </p>
+</section>
+
+<!-- GPT 的隱私說明 -->
+<section class="card" id="gpt-privacy" style="border-color:#f9a8d4;">
+  <h3 style="margin-top:0; color:#be185d;">🤖 GPT 的隱私說明</h3>
+  <p style="margin:0 0 10px; line-height:1.6;">
+    使用者請注意：當你「點右上或中間的 GPT / AI 小助手連結」離開本頁時，接下來的檔案處理就不在本網站控制範圍內，而是依照 OpenAI / GPT 平台各自的使用條款與隱私權政策。
+  </p>
+  <ol style="margin:0 0 10px 18px; line-height:1.6; color:#111827;">
+    <li><b>主動上傳行為：</b>按「單獨 GPT 檢查 PDF（GPT B）」或「AI 小助手（GPT A）」等按鈕，是由使用者本人把 PDF 或檢查結果貼到 GPT 平台，而不是本網站自動幫你上傳。</li>
+    <li><b>GPT 暫存即刪：</b>目前 GPT 系統已設定在完成這次分析後，即刪除本次請求用的 PDF 暫存檔，不做長期留存，以保障使用者檔案安全。</li>
+    <li><b>適用他方政策：</b>上傳到 GPT 後，檔案與對話內容會依該平台的隱私權政策、資料保留政策、模型訓練政策處理，本網站無法得知也無法刪除。</li>
+    <li><b>請先去識別：</b>若是比賽用、校內審查用的 PDF，建議在送到 GPT 前，先刪掉「學校名稱、學生姓名、班級、指導老師、聯絡電話、地址」等欄位，再上傳。</li>
+    <li><b>JSON 給 GPT 的情境：</b>當你按「複製查核提示（給 AI 小助手）」時，只是把本次的檢查 JSON 與題名複製起來，等你貼到 GPT 才真的送出去，這一段也被視為你個人對外貼文。</li>
+    <li><b>老師宣導建議：</b>建議向學生說明：「本頁進行的檢查與 GPT 進行的檢查屬於兩個獨立階段」。前一階段（本頁＋雲端後端）不會保存任何檔案；後一階段（GPT）雖具暫存即刪機制，但仍依 GPT 平台之隱私與資料政策運作。</li>
+  </ol>
+  <p class="hint" style="margin:6px 0 0;">
+    ⚠️ 重要公告：<br>
+    <code>「本系統不保存你的 PDF；GPT 系統分析完畢後即刪除暫存檔，不做長期留存。」</code>
+  </p>
+</section>
+ 
+<footer style="text-align:center; color:#6b7280; font-size:13px; margin-top:24px;">
+  © 2025 CTVS 凡事皆正面 · v=2025-11-03 ｜ 
+  <a href="#privacy" style="color:#2563eb; text-decoration:none;">隱私說明</a> ｜ 
+  <a href="#gpt-privacy" style="color:#c2185b; text-decoration:none;">GPT 隱私說明</a>
+</footer>
+
 </div>
 
 <script>
