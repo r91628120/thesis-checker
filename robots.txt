@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://r91628120.github.io/thesis-checker/sitemap.xml
