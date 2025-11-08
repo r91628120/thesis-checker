@@ -1,11 +1,12 @@
 ---
 layout: default
 title: 部落格
+permalink: /blog/
 ---
 
 <header style="margin-bottom: 2rem;">
   <h1>部落格文章列表</h1>
-  <p>記錄這個「高中職小論文格式自檢系統」的開發、教學應用、還有 AI 實作心得。</p>
+  <p>記錄「高中職小論文格式自檢系統」的開發、教學應用與 AI 實作心得。</p>
   <nav style="margin-top: 1rem;">
     <a href="{{ "/" | relative_url }}">回首頁</a> |
     <a href="{{ "/thesis-checker/" | relative_url }}">系統頁面</a>
@@ -38,12 +39,10 @@ title: 部落格
       {% endfor %}
     </ul>
   {% else %}
-    <p>目前還沒有文章，先去 <code>_posts/</code> 放一篇吧！</p>
+    <p>目前還沒有文章，先到 <code>_posts/</code> 放一篇吧！</p>
   {% endif %}
 </section>
 
 <footer style="margin-top: 3rem; font-size: .85rem; color: #888;">
   高中職小論文格式自檢系統 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
 </footer>
-
-
