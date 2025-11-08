@@ -35,13 +35,53 @@ permalink: /blog/
     padding: 3.5rem 1.25rem 2.5rem 1.25rem;
   }
 
+  /* 導覽列樣式 */
   .blog-nav a {
     margin-right: 1rem;
     text-decoration: none;
     color: #2563eb;
+    font-weight: 500;
   }
   .blog-nav a:hover {
     text-decoration: underline;
+  }
+
+  /* 文章列表內文標題縮小設定 */
+  h2 {
+    font-size: 1.35rem;
+    line-height: 1.4;
+  }
+
+  /* 單篇文章頁的主標題縮小 */
+  h1.post-title, article h1, .post h1, header h1 {
+    font-size: 1.8rem;     /* 原本太大，改為適中 */
+    line-height: 1.3;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 1rem;
+  }
+
+  /* 手機響應：標題再小一點 */
+  @media (max-width: 768px) {
+    h1.post-title, article h1, .post h1, header h1 {
+      font-size: 1.5rem;
+    }
+    h2 {
+      font-size: 1.15rem;
+    }
+  }
+
+  /* 文章列表樣式微調 */
+  li {
+    list-style: none;
+  }
+
+  ul {
+    padding-left: 0;
+  }
+
+  p {
+    line-height: 1.6;
   }
 </style>
 
@@ -61,11 +101,11 @@ permalink: /blog/
 
   <section>
     {% if site.posts and site.posts.size > 0 %}
-      <ul style="list-style: none; padding: 0;">
+      <ul>
         {% for post in site.posts %}
           <li style="margin-bottom: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 1.2rem;">
-            <h2 style="margin: 0;">
-              <a href="{{ post.url | relative_url }}" style="text-decoration: none;">
+            <h2>
+              <a href="{{ post.url | relative_url }}" style="text-decoration: none; color: #111;">
                 {{ post.title }}
               </a>
             </h2>
@@ -90,6 +130,6 @@ permalink: /blog/
   </section>
 
   <footer style="margin-top: 3rem; font-size: .85rem; color: #888;">
-    高中職小論文格式自檢系統 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
+    國立佳冬高農 農場經營科 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
   </footer>
 </div>
