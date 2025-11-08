@@ -1,5 +1,5 @@
 theme: minima
-title: 高中職小論文格式自檢系統
+title: AI 教育創新專案
 description: 阿澤老師 × ChatGPT 的 AI 教育創新專案
 plugins:
   - jekyll-feed
@@ -9,4 +9,5 @@ minima:
   skin: classic
   custom_css:
     - /assets/css/style.css
+
 
