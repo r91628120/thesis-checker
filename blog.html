@@ -4,46 +4,92 @@ title: 部落格
 permalink: /blog/
 ---
 
-<header style="margin-bottom: 2rem;">
-  <h1>部落格文章列表</h1>
-  <p>記錄「高中職小論文格式自檢系統」的開發、教學應用與 AI 實作心得。</p>
-  <nav style="margin-top: 1rem;">
-    <a href="https://r91628120.github.io/thesis-checker/blog.html">部落格</a>
-  <a href="https://r91628120.github.io/thesis-checker/">小論文格式自檢系統頁面</a>
-  </nav>
-</header>
+<style>
+  /* 左上角固定的返回首頁按鈕 */
+  .home-link {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    color: #111;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    z-index: 999;
+    font-weight: 500;
+  }
+  .home-link:hover {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
 
-<section>
-  {% if site.posts and site.posts.size > 0 %}
-    <ul style="list-style: none; padding: 0;">
-      {% for post in site.posts %}
-        <li style="margin-bottom: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 1.2rem;">
-          <h2 style="margin: 0;">
-            <a href="{{ post.url | relative_url }}" style="text-decoration: none;">
-              {{ post.title }}
-            </a>
-          </h2>
-          <p style="color: #666; font-size: 0.9rem; margin: .3rem 0 .6rem 0;">
-            {{ post.date | date: "%Y-%m-%d" }}
-            {% if post.categories and post.categories.size > 0 %}
-              · 分類：
-              {% for cat in post.categories %}
-                <span>{{ cat }}</span>{% unless forloop.last %}, {% endunless %}
-              {% endfor %}
+  /* 讓上面的固定按鈕不要擋到內容 */
+  .blog-page-wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 2.5rem 1.25rem;
+  }
+
+  .blog-nav a {
+    margin-right: 1rem;
+    text-decoration: none;
+    color: #2563eb;
+  }
+  .blog-nav a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<a href="https://r91628120.github.io/thesis-checker/" class="home-link">
+  🏠 返回系統首頁
+</a>
+
+<div class="blog-page-wrap">
+  <header style="margin-bottom: 2rem;">
+    <h1>部落格文章列表</h1>
+    <p>記錄「高中職小論文格式自檢系統」的開發、教學應用與 AI 實作心得。</p>
+    <nav class="blog-nav" style="margin-top: 1rem;">
+      <a href="https://r91628120.github.io/thesis-checker/blog.html">部落格</a>
+      <a href="https://r91628120.github.io/thesis-checker/">小論文格式自檢系統頁面</a>
+    </nav>
+  </header>
+
+  <section>
+    {% if site.posts and site.posts.size > 0 %}
+      <ul style="list-style: none; padding: 0;">
+        {% for post in site.posts %}
+          <li style="margin-bottom: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 1.2rem;">
+            <h2 style="margin: 0;">
+              <a href="{{ post.url | relative_url }}" style="text-decoration: none;">
+                {{ post.title }}
+              </a>
+            </h2>
+            <p style="color: #666; font-size: 0.9rem; margin: .3rem 0 .6rem 0;">
+              {{ post.date | date: "%Y-%m-%d" }}
+              {% if post.categories and post.categories.size > 0 %}
+                · 分類：
+                {% for cat in post.categories %}
+                  <span>{{ cat }}</span>{% unless forloop.last %}, {% endunless %}
+                {% endfor %}
+              {% endif %}
+            </p>
+            {% if post.excerpt %}
+              <p style="margin: 0;">{{ post.excerpt | strip_html | truncate: 140 }}</p>
             {% endif %}
-          </p>
-          {% if post.excerpt %}
-            <p style="margin: 0;">{{ post.excerpt | strip_html | truncate: 140 }}</p>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>目前還沒有文章，先到 <code>_posts/</code> 放一篇吧！</p>
-  {% endif %}
-</section>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>目前還沒有文章，先到 <code>_posts/</code> 放一篇吧！</p>
+    {% endif %}
+  </section>
 
-<footer style="margin-top: 3rem; font-size: .85rem; color: #888;">
-  高中職小論文格式自檢系統 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
-</footer>
-
+  <footer style="margin-top: 3rem; font-size: .85rem; color: #888;">
+    高中職小論文格式自檢系統 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
+  </footer>
+</div>
