@@ -3,13 +3,47 @@ layout: default
 title: 部落格
 ---
 
-<h1>部落格文章列表</h1>
-<ul>
-  {% for post in site.posts %}
-    <li>
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-      <small>（{{ post.date | date: "%Y-%m-%d" }}）</small>
-    </li>
-  {% endfor %}
-</ul>
+<header style="margin-bottom: 2rem;">
+  <h1>部落格文章列表</h1>
+  <p>記錄這個「高中職小論文格式自檢系統」的開發、教學應用、還有 AI 實作心得。</p>
+  <nav style="margin-top: 1rem;">
+    <a href="{{ "/" | relative_url }}">回首頁</a> |
+    <a href="{{ "/thesis-checker/" | relative_url }}">系統頁面</a>
+  </nav>
+</header>
+
+<section>
+  {% if site.posts and site.posts.size > 0 %}
+    <ul style="list-style: none; padding: 0;">
+      {% for post in site.posts %}
+        <li style="margin-bottom: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 1.2rem;">
+          <h2 style="margin: 0;">
+            <a href="{{ post.url | relative_url }}" style="text-decoration: none;">
+              {{ post.title }}
+            </a>
+          </h2>
+          <p style="color: #666; font-size: 0.9rem; margin: .3rem 0 .6rem 0;">
+            {{ post.date | date: "%Y-%m-%d" }}
+            {% if post.categories and post.categories.size > 0 %}
+              · 分類：
+              {% for cat in post.categories %}
+                <span>{{ cat }}</span>{% unless forloop.last %}, {% endunless %}
+              {% endfor %}
+            {% endif %}
+          </p>
+          {% if post.excerpt %}
+            <p style="margin: 0;">{{ post.excerpt | strip_html | truncate: 140 }}</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>目前還沒有文章，先去 <code>_posts/</code> 放一篇吧！</p>
+  {% endif %}
+</section>
+
+<footer style="margin-top: 3rem; font-size: .85rem; color: #888;">
+  高中職小論文格式自檢系統 · 阿澤老師 × ChatGPT 的 AI 教育創新專案
+</footer>
+
 
