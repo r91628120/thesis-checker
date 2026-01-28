@@ -82,6 +82,47 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
   border-color: #2563eb;
 }
 
+/* ✅ Step2：執行檢查分區塊排版 */
+.action-group{
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.action-group h4{
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.font-modes{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 10px 0 6px;
+  font-size: 13px;
+}
+
+.font-help summary,
+.ai-help summary{
+  cursor: pointer;
+}
+
+.ai-buttons{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-group.primary button{
+  width: 100%;
+}
+
+.action-group.danger{
+  display: flex;
+  justify-content: flex-end;
+}
 
 </style>
 
@@ -195,72 +236,95 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     </div>
   </section>
 
-  <!-- Step 2 -->
-  <section class="card">
-    <div class="step">
-      <div class="no">2</div>
-      <div>
-        <h3 style="margin:4px 0 8px">執行檢查</h3>
-        <div class="row">
-          <button id="start" class="primary" disabled>開始檢查（邊界：Server 優先）</button>
-          <button id="fontCheckBtn" disabled>字體字型進階檢查（Cloud Run）</button>
+      <!-- ✅ Step 2｜重新排版（分區塊） -->
+<div class="action-group primary">
+  <button id="start" class="primary" disabled>
+    開始檢查（邊界：Server 優先）
+  </button>
+</div>
 
-          <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.5rem;font-size:13px">
-            <input type="radio" name="fontMode" id="modeMixed" value="mixed" checked>
-            混合模式（接受常見替代字族）
-          </label>
-          <label style="display:inline-flex;align-items:center;gap:.35rem;margin-left:.6rem;font-size:13px">
-            <input type="radio" name="fontMode" id="modeStrict" value="strict">
-            嚴格模式（只認新細明體／Times）
-          </label>
+<div class="action-group font">
+  <h4>🔤 字體字型進階檢查（選用）</h4>
 
-          <details style="margin-top:8px; font-size:13px; color:#374151">
-            <summary>什麼是「混合模式」？（點我展開說明）</summary>
-            <div style="padding:8px 0 0 2px; line-height:1.7">
-               <b>目的：</b>考量各校/各軟體把 Word 轉成 PDF 後，字體名稱可能被替換（但視覺上仍等價）。
-               「混合模式」除正式規範字族外，<u>也接受常見替代字族</u>，避免因工具差異而誤判。<br/>
-               <b>三種最常見的 Word→PDF 產生型態</b>（僅摘要；完整脈絡會顯示在 AI 摘要中）：
-               <ol style="margin:6px 0 0 18px">
-                 <li><b>另存新檔 → PDF</b>：通常已嵌字，西文字族常見 <code>Times New Roman / Cambria</code> 等。</li>
-                 <li><b>印表機 → Microsoft Print to PDF</b>：有時用 <code>Microsoft JhengHei</code> 代替中文明體。</li>
-                 <li><b>雲端/WPS/Google</b>：常見 <code>Cambria / Arial / HeiseiMin / MSung</code> 等等。</li>
-               </ol>
-               <b>判定邏輯：</b>混合模式會把上述等價族群納入「主字體 coverage」；<b>嚴格模式</b>只認
-                「<code>新細明體（PMingLiU 系）</code>＋<code>Times New Roman</code>」兩大族。
-            </div>
-          </details>
+  <button id="fontCheckBtn" disabled>
+    字體字型進階檢查（Cloud Run）
+  </button>
 
-          <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
-             href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-lao-shi-zhu-shou-gpt-dan-du-pdf-mo-shi">檢查完整小論文格式 PDF（GPT B）</a>
-          <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
-             href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">外部檢索助手（GPT A）</a>
-          <details style="margin-top:10px; font-size:13px; color:#374151; max-width:720px">
-            <summary style="cursor:pointer; font-weight:600;">
-             ❔ 請依使用目的選擇功能（GPT A / GPT B 說明）
-            </summary>
+  <div class="font-modes">
+    <label>
+      <input type="radio" name="fontMode" id="modeMixed" value="mixed" checked>
+      混合模式（接受常見替代字族）
+    </label>
 
-            <div style="margin-top:8px; line-height:1.7;">
-              <p><b>🔹 外部檢索助手（GPT A）</b><br>
-              適合「協助擴大搜尋全台小論文題目，判斷是否與您的研究主題有相似題目」。<br>
-              👉 本功能<b>不直接讀取 PDF</b>，而是將「本系統檢查結果第 4 項【外部檢索助手】所產生之檢查摘要 JSON」提供給 外部檢索助手（GPT A），
-              由 AI 協助進行全台小論文題目之廣泛比對與主題相似性搜尋，作為研究方向與題目檢核之參考。
-              </p>
+    <label>
+      <input type="radio" name="fontMode" id="modeStrict" value="strict">
+      嚴格模式（只認新細明體／Times）
+    </label>
+  </div>
 
-            <p><b>🔹 檢查完整小論文格式 PDF（GPT B）</b><br>
-            適合「直接將 PDF 檔案交由 GPT 進行整體內容分析」。<br>
-            👉 本功能屬於外部 AI 工具，與本頁小論文格式檢查流程<b>相互獨立</b>。
-            </p>
+  <details class="font-help">
+    <summary>什麼是「混合模式」？（點我展開說明）</summary>
+    <div style="padding:8px 0 0 2px; line-height:1.7">
+      <b>目的：</b>考量各校/各軟體把 Word 轉成 PDF 後，字體名稱可能被替換（但視覺上仍等價）。
+      「混合模式」除正式規範字族外，<u>也接受常見替代字族</u>，避免因工具差異而誤判。<br/>
+      <b>三種最常見的 Word→PDF 產生型態</b>（僅摘要；完整脈絡會顯示在 AI 摘要中）：
+      <ol style="margin:6px 0 0 18px">
+        <li><b>另存新檔 → PDF</b>：通常已嵌字，西文字族常見 <code>Times New Roman / Cambria</code> 等。</li>
+        <li><b>印表機 → Microsoft Print to PDF</b>：有時用 <code>Microsoft JhengHei</code> 代替中文明體。</li>
+        <li><b>雲端/WPS/Google</b>：常見 <code>Cambria / Arial / HeiseiMin / MSung</code> 等等。</li>
+      </ol>
+      <b>判定邏輯：</b>混合模式會把上述等價族群納入「主字體 coverage」；<b>嚴格模式</b>只認
+      「<code>新細明體（PMingLiU 系）</code>＋<code>Times New Roman</code>」兩大族。
+    </div>
+  </details>
+</div>
 
-            <p style="margin-top:6px;">
-               📌 <b>建議使用流程：</b><br>
-              先使用本系統完成小論文格式檢查 → 再視需要使用 <b>外部檢索助手（GPT A）</b>
-              協助進行題目相似性之延伸檢索。
-            </p>
-           </div>
-          </details>
-   
-          <button id="clearTop" class="danger">清除</button>
-        </div>
+<div class="action-group ai">
+  <h4>🤖 AI 延伸工具</h4>
+
+  <div class="ai-buttons">
+    <a id="gptB" class="btn-gpt" target="_blank" rel="noopener"
+       href="https://chatgpt.com/g/g-68f77bc5d4008191802b3e5984de6f72-gao-zhong-zhi-xiao-lun-wen-lao-shi-zhu-shou-gpt-dan-du-pdf-mo-shi">
+      檢查完整小論文格式 PDF（GPT B）
+    </a>
+
+    <a id="gptA" class="btn-violet" target="_blank" rel="noopener"
+       href="https://chatgpt.com/g/g-68c6d9e700c88191872154808e0e0e7b-gao-zhong-zhi-xiao-lun-wen-ge-shi-zi-jian-xi-tong">
+      外部檢索助手（GPT A）
+    </a>
+  </div>
+
+  <!-- ✅ 你原本的 GPT A / GPT B 說明整段可以原封不動放這裡 -->
+  <details class="ai-help" style="margin-top:10px; font-size:13px; color:#374151; max-width:720px">
+    <summary style="cursor:pointer; font-weight:600;">
+      ❔ 請依使用目的選擇功能（GPT A / GPT B 說明）
+    </summary>
+    <div style="margin-top:8px; line-height:1.7;">
+      <p><b>🔹 外部檢索助手（GPT A）</b><br>
+        適合「協助擴大搜尋全台小論文題目，判斷是否與您的研究主題有相似題目」。<br>
+        👉 本功能<b>不直接讀取 PDF</b>，而是將「本系統檢查結果第 4 項【外部檢索助手】所產生之檢查摘要 JSON」提供給 外部檢索助手（GPT A），
+        由 AI 協助進行全台小論文題目之廣泛比對與主題相似性搜尋，作為研究方向與題目檢核之參考。
+      </p>
+
+      <p><b>🔹 檢查完整小論文格式 PDF（GPT B）</b><br>
+        適合「直接將 PDF 檔案交由 GPT 進行整體內容分析」。<br>
+        👉 本功能屬於外部 AI 工具，與本頁小論文格式檢查流程<b>相互獨立</b>。
+      </p>
+
+      <p style="margin-top:6px;">
+        📌 <b>建議使用流程：</b><br>
+        先使用本系統完成小論文格式檢查 → 再視需要使用 <b>外部檢索助手（GPT A）</b>
+        協助進行題目相似性之延伸檢索。
+      </p>
+    </div>
+  </details>
+</div>
+
+<div class="action-group danger">
+  <button id="clearTop" class="danger">清除</button>
+</div>
+
+
         <p class="hint">🔎 含「小論文評分表」之頁將被<strong>完整略過</strong>：不納入全文、頁數、頁碼與邊界等任何檢查。</p>
       </div>
     </div>
