@@ -1,15 +1,50 @@
-.hero{
-  border-radius:24px;
-  /* ✅ 先放圖，再疊官方漸層，文字更清楚 */
-  background:
-    linear-gradient(135deg, rgba(11,43,82,.92), rgba(10,58,107,.90)),
-    url("./assets/hero-bg.svg");
-  background-size: cover;
-  background-position: center;
-  box-shadow:0 22px 55px rgba(11,43,82,.22);
-  color:#fff;
-  overflow:hidden;
-  position:relative;
-  border:1px solid rgba(255,255,255,.14);
-}
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="760" viewBox="0 0 1920 760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b2b52"/>
+      <stop offset="60%" stop-color="#0a3a6b"/>
+      <stop offset="100%" stop-color="#09406f"/>
+    </linearGradient>
 
+    <radialGradient id="glow1" cx="20%" cy="15%" r="60%">
+      <stop offset="0%" stop-color="#18b6b6" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#18b6b6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#18b6b6" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow2" cx="85%" cy="20%" r="65%">
+      <stop offset="0%" stop-color="#3ce6d2" stop-opacity="0.25"/>
+      <stop offset="70%" stop-color="#3ce6d2" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#3ce6d2" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow3" cx="60%" cy="95%" r="75%">
+      <stop offset="0%" stop-color="#f8cc5c" stop-opacity="0.18"/>
+      <stop offset="70%" stop-color="#f8cc5c" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#f8cc5c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Base -->
+  <rect width="1920" height="760" fill="url(#bg)"/>
+
+  <!-- Soft light -->
+  <circle cx="360" cy="120" r="520" fill="url(#glow1)"/>
+  <circle cx="1600" cy="160" r="560" fill="url(#glow2)"/>
+  <circle cx="1100" cy="760" r="700" fill="url(#glow3)"/>
+
+  <!-- Elegant curves -->
+  <g opacity="0.18">
+    <path d="M-40 520 C 420 420, 720 580, 1060 460 C 1380 350, 1640 380, 1980 260"
+          fill="none" stroke="#ffffff" stroke-width="2"/>
+    <path d="M-60 620 C 420 520, 760 680, 1120 540 C 1480 420, 1680 460, 1980 340"
+          fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+
+  <!-- Subtle dots -->
+  <g opacity="0.25">
+    <circle cx="220" cy="210" r="2" fill="#ffffff"/>
+    <circle cx="260" cy="240" r="1.5" fill="#ffffff"/>
+    <circle cx="300" cy="190" r="1.8" fill="#ffffff"/>
+    <circle cx="1520" cy="230" r="2" fill="#ffffff"/>
+    <circle cx="1560" cy
