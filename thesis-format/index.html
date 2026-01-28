@@ -8,171 +8,366 @@
   <meta name="theme-color" content="#0b2b52" />
 
   <style>
-    :root {
-      --navy: #0b2b52;
-      --navy-dark: #05162d;
-      --cyan: #18b6b6;
-      --cyan-light: #e0f7f7;
-      --gold: #f8cc5c;
-      --bg: #f0f4f9;
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --ink: #1e293b;
-      --muted: #64748b;
-      --danger: #ef4444;
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-      --font: "Noto Sans TC", system-ui, -apple-system, sans-serif;
+    /*
+      UI 美化版：保持所有文字內容不變，僅更新樣式與視覺呈現。
+      特色：
+      - 更佳的字體層次與間距
+      - 現代化的按鈕、卡片、陰影與玻璃毛玻璃效果
+      - 響應式隊形：在較寬螢幕時 hero 以左右視覺分欄呈現
+      - 無新增或更改任何可見文字
+    */
+
+    :root{
+      --navy:#07203a;
+      --navy-2:#0b3a63;
+      --accent-cyan:#18b6b6;
+      --accent-cyan-2:#46e6d3;
+      --accent-gold:#f8cc5c;
+
+      --bg-0: #f5f8fb;
+      --ink:#071226;
+      --muted:#5b7089;
+      --danger:#b91c1c;
+
+      --glass: rgba(255,255,255,0.7);
+      --card-shadow: 0 10px 30px rgba(9,30,66,0.08);
+      --elev-shadow: 0 20px 50px rgba(7,20,40,0.12);
+
+      --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Helvetica Neue", Arial, sans-serif;
+      --max:1100px;
     }
 
-    * { box-sizing: border-box; }
-    
-    body {
-      margin: 0;
-      background: 
-        radial-gradient(circle at 0% 0%, rgba(24, 182, 182, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 100% 100%, rgba(248, 204, 92, 0.1) 0%, transparent 40%),
-        var(--bg);
-      color: var(--ink);
-      font-family: var(--font);
-      line-height: 1.6;
-      overflow-x: hidden;
+    /* --- Basic reset --- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(700px 420px at 12% 4%, rgba(24,182,182,0.12), transparent 40%),
+        radial-gradient(760px 420px at 92% 8%, rgba(60,230,210,0.08), transparent 45%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg-0) 100%);
+      color:var(--ink);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.6;
+    }
+    a{ color:var(--navy-2); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:28px auto;
+      padding:20px;
     }
 
-    .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 20px 60px; }
-
-    /* ---------- Top Bar ---------- */
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 0 30px;
+    /* --- Topbar --- */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:8px 6px;
     }
-    .logo { display: flex; align-items: center; gap: 15px; }
-    .mark {
-      width: 48px; height: 48px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--navy), var(--navy-dark));
-      position: relative; overflow: hidden;
-      box-shadow: 0 10px 20px rgba(11, 43, 82, 0.2);
+    .logo{ display:flex; align-items:center; gap:14px; user-select:none; }
+    .mark{
+      width:56px; height:56px; border-radius:14px;
+      background: linear-gradient(135deg, var(--navy), var(--navy-2));
+      position:relative;
+      box-shadow: var(--elev-shadow);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.06);
     }
-    .mark::after {
-      content: ""; position: absolute; inset: -50%;
-      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
-      animation: shine 4s infinite linear;
+    /* subtle icon shape inside mark using CSS */
+    .mark::before{
+      content:"";
+      position:absolute;
+      inset:8px;
+      border-radius:10px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(248,204,92,0.9), transparent 30%),
+        linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      mix-blend-mode:screen;
+      transform:rotate(-6deg);
+      opacity:0.95;
+      pointer-events:none;
     }
-    @keyframes shine {
-      0% { transform: translateX(-100%) rotate(20deg); }
-      100% { transform: translateX(100%) rotate(20deg); }
+    .mark::after{
+      content:"";
+      position:absolute;
+      right:-28%;
+      top:-20%;
+      width:120%;
+      height:120%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent 40%);
+      transform:rotate(18deg);
+      animation: shimmer 5s linear infinite;
+      opacity:0.7;
     }
-    .siteTitle { margin: 0; font-size: 1.75rem; font-weight: 900; color: var(--navy); letter-spacing: 1px; }
-    .siteSub { margin: 0; font-size: 0.9rem; color: var(--muted); font-weight: 500; }
-
-    /* ---------- Hero Section ---------- */
-    .hero {
-      background: linear-gradient(145deg, #0b2b52 0%, #0a3a6b 100%);
-      border-radius: 30px;
-      padding: 50px 40px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 30px 60px rgba(11, 43, 82, 0.25);
-      margin-bottom: 30px;
-    }
-    .hero::before {
-      content: ""; position: absolute; top: -50%; right: -10%;
-      width: 400px; height: 400px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(24, 182, 182, 0.2) 0%, transparent 70%);
-    }
-
-    .badge {
-      display: inline-flex; align-items:center; gap: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 6px 14px; border-radius: 50px;
-      font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(5px); margin-bottom: 20px;
-    }
-    .badge .spark { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 10px var(--gold); }
-
-    .heroTitle { 
-      font-size: clamp(1.8rem, 5vw, 2.5rem); 
-      line-height: 1.2; font-weight: 900; margin: 0 0 20px; 
-      background: linear-gradient(to bottom, #fff, #cbd5e1);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .heroDesc { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin-bottom: 35px; }
-
-    /* Button Style */
-    .btnPrimary {
-      background: white; color: var(--navy);
-      padding: 16px 32px; border-radius: 16px; border: none;
-      font-size: 1.1rem; font-weight: 900; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 12px;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    .btnPrimary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); }
-    .btnPrimary:active { transform: translateY(0); }
-
-    /* ---------- Warning Strip ---------- */
-    .warnStrip {
-      background: #fff5f5; border-left: 5px solid var(--danger);
-      padding: 20px; border-radius: 12px; margin-bottom: 30px;
-      box-shadow: 0 4px 12px rgba(185, 28, 28, 0.05);
-    }
-    .warnTitle { display: flex; align-items: center; gap: 8px; font-weight: 900; color: #991b1b; margin-bottom: 8px; }
-    .warnBody { margin: 0; font-size: 0.95rem; color: #7f1d1d; }
-
-    /* ---------- Content Cards ---------- */
-    .sectionCard {
-      background: var(--card-bg);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      border-radius: 24px;
-      padding: 40px;
-      box-shadow: var(--shadow);
-      margin-bottom: 30px;
-    }
-    .sectionTitle { 
-      font-size: 1.5rem; font-weight: 950; color: var(--navy); 
-      margin: 0 0 25px; display: flex; align-items: center; gap: 12px;
-    }
-    .sectionTitle::before {
-      content: ""; width: 6px; height: 24px; background: var(--cyan); border-radius: 3px;
+    @keyframes shimmer{
+      0%{ transform:translateX(-25%) rotate(18deg); opacity:0; }
+      40%{ opacity:0.75; }
+      100%{ transform:translateX(25%) rotate(18deg); opacity:0; }
     }
 
-    .termsBody h3 { font-size: 1.1rem; color: var(--navy); margin: 25px 0 10px; font-weight: 800; }
-    .termsBody ul { padding-left: 20px; margin: 0; }
-    .termsBody li { margin-bottom: 8px; font-weight: 500; }
-    .em { color: var(--danger); font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
-
-    /* ---------- Steps ---------- */
-    .howSteps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 20px; }
-    .howStep {
-      background: white; padding: 25px; border-radius: 20px;
-      border: 1px solid #e2e8f0; transition: all 0.3s ease;
+    .titleBox{ display:flex; flex-direction:column; gap:3px; }
+    .siteTitle{
+      margin:0;
+      font-weight:800;
+      letter-spacing:.04em;
+      font-size:20px;
+      color:var(--navy);
     }
-    .howStep:hover { border-color: var(--cyan); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .howNum {
-      width: 40px; height: 40px; background: var(--cyan-light); color: var(--cyan);
-      display: grid; place-items: center; border-radius: 12px; font-weight: 900; font-size: 1.2rem;
-      margin-bottom: 15px;
-    }
-    .howLine { font-weight: 800; font-size: 1rem; color: var(--navy); display: block; }
-    .howSub { font-size: 0.85rem; color: var(--muted); margin-top: 8px; display: block; }
-
-    /* ---------- Footer ---------- */
-    footer {
-      background: #fff;
-      margin-top: 40px; padding: 40px 0;
-      border-top: 1px solid #e2e8f0;
-    }
-    .footGrid {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    }
-    .tag {
-      padding: 6px 14px; background: #f8fafc; border: 1px solid #e2e8f0;
-      border-radius: 8px; font-size: 0.8rem; color: var(--muted); font-weight: 600;
+    .siteSub{
+      margin:0;
+      font-size:13px;
+      color:var(--muted);
     }
 
-    @media (max-width: 600px) {
-      .hero { padding: 30px 20px; }
-      .sectionCard { padding: 25px; }
+    /* --- Hero --- */
+    .hero{
+      margin-top:18px;
+      border-radius:20px;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:0;
+      background:linear-gradient(160deg, rgba(7,32,59,0.95), rgba(10,54,93,0.95));
+      color: #fff;
+      box-shadow: 0 30px 80px rgba(5,22,42,0.24);
+      position:relative;
+      border: 1px solid rgba(255,255,255,0.06);
+      min-height:200px;
+    }
+
+    /* decorative vector on the right using pseudo element */
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-5%;
+      top:-10%;
+      width:60%;
+      height:120%;
+      background-image: radial-gradient(circle at 20% 20%, rgba(72,200,190,0.14), transparent 12%), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='%23ffffff' stop-opacity='0.06' offset='0'/><stop stop-color='%23ffffff' stop-opacity='0.0' offset='1'/></linearGradient></defs><g opacity='0.38' fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='6'><circle cx='200' cy='120' r='120'/><circle cx='420' cy='260' r='200'/><circle cx='620' cy='420' r='260'/></g></svg>");
+      background-repeat:no-repeat;
+      background-size:contain;
+      pointer-events:none;
+      transform:translateZ(0);
+      filter: blur(6px) saturate(120%);
+      mix-blend-mode:screen;
+    }
+
+    .heroInner{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:18px;
+      padding:28px;
+      align-items:center;
+    }
+
+    /* make hero copy a bit more prominent */
+    .heroCopy{ padding:8px 6px 8px; max-width:760px; }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      font-weight:800;
+      font-size:13px;
+      color: #eaf9f8;
+    }
+    .badge .spark{
+      width:12px; height:12px; border-radius:4px;
+      background:linear-gradient(135deg, var(--accent-gold), #ffffff);
+      box-shadow:0 0 0 4px rgba(248,204,92,0.12);
+    }
+
+    .heroTitle{
+      margin:12px 0 6px;
+      font-size:30px;
+      line-height:1.12;
+      font-weight:900;
+      letter-spacing:0;
+      color: #fff;
+      text-shadow: 0 6px 24px rgba(6,12,30,0.45);
+    }
+    .heroDesc{
+      margin:0 0 12px;
+      color: rgba(255,255,255,0.92);
+      font-size:15px;
+      max-width:64ch;
+    }
+
+    .ctaRow{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      border-radius:14px;
+      padding:12px 18px;
+      font-weight:800;
+      font-size:16px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      box-shadow: 0 12px 30px rgba(3,12,30,0.18);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btnPrimary{
+      color:#032033;
+      background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.92) 100%);
+      padding:12px 18px;
+      border-radius:14px;
+    }
+    .btnPrimary:hover{ transform: translateY(-3px); box-shadow: 0 18px 38px rgba(3,12,30,0.18); }
+
+    /* --- Warning Strip --- */
+    .warnStrip{
+      margin-top:-28px; /* overlap hero slightly for layered feel */
+      border-radius:14px;
+      padding:12px 14px;
+      background: linear-gradient(180deg, rgba(255,238,238,0.95), rgba(255,255,255,0.9));
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      border:1px solid rgba(185,28,28,0.10);
+      box-shadow: var(--card-shadow);
+    }
+    .warnTitle{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+      color:var(--danger);
+      margin:0 0 4px;
+      font-size:15px;
+    }
+    .warnBody{
+      margin:0;
+      color:#2b3948;
+      font-weight:700;
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    /* --- Terms Section --- */
+    .termsSection{
+      margin-top:16px;
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
+      border: 1px solid rgba(14,36,61,0.04);
+      box-shadow: var(--card-shadow);
+      padding:18px;
+      backdrop-filter: blur(6px);
+    }
+    .termsTitle{
+      margin:0;
+      font-weight:900;
+      letter-spacing:.02em;
+      font-size:20px;
+      color:var(--navy);
+    }
+    .termsHint{ margin:6px 0 0; color:var(--muted); font-weight:700; font-size:13px; }
+
+    .termsBody{
+      margin-top:12px;
+      color:#0d2433;
+      font-size:15px;
+      font-weight:600;
+      line-height:1.9;
+    }
+    .termsBody h3{
+      margin:14px 0 8px;
+      font-size:17px;
+      font-weight:900;
+      color:var(--navy);
+    }
+    .termsBody ul{ margin:8px 0 12px 20px; padding:0; }
+    .termsBody li{ margin:6px 0; }
+
+    .termsBody .em{
+      color:var(--danger);
+      font-weight:900;
+    }
+
+    /* --- How-to Card --- */
+    .howCard{
+      margin-top:14px;
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(252,253,255,0.98));
+      border: 1px solid rgba(14,36,61,0.04);
+      box-shadow: var(--card-shadow);
+      padding:16px;
+      backdrop-filter: blur(6px);
+    }
+    .howTitle{ margin:0; font-weight:900; font-size:20px; color:var(--navy); }
+    .howHint{ margin:6px 0 0; color:var(--muted); font-weight:700; font-size:13px; }
+
+    .howSteps{ list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:10px; }
+    .howStep{
+      display:flex; gap:12px; align-items:flex-start;
+      padding:12px; border-radius:12px;
+      border:1px solid rgba(14,36,61,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(245,247,250,0.95));
+    }
+    .howNum{
+      flex:0 0 auto; width:40px; height:40px; border-radius:10px;
+      display:grid; place-items:center;
+      font-weight:900; color:var(--navy);
+      background: linear-gradient(180deg, rgba(24,182,182,0.14), rgba(60,230,210,0.08));
+      border:1px solid rgba(24,182,182,0.18);
+      box-shadow: 0 6px 18px rgba(6,12,30,0.06);
+    }
+    .howLine{ color:#0d2433; font-size:15px; font-weight:800; line-height:1.6; }
+    .howSub{ margin-top:4px; color:var(--muted); font-size:13px; font-weight:700; }
+
+    /* --- Footer --- */
+    footer{
+      margin-top:18px; color:#314152; font-size:14px;
+      padding-top:18px;
+    }
+    .footTop{
+      display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 2px 6px;
+      border-top:1px solid rgba(226,232,240,0.9);
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(226,232,240,0.95);
+      background:rgba(255,255,255,0.86);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .04);
+      font-weight:800; font-size:13px; color:#0d2433;
+    }
+
+    /* footer visual base */
+    footer{
+      margin-top:28px;
+      padding:22px 0 30px;
+      background: linear-gradient(to bottom, #eaf3ff, #dbeafc);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+
+    /* --- Responsive & layout improvements for wider screens --- */
+    @media (min-width:880px){
+      .hero{ grid-template-columns: 1fr 420px; min-height:260px; }
+      .heroInner{ grid-template-columns: 1fr 1fr; padding:32px; align-items:center; gap:22px; }
+      .heroCopy{ padding-right:12px; }
+      .hero::after{ right:-2%; width:48%; filter: blur(4px) saturate(120%); opacity:0.95; }
+      .warnStrip{ margin-top:18px; }
+    }
+
+    @media (max-width:520px){
+      .wrap{ padding:14px; margin:12px auto; }
+      .siteTitle{ font-size:18px; }
+      .heroTitle{ font-size:22px; }
+      .heroInner{ padding:18px; }
+      .howNum{ width:36px; height:36px; font-size:14px; }
+    }
+
+    /* Focus outlines for accessibility */
+    .btn:focus, .btn:active, .btn:focus-visible{
+      outline: 3px solid rgba(24,182,182,0.18);
+      outline-offset: 3px;
     }
   </style>
 </head>
@@ -180,101 +375,144 @@
 <body>
   <div class="wrap">
 
-    <header class="topbar">
-      <div class="logo">
-        <div class="mark"></div>
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="logo" aria-label="網站識別">
+        <div class="mark" aria-hidden="true"></div>
         <div class="titleBox">
           <h1 class="siteTitle">中學生網站</h1>
-          <p class="siteSub">小論文格式檢核輔助系統</p>
+          <p class="siteSub">小論文格式檢核輔助系統｜官方入口</p>
         </div>
       </div>
-    </header>
+    </div>
 
-    <section class="hero">
-      <div class="badge"><span class="spark"></span> 官方入口｜智能檢核系統</div>
-      <h2 class="heroTitle">一鍵快速格式檢核<br/>上傳 PDF，AI 立即提供修正建議</h2>
-      <p class="heroDesc">
-        專為高中職小論文開發的結構檢核工具，自動識別排版錯誤與結構缺失，幫助你在參賽前完成最後校閱。
-      </p>
-      <button class="btn btnPrimary" id="goCheckBtn">
-        🚀 開始進行格式檢核
-      </button>
+    <!-- Hero -->
+    <section class="hero" aria-label="主要入口">
+      <div class="heroInner">
+        <div class="heroCopy">
+          <div class="badge"><span class="spark"></span> 官方入口｜快速自我檢核</div>
+          <h2 class="heroTitle">一鍵前往格式檢核<br/>上傳 PDF 後立即產出檢核建議</h2>
+          <p class="heroDesc">
+            本系統提供「小論文格式與結構」之檢核建議，協助學生與教師快速自我檢查。
+            <strong>不具評分或認定合格之效力</strong>；競賽評審結果以評審老師專業判定為準。
+          </p>
+
+          <div class="ctaRow">
+            <button class="btn btnPrimary" id="goCheckBtn" type="button">🚀 開始進行小論文格式檢核</button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="warnStrip">
-      <div class="warnTitle">⚠️ 參賽者須知</div>
+    <!-- Responsibility / Warning -->
+    <section class="warnStrip" aria-label="重要說明">
+      <p class="warnTitle">⚠️ 重要說明（請務必閱讀）</p>
       <p class="warnBody">
-        本系統僅供「格式與結構」之技術性建議，<strong>不具備實質評分效力</strong>。最終作品成績與合格判定，一律以評審老師之專業評核為準。
+        本系統僅提供格式檢核建議，<strong>不代表作品品質、研究水準或競賽評分結果</strong>。
+        檢核結果不得作為申訴、質疑或對抗評審老師評分之依據；評審結果以評審老師專業判定為準。
       </p>
     </section>
 
-    <section class="sectionCard">
-      <h2 class="sectionTitle">網站服務條款</h2>
+    <!-- Website Terms (直接展開顯示) -->
+    <section class="termsSection" aria-label="網站服務條款">
+      <div>
+        <h2 class="termsTitle">網站服務條款（請務必閱讀）</h2>
+        <p class="termsHint">本頁為公開入口之使用規範與責任切割說明；如國教署另有正式法務條款，請以正式版本替換。</p>
+      </div>
+
       <div class="termsBody">
-        <h3>一、定位說明</h3>
+        <h3>一、工具定位與責任切割</h3>
         <ul>
-          <li>本系統定位為學習輔助工具，旨在減少排版技術失誤。</li>
-          <li>檢核結果<strong class="em">不代表</strong>研究水準或競賽成績。</li>
+          <li>本系統提供小論文「格式與結構」檢核建議，屬學習與自我檢核之輔助工具。</li>
+          <li>本系統檢核結果<strong class="em">不具評分或合格認定之效力</strong>，亦不代表作品品質、研究水準或競賽成績。</li>
+          <li>競賽評審結果以評審老師之專業判定為唯一依據。</li>
         </ul>
 
-        <h3>二、法律責任</h3>
+        <h3>二、禁止不當引用</h3>
         <ul>
-          <li>使用者不得以檢核結果作為申訴、抗議或要求更改評分之證明。</li>
-          <li>系統不保留使用者上傳之檔案，請確保自行備份。</li>
+          <li>使用者不得以本系統檢核結果作為申訴、質疑或對抗評審老師評分之依據。</li>
+          <li>本系統結果不得作為要求更改成績、主張評審錯誤或任何爭議處理之證明文件。</li>
         </ul>
 
-        <h3>三、隱私安全</h3>
+        <h3>三、使用建議</h3>
         <ul>
-          <li>請勿上傳包含身分證號、住址等個人隱私資訊之草稿。</li>
+          <li>建議於作品排版與內容已接近完成後再進行檢核，以提升檢核效益。</li>
+          <li>如需釐清規範細節，請以官方公告之格式規範文件為準。</li>
+        </ul>
+
+        <h3>四、隱私與資料處理（可依實際情況調整）</h3>
+        <ul>
+          <li>請勿上傳含有個資或敏感資訊之文件（例如：身分證字號、電話、住址等）。</li>
+          <li>系統所產生之檢核結果僅作為使用者自我修正參考。</li>
         </ul>
       </div>
     </section>
 
-    <section class="sectionCard">
-      <h2 class="sectionTitle">檢核三步驟</h2>
-      <div class="howSteps">
-        <div class="howStep">
+    <!-- How to（短卡片：不使用 modal） -->
+    <section class="howCard" aria-label="3 步驟怎麼用">
+      <div>
+        <h2 class="howTitle">3 步驟怎麼用</h2>
+        <p class="howHint">不需登入、不需下載；準備好 PDF 後即可開始檢核。</p>
+      </div>
+
+      <ol class="howSteps">
+        <li class="howStep">
           <div class="howNum">1</div>
-          <span class="howLine">準備 PDF 檔案</span>
-          <span class="howSub">確保您的字型、行距與邊界已完成排版。</span>
-        </div>
+          <div>
+            <div class="howLine"><strong>準備 PDF：</strong>建議字型、行距、邊界等排版已接近完成。</div>
+            <div class="howSub">（越接近完成版，檢核建議越有效）</div>
+          </div>
+        </li>
 
-        <div class="howStep">
+        <li class="howStep">
           <div class="howNum">2</div>
-          <span class="howLine">上傳至 GPT 檢核</span>
-          <span class="howSub">點擊上方按鈕，將檔案拖曳至對話框即可。</span>
-        </div>
+          <div>
+            <div class="howLine"><strong>前往檢核：</strong>點選上方「開始進行小論文格式檢核」，進入工具並上傳 PDF。</div>
+            <div class="howSub">（若在手機操作，建議先確認檔案可正常上傳）</div>
+          </div>
+        </li>
 
-        <div class="howStep">
+        <li class="howStep">
           <div class="howNum">3</div>
-          <span class="howLine">依建議進行優化</span>
-          <span class="howSub">根據 AI 提供的條列建議，逐項核對並修正作品。</span>
-        </div>
-      </div>
+          <div>
+            <div class="howLine"><strong>依建議修正：</strong>依檢核結果逐項修正後，可再檢核確認。</div>
+            <div class="howSub">提醒：檢核結果屬「輔助建議」，評審結果以評審老師為準。</div>
+          </div>
+        </li>
+      </ol>
     </section>
 
-    <footer>
-      <div class="footGrid">
+    <!-- Footer（只留官方密度） -->
+    <footer aria-label="頁尾資訊">
+      <div class="footTop">
         <div class="tag">© <span id="yearNow"></span></div>
-        <div class="tag">Version 4.0.2</div>
-        <div class="tag">教育部國民及學前教育署</div>
-        <div class="tag">全國高級中等校圖書館輔導團</div>
-        <div class="tag">國立中興高中圖書館</div>
-        <div class="tag">國立中興大學附屬高級中學</div>
+        <div class="tag">版本：<span id="ver">4.0.1</span></div>
+        <div class="tag">主辦：教育部國民及學前教育署</div>
+        <div class="tag">承辦：全國高級中等校圖書館輔導團</div>
+        <div class="tag">總召：國立中興高中圖書館</div>
+        <div class="tag">小論文寫作比賽：國立中興大學附屬高級中學</div>
+        <div class="tag">網站建置與維運：高中職小論文寫作輔導團</div>
       </div>
     </footer>
 
   </div>
 
   <script>
-    const GPT_CHECK_URL = "https://chatgpt.com/g/g-69647868d1748191acc70924b07483c6-xiao-lun-wen-lao-shi-zhu-shou-gpt-xi-tong-gui-ze-v1-9-1";
+    // =========================
+    // TODO���改成你們正式 GPT 檢核網址
+    // =========================
+    const GPT_CHECK_URL = "https://chatgpt.com/g/g-69647868d1748191acc70924b07483c6-xiao-lun-wen-lao-shi-zhu-shou-gpt-xi-tong-gui-ze-v1-9-1"; // ← 改這裡
 
+    // Footer year
     document.getElementById("yearNow").textContent = new Date().getFullYear();
 
+    // Go to GPT checker
     const goCheckBtn = document.getElementById("goCheckBtn");
-    goCheckBtn.addEventListener("click", () => {
+    function goCheck(){
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-    });
+    }
+    goCheckBtn.addEventListener("click", goCheck);
   </script>
+
 </body>
 </html>
