@@ -9,7 +9,6 @@
 
   <style>
     :root{
-      /* Brand (官方感+吸睛) */
       --navy:#0b2b52;
       --navy2:#0a3a6b;
       --cyan:#18b6b6;
@@ -17,22 +16,15 @@
       --gold:#f8cc5c;
 
       --bg:#f5f7fb;
-      --card:#ffffff;
       --ink:#0f172a;
       --muted:#64748b;
-      --line:#e5e7eb;
 
       --danger:#b91c1c;
-      --dangerBg:rgba(185,28,28,.06);
 
       --shadow:0 18px 40px rgba(2, 12, 27, .10);
       --shadow2:0 10px 22px rgba(2, 12, 27, .08);
-      --radius:18px;
-      --radius2:14px;
 
       --font: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-
       --max:1040px;
     }
 
@@ -91,58 +83,25 @@
       margin:0;
       font-weight:900;
       letter-spacing:.06em;
-      font-size:22px;
+      font-size:28px;
       color:var(--navy);
     }
     .siteSub{
       margin:0;
-      font-size:13px;
+      font-size:15px;
       color:var(--muted);
     }
-
-    .navActions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.72);
-      border:1px solid rgba(226,232,240,.9);
-      box-shadow:0 10px 22px rgba(15, 23, 42, .06);
-      font-weight:800;
-      font-size:13px;
-      color:#0f172a;
-      backdrop-filter: blur(10px);
+    @media (max-width:520px){
+      .siteTitle{ font-size:24px; }
+      .siteSub{ font-size:14px; }
     }
-    .chip .dot{
-      width:9px; height:9px; border-radius:50%;
-      background:linear-gradient(135deg, var(--cyan), var(--cyan2));
-      box-shadow:0 0 0 3px rgba(24,182,182,.12);
-    }
-    .menuBtn{
-      width:44px; height:44px; border-radius:14px;
-      border:1px solid rgba(226,232,240,.9);
-      background:rgba(255,255,255,.72);
-      box-shadow:0 10px 22px rgba(15, 23, 42, .06);
-      backdrop-filter: blur(10px);
-      cursor:pointer;
-      display:grid; place-items:center;
-    }
-    .burger{
-      width:18px; height:2px; background:#64748b; position:relative;
-    }
-    .burger:before,.burger:after{
-      content:""; position:absolute; left:0; width:18px; height:2px; background:#64748b;
-    }
-    .burger:before{ top:-6px; }
-    .burger:after{ top:6px; }
 
     /* ---------- Hero ---------- */
     .hero{
       border-radius:24px;
-       /* ✅ 先放圖，再疊官方漸層，文字更清楚 */
       background:
-       linear-gradient(135deg, rgba(11,43,82,.92), rgba(10,58,107,.90)),
-       url("./assets/hero-bg.svg");
+        linear-gradient(135deg, rgba(11,43,82,.92), rgba(10,58,107,.90)),
+        url("./assets/hero-bg.svg");
       background-size: cover;
       background-position: center;
       box-shadow:0 22px 55px rgba(11,43,82,.22);
@@ -155,14 +114,12 @@
     .heroInner{
       padding:18px 18px 18px;
       display:grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap:18px;
+      grid-template-columns: 1fr; /* ✅ 改為單欄（0 干擾、更公部門） */
+      gap:14px;
       align-items:stretch;
     }
-    @media (max-width:920px){
-      .heroInner{ grid-template-columns:1fr; }
-    }
     .heroCopy{ padding:8px 6px 10px; }
+
     .badge{
       display:inline-flex; align-items:center; gap:8px;
       padding:7px 10px;
@@ -187,7 +144,7 @@
     }
     .heroDesc{
       margin:0 0 14px;
-      color:rgba(255,255,255,.86);
+      color:rgba(255,255,255,.88);
       font-size:15px;
     }
 
@@ -211,65 +168,12 @@
     .btn:active{ transform: translateY(1px); }
     .btnPrimary{
       color:#06213f;
-      background:
-        linear-gradient(135deg, #ffffff, rgba(255,255,255,.88));
+      background:linear-gradient(135deg, #ffffff, rgba(255,255,255,.88));
       box-shadow:0 18px 30px rgba(0,0,0,.18);
     }
     .btnPrimary:hover{ filter:brightness(1.02); box-shadow:0 22px 40px rgba(0,0,0,.22); }
-    .btnGhost{
-      color:#fff;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow:0 10px 24px rgba(0,0,0,.12);
-    }
 
-    .heroSide{
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(255,255,255,.06);
-      padding:14px 14px 12px;
-      backdrop-filter: blur(10px);
-    }
-    .stepsTitle{
-      margin:2px 0 10px;
-      font-weight:950;
-      letter-spacing:.02em;
-      font-size:16px;
-      color:#fff;
-    }
-    .steps{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin:0;
-      padding:0;
-      list-style:none;
-    }
-    .step{
-      display:flex; gap:10px; align-items:flex-start;
-      padding:10px 10px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-    }
-    .num{
-      flex:0 0 auto;
-      width:28px; height:28px;
-      border-radius:10px;
-      background:linear-gradient(135deg, rgba(24,182,182,.95), rgba(60,230,210,.90));
-      display:grid; place-items:center;
-      font-weight:950;
-      box-shadow:0 12px 24px rgba(24,182,182,.22);
-    }
-    .stepText{ margin:0; color:rgba(255,255,255,.88); font-weight:700; font-size:14px; }
-    .fine{
-      margin:10px 0 0;
-      font-size:12px;
-      color:rgba(255,255,255,.78);
-    }
-    .fine strong{ color:#fff; }
-
-    /* ---------- Warning Strip (責任切割：高可見度但不恐嚇) ---------- */
+    /* ---------- Warning Strip ---------- */
     .warnStrip{
       margin-top:14px;
       background:rgba(185,28,28,.06);
@@ -284,148 +188,150 @@
       color:var(--danger);
       margin:0 0 4px;
       letter-spacing:.02em;
+      font-size:16px;
     }
     .warnBody{
       margin:0;
       color:#334155;
-      font-weight:700;
-      font-size:13px;
+      font-weight:800;
+      font-size:14px;
+      line-height:1.75;
     }
 
-    /* ---------- Main Cards (仿圖2：雙卡入口，但更漂亮) ---------- */
-    .grid{
-      margin-top:16px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-    @media (max-width:920px){
-      .grid{ grid-template-columns:1fr; }
-    }
-    .card{
-      background:rgba(255,255,255,.75);
-      border:1px solid rgba(226,232,240,.9);
-      border-radius:22px;
+    /* ---------- Terms Section (直接展開、字大清楚) ---------- */
+    .termsSection{
+      margin-top:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.80);
+      border:1px solid rgba(226,232,240,.95);
       box-shadow:var(--shadow);
-      padding:16px;
+      padding:18px 18px;
       backdrop-filter: blur(10px);
-      position:relative;
-      overflow:hidden;
-      min-height:140px;
     }
-    .card:before{
-      content:"";
-      position:absolute; inset:-40%;
-      background:radial-gradient(240px 180px at 25% 30%, rgba(24,182,182,.22), transparent 65%);
-      transform:rotate(-8deg);
-      pointer-events:none;
-    }
-    .card.red:before{
-      background:radial-gradient(260px 180px at 25% 30%, rgba(248,204,92,.22), transparent 65%);
-    }
-    .cardHead{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:12px;
-      position:relative;
-    }
-    .card h2{
+
+    .termsTitle{
       margin:0;
-      font-size:22px;
       font-weight:950;
       letter-spacing:.02em;
-      color:#0f172a;
-    }
-    .flag{
-      flex:0 0 auto;
-      padding:8px 10px;
-      border-radius:999px;
-      font-weight:950;
-      font-size:12px;
-      border:1px solid rgba(15, 23, 42, .12);
-      background:#fff;
-      box-shadow:0 12px 26px rgba(15, 23, 42, .06);
-    }
-    .flag.green{ color:#0f766e; }
-    .flag.red{ color:#b91c1c; }
-    .cardLinks{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top:12px;
-      position:relative;
-    }
-    .linkBtn{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(226,232,240,.95);
-      background:#fff;
-      font-weight:950;
-      color:#0f172a;
-      box-shadow:0 10px 20px rgba(15, 23, 42, .06);
-      transition:transform .12s ease;
-    }
-    .linkBtn:hover{ transform:translateY(-1px); text-decoration:none; }
-    .linkBtn.primary{
-      color:#06213f;
-      border:1px solid rgba(24,182,182,.28);
-      background:linear-gradient(135deg, rgba(24,182,182,.18), rgba(60,230,210,.14), #fff);
-    }
-    .cardNote{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      position:relative;
-      font-weight:700;
+      font-size:22px;
+      color:var(--navy);
     }
 
-    /* ---------- News ---------- */
-    .news{
-      margin-top:16px;
-      border-radius:22px;
-      background:rgba(255,255,255,.72);
-      border:1px solid rgba(226,232,240,.9);
+    .termsHint{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .termsBody{
+      margin-top:10px;
+      color:#0f172a;
+      font-size:16px;
+      font-weight:650;
+      line-height:1.85;
+    }
+
+    .termsBody h3{
+      margin:14px 0 6px;
+      font-size:18px;
+      font-weight:950;
+    }
+
+    .termsBody ul{
+      margin:6px 0 12px 18px;
+      padding:0;
+    }
+    .termsBody li{ margin:6px 0; }
+
+    .termsBody .em{
+      color:var(--danger);
+      font-weight:950;
+    }
+
+    @media (max-width:520px){
+      .termsTitle{ font-size:20px; }
+      .termsBody{ font-size:15px; }
+      .termsBody h3{ font-size:17px; }
+    }
+
+    /* ---------- How-to Card（條款下方短卡片：0 彈窗、0 干擾） ---------- */
+    .howCard{
+      margin-top:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.80);
+      border:1px solid rgba(226,232,240,.95);
       box-shadow:var(--shadow);
-      overflow:hidden;
+      padding:18px 18px;
       backdrop-filter: blur(10px);
     }
-    .newsHeader{
-      padding:14px 16px;
+
+    .howTitle{
+      margin:0;
       font-weight:950;
-      font-size:18px;
-      border-bottom:1px solid rgba(226,232,240,.9);
-      display:flex; align-items:center; justify-content:space-between;
+      letter-spacing:.02em;
+      font-size:22px;
+      color:var(--navy);
+    }
+    .howHint{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .howSteps{
+      list-style:none;
+      margin:12px 0 0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
       gap:10px;
     }
-    .more{
-      font-weight:950;
-      font-size:13px;
-      color:#2563eb;
-    }
-    .newsItem{
-      display:grid;
-      grid-template-columns:120px 1fr;
+
+    .howStep{
+      display:flex;
       gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(226,232,240,.9);
+      align-items:flex-start;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(226,232,240,.95);
+      background:rgba(255,255,255,.65);
     }
-    .newsItem:last-child{ border-bottom:0; }
-    .newsDate{
+
+    .howNum{
+      flex:0 0 auto;
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
       font-weight:950;
-      color:#475569;
+      color:#06213f;
+      background:linear-gradient(135deg, rgba(24,182,182,.22), rgba(60,230,210,.14), #fff);
+      border:1px solid rgba(24,182,182,.28);
+      box-shadow:0 10px 22px rgba(15, 23, 42, .08);
     }
-    .newsText a{
-      font-weight:950;
+
+    .howLine{
       color:#0f172a;
+      font-size:16px;
+      font-weight:850;
+      line-height:1.65;
     }
-    .newsSub{
+    .howSub{
       margin-top:4px;
       color:var(--muted);
       font-size:13px;
-      font-weight:700;
+      font-weight:800;
     }
 
-    /* ---------- Footer (仿圖1：密度但漂亮) ---------- */
+    @media (max-width:520px){
+      .howTitle{ font-size:20px; }
+      .howLine{ font-size:15px; }
+    }
+
+    /* ---------- Footer（收斂成官方密度） ---------- */
     footer{
       margin-top:16px;
       color:#334155;
@@ -451,146 +357,6 @@
       font-size:13px;
       color:#0f172a;
     }
-    .termsBtn{
-      border:1px solid rgba(185,28,28,.45);
-      color:var(--danger);
-      background:rgba(255,255,255,.8);
-      border-radius:999px;
-      padding:10px 12px;
-      font-weight:950;
-      cursor:pointer;
-      box-shadow:0 10px 20px rgba(15, 23, 42, .06);
-      backdrop-filter: blur(10px);
-    }
-
-    .footInfo{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-    .infoRow{
-      display:flex; gap:10px;
-      align-items:flex-start;
-    }
-    .medal{
-      width:18px;height:18px;border-radius:50%;
-      background:linear-gradient(135deg, var(--gold), #fff);
-      box-shadow:0 8px 18px rgba(248,204,92,.18);
-      flex:0 0 auto;
-      margin-top:3px;
-    }
-    .infoText strong{
-      display:inline-block;
-      min-width:92px;
-      color:#0f172a;
-    }
-    .muted{ color:var(--muted); }
-    .small{ font-size:13px; }
-    .mono{ font-family:var(--mono); }
-
-    /* ---------- Modal (服務條款/說明) ---------- */
-    .modalMask{
-      position:fixed; inset:0;
-      background:rgba(2, 12, 27, .58);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:50;
-    }
-    .modal{
-      width:min(860px,100%);
-      background:#fff;
-      border-radius:18px;
-      border:1px solid rgba(226,232,240,.9);
-      box-shadow:0 26px 70px rgba(2, 12, 27, .35);
-      overflow:hidden;
-    }
-    .modalHead{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(226,232,240,.9);
-      font-weight:950;
-      color:#0f172a;
-      background:linear-gradient(180deg, rgba(248,250,252,.92), #fff);
-    }
-    .closeBtn{
-      border:1px solid rgba(226,232,240,.9);
-      background:#fff;
-      border-radius:12px;
-      padding:8px 10px;
-      cursor:pointer;
-      font-weight:950;
-    }
-    .modalBody{
-      padding:16px;
-      max-height:min(74vh,720px);
-      overflow:auto;
-      color:#0f172a;
-      font-size:14px;
-    }
-    .modalBody h3{ margin:14px 0 6px; }
-    .modalBody ul{ margin:6px 0 10px 18px; }
-    .kbd{
-      font-family:var(--mono);
-      background:#f1f5f9;
-      border:1px solid #e2e8f0;
-      border-radius:8px;
-      padding:2px 6px;
-      font-size:12px;
-    }
-
-     .firstTip{
-  position:fixed;
-  left:0; right:0;
-  bottom:14px;
-  display:none;               /* ✅ 預設不顯示 */
-  justify-content:center;
-  padding:0 14px;
-  z-index:60;
-}
-
-.firstTip__inner{
-  width:min(980px, 100%);
-  border-radius:16px;
-  border:1px solid rgba(185,28,28,.18);
-  background:rgba(255,255,255,.92);
-  box-shadow:0 18px 40px rgba(2, 12, 27, .18);
-  backdrop-filter: blur(10px);
-  padding:12px 12px;
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.firstTip__title{
-  font-weight:950;
-  color:#b91c1c;
-  white-space:nowrap;
-}
-
-.firstTip__text{
-  font-weight:800;
-  color:#334155;
-  font-size:13px;
-  line-height:1.4;
-  flex:1 1 auto;
-}
-
-.firstTip__btn{
-  border:0;
-  cursor:pointer;
-  border-radius:14px;
-  padding:10px 12px;
-  font-weight:950;
-  color:#06213f;
-  background:linear-gradient(135deg, rgba(24,182,182,.22), rgba(60,230,210,.14), #fff);
-  border:1px solid rgba(24,182,182,.28);
-  box-shadow:0 10px 22px rgba(15, 23, 42, .08);
-  white-space:nowrap;
-}
-
   </style>
 </head>
 
@@ -605,16 +371,6 @@
           <h1 class="siteTitle">中學生網站</h1>
           <p class="siteSub">小論文格式檢核輔助系統｜官方入口</p>
         </div>
-      </div>
-
-      <div class="navActions">
-        <div class="chip" title="官方入口狀態">
-          <span class="dot"></span>
-          服務正常
-        </div>
-        <button class="menuBtn" type="button" aria-label="選單（示意）" title="選單（示意）">
-          <span class="burger"></span>
-        </button>
       </div>
     </div>
 
@@ -631,30 +387,8 @@
 
           <div class="ctaRow">
             <button class="btn btnPrimary" id="goCheckBtn" type="button">🚀 開始進行小論文格式檢核</button>
-            <button class="btn btnGhost" id="howBtn" type="button">📌 3 步驟怎麼用</button>
           </div>
         </div>
-
-        <aside class="heroSide" aria-label="使用步驟">
-          <div class="stepsTitle">3 步驟完成</div>
-          <ol class="steps">
-            <li class="step">
-              <div class="num">1</div>
-              <p class="stepText">準備接近完成版 PDF（建議排版已完成）</p>
-            </li>
-            <li class="step">
-              <div class="num">2</div>
-              <p class="stepText">前往檢核工具並上傳 PDF，開始檢核</p>
-            </li>
-            <li class="step">
-              <div class="num">3</div>
-              <p class="stepText">依檢核建議修正後，可再檢核確認</p>
-            </li>
-          </ol>
-          <p class="fine">
-            提醒：檢核結果屬「輔助建議」。<strong>評審結果以評審老師為準</strong>。
-          </p>
-        </aside>
       </div>
     </section>
 
@@ -667,124 +401,18 @@
       </p>
     </section>
 
-    <!-- Main cards (仿圖2但更美) -->
-    <section class="grid" aria-label="競賽入口">
-      <div class="card green">
-        <div class="cardHead">
-          <h2>閱讀心得寫作比賽</h2>
-          <span class="flag green">入口</span>
-        </div>
-        <div class="cardLinks">
-          <a class="linkBtn" href="#" aria-label="閱讀心得競賽資訊（示意）">📄 競賽資訊</a>
-          <a class="linkBtn" href="#" aria-label="閱讀心得我的作品（示意）">🗂️ 我的作品</a>
-        </div>
-        <p class="cardNote">（此區塊可依國教署既有入口架構調整）</p>
+    <!-- Website Terms (直接展開顯示) -->
+    <section class="termsSection" aria-label="網站服務條款">
+      <div>
+        <h2 class="termsTitle">網站服務條款（請務必閱讀）</h2>
+        <p class="termsHint">本頁為公開入口之使用規範與責任切割說明；如國教署另有正式法務條款，請以正式版本替換。</p>
       </div>
 
-      <div class="card red">
-        <div class="cardHead">
-          <h2>小論文寫作比賽</h2>
-          <span class="flag red">入口</span>
-        </div>
-        <div class="cardLinks">
-          <a class="linkBtn" href="#" aria-label="小論文競賽資訊（示意）">📄 競賽資訊</a>
-          <a class="linkBtn" href="#" aria-label="小論文我的作品（示意）">🗂️ 我的作品</a>
-          <a class="linkBtn primary" href="#" id="goCheckLink" aria-label="前往小論文格式檢核">✅ 格式檢核</a>
-        </div>
-        <p class="cardNote">「格式檢核」將導向官方檢核工具頁。</p>
-      </div>
-    </section>
-
-    <!-- Latest news -->
-    <section class="news" aria-label="最新訊息">
-      <div class="newsHeader">
-        <span>最新訊息</span>
-        <a class="more" href="#" aria-label="更多訊息（示意）">更多訊息 ›</a>
-      </div>
-
-      <!-- TODO: 你可把下面改成真正公告連結/內容 -->
-      <div class="newsItem">
-        <div class="newsDate">2026/01/02</div>
-        <div class="newsText">
-          <a href="#" aria-label="公告（示意）">網站服務維護公告</a>
-          <div class="newsSub">維護期間可能影響檢核服務使用，敬請見諒。</div>
-        </div>
-      </div>
-
-      <div class="newsItem">
-        <div class="newsDate">2025/12/01</div>
-        <div class="newsText">
-          <a href="#" aria-label="公告（示意）">小論文疑似抄襲通知與申復期限提醒</a>
-          <div class="newsSub">請依公告期限完成必要程序（示意文字）。</div>
-        </div>
-      </div>
-
-      <div class="newsItem">
-        <div class="newsDate">2025/11/25</div>
-        <div class="newsText">
-          <a href="#" aria-label="公告（示意）">小論文寫作比賽成績公告</a>
-          <div class="newsSub">如需查詢得獎名單資訊，請依公告說明辦理（示意文字）。</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer (仿圖1：版權/版本/服務條款/IP/主辦承辦等) -->
-    <footer aria-label="頁尾資訊">
-      <div class="footTop">
-        <div class="tag">© <span id="yearNow"></span> － 中學生網站</div>
-        <div class="tag">版本：<span id="ver">4.0.1</span></div>
-        <button class="termsBtn" id="termsBtn" type="button">網站服務條款</button>
-        <div class="tag">IP位置：<span id="ip" class="mono">載入中…</span></div>
-      </div>
-
-      <div class="footInfo">
-        <!-- TODO: 依國教署正式資訊修改 -->
-        <div class="infoRow">
-          <div class="medal" aria-hidden="true"></div>
-          <div class="infoText">
-            <strong>主辦單位：</strong>教育部國民及學前教育署
-          </div>
-        </div>
-
-        <div class="infoRow">
-          <div class="medal" aria-hidden="true"></div>
-          <div class="infoText">
-            <strong>承辦單位：</strong>（請填入輔導團/承辦單位正式名稱）
-          </div>
-        </div>
-
-        <div class="infoRow">
-          <div class="medal" aria-hidden="true"></div>
-          <div class="infoText">
-            <strong>聯絡信箱：</strong><a href="mailto:example@edu.tw">example@edu.tw</a>
-            <span class="muted small">（請改成正式聯絡資訊）</span>
-          </div>
-        </div>
-
-        <div class="infoRow">
-          <div class="medal" aria-hidden="true"></div>
-          <div class="infoText">
-            <strong>系統定位：</strong><span class="muted">格式與結構檢核輔助工具（非評分、非合格認定）</span>
-          </div>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Modal: 服務條款 / 使用說明 -->
-  <div class="modalMask" id="modalMask" role="dialog" aria-modal="true" aria-label="服務條款視窗">
-    <div class="modal">
-      <div class="modalHead">
-        <div id="modalTitle">網站服務條款</div>
-        <button class="closeBtn" id="closeBtn" type="button">關閉</button>
-      </div>
-      <div class="modalBody" id="modalBody">
-        <p class="muted small">以下為「可用版本」示意。若國教署有正式法務條款，請以正式版本替換。</p>
-
+      <div class="termsBody">
         <h3>一、工具定位與責任切割</h3>
         <ul>
           <li>本系統提供小論文「格式與結構」檢核建議，屬學習與自我檢核之輔助工具。</li>
-          <li>本系統檢核結果<strong>不具評分或合格認定之效力</strong>，亦不代表作品品質、研究水準或競賽成績。</li>
+          <li>本系統檢核結果<strong class="em">不具評分或合格認定之效力</strong>，亦不代表作品品質、研究水準或競賽成績。</li>
           <li>競賽評審結果以評審老師之專業判定為唯一依據。</li>
         </ul>
 
@@ -805,138 +433,74 @@
           <li>請勿上傳含有個資或敏感資訊之文件（例如：身分證字號、電話、住址等）。</li>
           <li>系統所產生之檢核結果僅作為使用者自我修正參考。</li>
         </ul>
-
-        <p class="muted small">快捷鍵：按 <span class="kbd">Esc</span> 可關閉視窗。</p>
       </div>
-    </div>
+    </section>
+
+    <!-- How to（短卡片：不使用 modal） -->
+    <section class="howCard" aria-label="3 步驟怎麼用">
+      <div>
+        <h2 class="howTitle">3 步驟怎麼用</h2>
+        <p class="howHint">不需登入、不需下載；準備好 PDF 後即可開始檢核。</p>
+      </div>
+
+      <ol class="howSteps">
+        <li class="howStep">
+          <div class="howNum">1</div>
+          <div>
+            <div class="howLine"><strong>準備 PDF：</strong>建議字型、行距、邊界等排版已接近完成。</div>
+            <div class="howSub">（越接近完成版，檢核建議越有效）</div>
+          </div>
+        </li>
+
+        <li class="howStep">
+          <div class="howNum">2</div>
+          <div>
+            <div class="howLine"><strong>前往檢核：</strong>點選上方「開始進行小論文格式檢核」，進入工具並上傳 PDF。</div>
+            <div class="howSub">（若在手機操作，建議先確認檔案可正常上傳）</div>
+          </div>
+        </li>
+
+        <li class="howStep">
+          <div class="howNum">3</div>
+          <div>
+            <div class="howLine"><strong>依建議修正：</strong>依檢核結果逐項修正後，可再檢核確認。</div>
+            <div class="howSub">提醒：檢核結果屬「輔助建議」，評審結果以評審老師為準。</div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Footer（只留官方密度） -->
+    <footer aria-label="頁尾資訊">
+      <div class="footTop">
+        <div class="tag">© <span id="yearNow"></span></div>
+        <div class="tag">版本：<span id="ver">4.0.1</span></div>
+        <div class="tag">主辦：教育部國民及學前教育署</div>
+        <div class="tag">承辦：全國高級中等校圖書館輔導團</div>
+        <div class="tag">總召：國立中興高中圖書館</div>
+        <div class="tag">小論文檢查系統：國立中興大學附屬高級中學</div>
+        <div class="tag">網站建置與維運：高中職小論文寫作輔導團</div>
+      </div>
+    </footer>
+
   </div>
 
   <script>
     // =========================
-    // TODO 1) 改成你們正式 GPT 檢核網址
+    // TODO：改成你們正式 GPT 檢核網址
     // =========================
-    const GPT_CHECK_URL = "https://chatgpt.com/g/REPLACE_WITH_YOUR_GPT_ID"; // ← 改這裡
+    const GPT_CHECK_URL = "https://chatgpt.com/g/g-69647868d1748191acc70924b07483c6-xiao-lun-wen-lao-shi-zhu-shou-gpt-xi-tong-gui-ze-v1-9-1"; // ← 改這裡
 
-    // UI hooks
-    const goCheckBtn = document.getElementById("goCheckBtn");
-    const goCheckLink = document.getElementById("goCheckLink");
-    const howBtn = document.getElementById("howBtn");
-
-    // Footer
+    // Footer year
     document.getElementById("yearNow").textContent = new Date().getFullYear();
 
     // Go to GPT checker
+    const goCheckBtn = document.getElementById("goCheckBtn");
     function goCheck(){
-      // 你也可以改成 window.location.href = GPT_CHECK_URL;
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
     }
     goCheckBtn.addEventListener("click", goCheck);
-    goCheckLink.addEventListener("click", (e)=>{ e.preventDefault(); goCheck(); });
-
-    // How-to (用條款視窗當作「使用說明」也很省事)
-    howBtn.addEventListener("click", ()=>{
-      openModal("3 步驟怎麼用", `
-        <ol>
-          <li><strong>準備 PDF：</strong>建議排版（字型/行距/邊界）已接近完成。</li>
-          <li><strong>前往檢核：</strong>點選「開始進行小論文格式檢核」進入工具，並上傳 PDF。</li>
-          <li><strong>依建議修正：</strong>修正後可再次檢核確認（避免重複上傳同一版）。</li>
-        </ol>
-        <p class="muted small">提醒：本工具僅提供格式檢核建議，不具評分或合格認定效力；評審結果以評審老師為準。</p>
-      `);
-    });
-
-    // Modal
-    const modalMask = document.getElementById("modalMask");
-    const closeBtn = document.getElementById("closeBtn");
-    const termsBtn = document.getElementById("termsBtn");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalBody = document.getElementById("modalBody");
-
-    function openModal(title, bodyHtml){
-      modalTitle.textContent = title;
-      if(bodyHtml) modalBody.innerHTML = bodyHtml;
-      modalMask.style.display = "flex";
-      document.body.style.overflow = "hidden";
-    }
-    function closeModal(){
-      modalMask.style.display = "none";
-      document.body.style.overflow = "";
-    }
-
-    termsBtn.addEventListener("click", ()=>{
-      // 還原到原本條款內容（載入初始 HTML）
-      const original = document.querySelector("#modalBody").getAttribute("data-original");
-      if(original) modalBody.innerHTML = original;
-      modalTitle.textContent = "網站服務條款";
-      modalMask.style.display = "flex";
-      document.body.style.overflow = "hidden";
-    });
-
-    // 保存初始條款內容（讓 howBtn 用完能回復）
-    modalBody.setAttribute("data-original", modalBody.innerHTML);
-
-    closeBtn.addEventListener("click", closeModal);
-    modalMask.addEventListener("click", (e)=>{
-      if(e.target === modalMask) closeModal();
-    });
-    window.addEventListener("keydown", (e)=>{
-      if(e.key === "Escape" && modalMask.style.display === "flex") closeModal();
-    });
-
-    // IP (可選：若你不想顯示 IP，直接把這段關掉或固定顯示「—」)
-    // 若國教署環境不允許外部 API，建議改成後端寫入或移除。
-    (async ()=>{
-      try{
-        // 使用 Cloudflare trace 拿 IP（不寫死顏色/不依賴 JSON）
-        const res = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" });
-        const text = await res.text();
-        const match = text.match(/^ip=([^\n]+)$/m);
-        document.getElementById("ip").textContent = match ? match[1] : "—";
-      }catch(err){
-        document.getElementById("ip").textContent = "—";
-      }
-    })();
-
-    
-
-    // ✅ 首次進入提示（不打擾：只出現一次）
-(() => {
-  const KEY = "thesis_checker_first_tip_ack_v1";
-  const tip = document.getElementById("firstTip");
-  const btn = document.getElementById("firstTipBtn");
-  if (!tip || !btn) return;
-
-  const alreadyAck = localStorage.getItem(KEY) === "1";
-  if (!alreadyAck) {
-    // 讓畫面先穩定，再淡入提示
-    setTimeout(() => {
-      tip.style.display = "flex";
-    }, 700);
-  }
-
-  btn.addEventListener("click", () => {
-    localStorage.setItem(KEY, "1");
-    tip.style.display = "none";
-  });
-})();
-  
-  
   </script>
-
-  
-
-
-  <!-- 首次進入提示（只出現一次） -->
-<div class="firstTip" id="firstTip" aria-live="polite" aria-label="重要提醒">
-  <div class="firstTip__inner">
-    <div class="firstTip__title">⚠️ 重要提醒</div>
-    <div class="firstTip__text">
-      本系統僅提供「格式檢核建議」，不具評分或合格認定效力；評審結果以評審老師專業判定為準。
-    </div>
-    <button class="firstTip__btn" id="firstTipBtn" type="button">我知道了</button>
-  </div>
-</div>
-
 
 </body>
 </html>
