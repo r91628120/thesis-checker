@@ -1,1 +1,15 @@
+.hero{
+  border-radius:24px;
+  /* ✅ 先放圖，再疊官方漸層，文字更清楚 */
+  background:
+    linear-gradient(135deg, rgba(11,43,82,.92), rgba(10,58,107,.90)),
+    url("./assets/hero-bg.svg");
+  background-size: cover;
+  background-position: center;
+  box-shadow:0 22px 55px rgba(11,43,82,.22);
+  color:#fff;
+  overflow:hidden;
+  position:relative;
+  border:1px solid rgba(255,255,255,.14);
+}
 
