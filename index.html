@@ -101,8 +101,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2026-01-03b</span>
-      ｜© 2025 CTVS 凡事皆正面
+      <span class="mono">｜v=2026-01-28a</span>
+      ｜© 2026 CTVS 凡事皆正面
     </p>
    <!--
    <a href="https://r91628120.github.io/thesis-checker/blog.html"
@@ -240,20 +240,20 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
             </summary>
 
             <div style="margin-top:8px; line-height:1.7;">
-              <p><b>🔹 AI 小助手（GPT A）</b><br>
+              <p><b>🔹 外部檢索助手（GPT A）</b><br>
               適合「協助擴大搜尋全台小論文題目，判斷是否與您的研究主題有相似題目」。<br>
               👉 本功能<b>不直接讀取 PDF</b>，而是將「本系統檢查結果第 4 項【外部檢索助手】所產生之檢查摘要 JSON」提供給 AI 小助手（GPT A），
               由 AI 協助進行全台小論文題目之廣泛比對與主題相似性搜尋，作為研究方向與題目檢核之參考。
               </p>
 
-            <p><b>🔹 單獨 GPT 檢查 PDF（GPT B）</b><br>
+            <p><b>🔹 檢查完整小論文格式 PDF（GPT B）</b><br>
             適合「直接將 PDF 檔案交由 GPT 進行整體內容分析」。<br>
             👉 本功能屬於外部 AI 工具，與本頁小論文格式檢查流程<b>相互獨立</b>。
             </p>
 
             <p style="margin-top:6px;">
                📌 <b>建議使用流程：</b><br>
-              先使用本系統完成小論文格式檢查 → 再視需要使用 <b>AI 小助手（GPT A）</b>
+              先使用本系統完成小論文格式檢查 → 再視需要使用 <b>外部檢索助手（GPT A）</b>
               協助進行題目相似性之延伸檢索。
             </p>
            </div>
@@ -283,7 +283,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
           <h4 style="margin:10px 0 6px">#4 外部檢索助手（給 AI 小助手）</h4>
           <div class="row">
             <button id="btnOpenAllSearch">一鍵開啟所有搜尋</button>
-            <button id="btnCopyGptPrompt" class="btn-violet">複製查核提示（給 AI 小助手）</button>
+            <button id="btnCopyGptPrompt" class="btn-violet">複製查核提示（給 外部檢索助手）</button>
           </div>
           <ol id="searchLinks" style="margin:10px 0 6px;padding-left:20px"></ol>
           <details style="margin-top:6px">
@@ -291,7 +291,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
             <pre id="jsonPreview" class="mono" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:10px;max-height:280px;overflow:auto"></pre>
           </details>
           <details open style="margin-top:10px;border-top:1px dashed #ddd;padding-top:8px">
-            <summary><b>AI 小助手結果摘要（解釋版）</b></summary>
+            <summary><b>外部檢索助手 結果摘要（解釋版）</b></summary>
             <div id="aiSummaryReadable" style="white-space:pre-wrap;font-size:13px;line-height:1.6;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;"></div>
           </details>
         </div>
@@ -325,14 +325,14 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 <section class="card" id="gpt-privacy" style="border-color:#f9a8d4;">
   <h3 style="margin-top:0; color:#be185d;">🤖 GPT 的隱私說明</h3>
   <p style="margin:0 0 10px; line-height:1.6;">
-    使用者請注意：當你「點右上或中間的 GPT / AI 小助手連結」離開本頁時，接下來的檔案處理就不在本網站控制範圍內，而是依照 OpenAI / GPT 平台各自的使用條款與隱私權政策。
+    使用者請注意：當你「點右上或中間的 GPT / 外部檢索助手連結」離開本頁時，接下來的檔案處理就不在本網站控制範圍內，而是依照 OpenAI / GPT 平台各自的使用條款與隱私權政策。
   </p>
   <ol style="margin:0 0 10px 18px; line-height:1.6; color:#111827;">
-    <li><b>主動上傳行為：</b>按「單獨 GPT 檢查 PDF（GPT B）」或「AI 小助手（GPT A）」等按鈕，是由使用者本人把 PDF 或檢查結果貼到 GPT 平台，而不是本網站自動幫你上傳。</li>
+    <li><b>主動上傳行為：</b>按「檢查完整小論文格式 PDF（GPT B）」或「外部檢索助手（GPT A）」等按鈕，是由使用者本人把 PDF 或檢查結果貼到 GPT 平台，而不是本網站自動幫你上傳。</li>
     <li><b>GPT 暫存即刪：</b>目前 GPT 系統已設定在完成這次分析後，即刪除本次請求用的 PDF 暫存檔，不做長期留存，以保障使用者檔案安全。</li>
     <li><b>適用他方政策：</b>上傳到 GPT 後，檔案與對話內容會依該平台的隱私權政策、資料保留政策、模型訓練政策處理，本網站無法得知也無法刪除。</li>
     <li><b>請先去識別：</b>若是比賽用、校內審查用的 PDF，建議在送到 GPT 前，先刪掉「學校名稱、學生姓名、班級、指導老師、聯絡電話、地址」等欄位，再上傳。</li>
-    <li><b>JSON 給 GPT 的情境：</b>當你按「複製查核提示（給 AI 小助手）」時，只是把本次的檢查 JSON 與題名複製起來，等你貼到 GPT 才真的送出去，這一段也被視為你個人對外貼文。</li>
+    <li><b>JSON 給 GPT 的情境：</b>當你按「複製查核提示（給 外部檢索助手 (GPT A)」時，只是把本次的檢查 JSON 與題名複製起來，等你貼到 GPT 才真的送出去，這一段也被視為你個人對外貼文。</li>
     <li><b>老師宣導建議：</b>建議向學生說明：「本頁進行的檢查與 GPT 進行的檢查屬於兩個獨立階段」。前一階段（本頁＋雲端後端）不會保存任何檔案；後一階段（GPT）雖具暫存即刪機制，但仍依 GPT 平台之隱私與資料政策運作。</li>
   </ol>
   <p class="hint" style="margin:6px 0 0;">
