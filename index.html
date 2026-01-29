@@ -137,6 +137,18 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
   }
 }
 
+/* ✅ Step 3：檢查結果專用（閱讀型結果） */
+.card.result {
+  max-width: 760px;   /* 比說明稍寬，容納表格 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .card.result {
+    max-width: 100%;
+  }
+}
 
 </style>
 
@@ -156,7 +168,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2026-01-28d</span>
+      <span class="mono">｜v=2026-01-28e</span>
       ｜© 2026 CTVS 凡事皆正面
     </p>
    <!--
@@ -346,7 +358,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
   </section>
 
   <!-- Step 3 -->
-  <section class="card" id="resultCard" style="display:none">
+  <section class="card result" id="resultCard" style="display:none">
+
     <div class="step">
       <div class="no">3</div>
       <div>
