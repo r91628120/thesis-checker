@@ -124,6 +124,20 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
   justify-content: flex-end;
 }
 
+/* ✅ 說明型區塊：集中於畫面中間（閱讀友善） */
+.card.reading {
+  max-width: 720px;      /* 桌機閱讀最佳寬度 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .card.reading {
+    max-width: 100%;     /* 手機維持滿版 */
+  }
+}
+
+
 </style>
 
 <!-- pdf.js（ESM）僅作備援讀字 -->
@@ -142,7 +156,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2026-01-28b</span>
+      <span class="mono">｜v=2026-01-28d</span>
       ｜© 2026 CTVS 凡事皆正面
     </p>
    <!--
@@ -171,7 +185,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </section>
 
    <!-- AI 小論文格式檢查使用說明 -->
-<section class="card" id="usage-note" style="border-left:6px solid #2563eb;">
+<section class="card reading" id="usage-note" style="border-left:6px solid #2563eb;">
+
   <h3 style="margin-top:0;">📌 AI 小論文格式檢查使用說明（請務必閱讀）</h3>
 
   <p style="line-height:1.7; margin:8px 0;">
@@ -369,7 +384,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
   </section>
 
 <!-- 隱私說明 -->
-<section class="card" id="privacy">
+<section class="card reading" id="privacy">
+
   <h3 style="margin-top:0;">🔒 隱私說明（本站）</h3>
   <p class="hint" style="margin:0 0 8px;">本段說明本網頁（前端介面與雲端檢查 Cloud Run）對上傳檔案的處理方式。</p>
   <ol style="margin:0 0 10px 18px; line-height:1.6; color:#111827;">
@@ -386,7 +402,8 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
 </section>
 
 <!-- GPT 的隱私說明 -->
-<section class="card" id="gpt-privacy" style="border-color:#f9a8d4;">
+<section class="card reading" id="gpt-privacy" style="border-color:#f9a8d4;">
+
   <h3 style="margin-top:0; color:#be185d;">🤖 GPT 的隱私說明</h3>
   <p style="margin:0 0 10px; line-height:1.6;">
     使用者請注意：當你「點右上或中間的 GPT / 外部檢索助手連結」離開本頁時，接下來的檔案處理就不在本網站控制範圍內，而是依照 OpenAI / GPT 平台各自的使用條款與隱私權政策。
