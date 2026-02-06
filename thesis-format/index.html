@@ -399,6 +399,10 @@
           </p>
 
           <div class="ctaRow">
+            <label>
+              <input id="termsAgree" type="checkbox" />
+              我已閱讀並同意網站服務條款
+            </label>
             <button class="btn btnPrimary" id="goCheckBtn" type="button">🚀 開始進行小論文格式檢核</button>
           </div>
         </div>
@@ -507,9 +511,14 @@
 
     // Go to GPT checker
     const goCheckBtn = document.getElementById("goCheckBtn");
+    const termsAgree = document.getElementById("termsAgree");
     function goCheck(){
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
     }
+    goCheckBtn.disabled = true;
+    termsAgree.addEventListener("change", () => {
+      goCheckBtn.disabled = !termsAgree.checked;
+    });
     goCheckBtn.addEventListener("click", goCheck);
   </script>
 
