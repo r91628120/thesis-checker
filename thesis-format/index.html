@@ -583,31 +583,41 @@
     document.getElementById("yearNow").textContent = new Date().getFullYear();
 
     // Go to GPT checker
-    const goGptBtn = document.getElementById("goGptBtn");
-    const goGemBtn = document.getElementById("goGemBtn");
-    const termsAgree = document.getElementById("termsAgree");
-    function goCheck(){
-      if (termsAgree.checked){
-        incrementCounter();
-      }
+     const goGptBtn = document.getElementById("goGptBtn");
+     const goGemBtn = document.getElementById("goGemBtn");
+     const termsAgree = document.getElementById("termsAgree");
+
+    // 初始狀態
+     goGptBtn.disabled = true;
+     goGemBtn.href = GEM_CHECK_URL;
+     goGemBtn.setAttribute("aria-disabled", "true");
+
+   // 勾選才可點
+     termsAgree.addEventListener("change", () => {
+     const enabled = termsAgree.checked;
+     goGptBtn.disabled = !enabled;
+     goGemBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
+  });
+
+  // ✅ GPT：點一次 = +1（先計數，再開新分頁）
+    goGptBtn.addEventListener("click", () => {
+      if (!termsAgree.checked) return;
+
+    incrementCounterAndRefresh(); // ✅ 只加一次
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-    }
-    goGptBtn.disabled = true;
-    goGemBtn.href = GEM_CHECK_URL;
-    goGemBtn.setAttribute("aria-disabled", "true");
-    termsAgree.addEventListener("change", () => {
-      const enabled = termsAgree.checked;
-      goGptBtn.disabled = !enabled;
-      goGemBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
-    });
-    goGptBtn.addEventListener("click", goCheck);
+  });
+
+  // ✅ GEM：點一次 = +1（先計數，再照原本連結開新分頁）
     goGemBtn.addEventListener("click", (event) => {
-      if (!termsAgree.checked){
-        event.preventDefault();
-        return;
-      }
-      incrementCounter();
-    });
+      if (!termsAgree.checked) {
+    event.preventDefault();
+    return;
+  }
+
+    incrementCounterAndRefresh(); // ✅ 只加一次
+    // 不要 preventDefault，讓 <a> 自己開新分頁（你已經 target=_blank）
+  });
+
 
    
     const COUNTER_API_BASE = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
@@ -628,18 +638,21 @@
         });
     }
 
-    function incrementCounter(){
-      const now = Date.now();
-      const last = Number(sessionStorage.getItem("lastIncAt") || "0");
-      if (now - last < 1000) return;
-      sessionStorage.setItem("lastIncAt", String(now));
-
-      const url = `${COUNTER_API_BASE}?action=inc&t=${now}`;
-      fetch(url, { cache: "no-store", keepalive: true })
-        .then(() => setTimeout(readCounter, 350))
-        .catch(() => {});
+    function makeRid(){
+       if (crypto && crypto.randomUUID) return crypto.randomUUID();
+       return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
     }
 
+    function incrementCounterAndRefresh(){
+      const rid = makeRid();
+      const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
+
+    fetch(incUrl, { cache: "no-store", keepalive: true })
+      .then(() => readCounter())   // 立刻刷新畫面
+      .catch(() => {});
+   }
+
+   readCounter();
 
 
 
