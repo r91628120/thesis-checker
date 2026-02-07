@@ -463,7 +463,8 @@
             <button class="btn btnSoftGpt" id="goGptBtn" type="button">ChatGPT（GPT）</button>
             <a class="btn btnSoftGem" id="goGemBtn" href="https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing" target="_blank" rel="noopener noreferrer">Gemini（GEM）</a>
           </div>
-          <div class="aiInfo">自檢累計使用次數（僅供參考）：0　｜　最後更新日期：2026-02-07</div>
+          <div class="aiInfo">自檢累計使用次數（僅供參考）：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
+          </div>
         </div>
       </div>
     </section>
@@ -628,15 +629,17 @@
     }
 
     function incrementCounter(){
-      const url = `${COUNTER_API_BASE}?action=inc&t=${Date.now()}`;
-      if (navigator.sendBeacon){
-        navigator.sendBeacon(url);
-        return;
-      }
-      fetch(url, { keepalive: true, cache: "no-store" }).catch(() => {});
+      const now = Date.now();
+      const last = Number(sessionStorage.getItem("lastIncAt") || "0");
+      if (now - last < 1000) return;
+      sessionStorage.setItem("lastIncAt", String(now));
+
+      const url = `${COUNTER_API_BASE}?action=inc&t=${now}`;
+      fetch(url, { cache: "no-store", keepalive: true })
+        .then(() => setTimeout(readCounter, 350))
+        .catch(() => {});
     }
 
-    readCounter();
 
 
 
