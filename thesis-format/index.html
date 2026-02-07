@@ -586,6 +586,9 @@
     const goGemBtn = document.getElementById("goGemBtn");
     const termsAgree = document.getElementById("termsAgree");
     function goCheck(){
+      if (termsAgree.checked){
+        incrementCounter();
+      }
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
     }
     goGptBtn.disabled = true;
@@ -600,20 +603,40 @@
     goGemBtn.addEventListener("click", (event) => {
       if (!termsAgree.checked){
         event.preventDefault();
+        return;
       }
+      incrementCounter();
     });
 
    
-    const COUNTER_API = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
+    const COUNTER_API_BASE = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
 
-     fetch(COUNTER_API)
-       .then(res => res.json())
-       .then(data => {
-         document.getElementById("usageCount").textContent = data.count;
-       })
-       .catch(() => {
-         document.getElementById("usageCount").textContent = "—";
-      });
+    function updateCounterDisplay(data){
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById("usageCount").textContent = data?.count ?? "—";
+      document.getElementById("lastUpdated").textContent = data?.lastUpdated || today;
+    }
+
+    function readCounter(){
+      fetch(`${COUNTER_API_BASE}?action=read&t=${Date.now()}`, { cache: "no-store" })
+        .then(res => res.json())
+        .then(updateCounterDisplay)
+        .catch(() => {
+          document.getElementById("usageCount").textContent = "—";
+          document.getElementById("lastUpdated").textContent = "—";
+        });
+    }
+
+    function incrementCounter(){
+      const url = `${COUNTER_API_BASE}?action=inc&t=${Date.now()}`;
+      if (navigator.sendBeacon){
+        navigator.sendBeacon(url);
+        return;
+      }
+      fetch(url, { keepalive: true, cache: "no-store" }).catch(() => {});
+    }
+
+    readCounter();
 
 
 
