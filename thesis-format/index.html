@@ -199,6 +199,13 @@
       flex-wrap:wrap;
       align-items:center;
     }
+    .aiInfo{
+      margin:8px 0 0;
+      color:rgba(255,255,255,.72);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.01em;
+    }
     .btnSoftGpt{
       color:#0b2b52;
       background:linear-gradient(135deg, #e8f7ef, #f6fdf9);
@@ -456,6 +463,7 @@
             <button class="btn btnSoftGpt" id="goGptBtn" type="button">ChatGPT（GPT）</button>
             <a class="btn btnSoftGem" id="goGemBtn" href="https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing" target="_blank" rel="noopener noreferrer">Gemini（GEM）</a>
           </div>
+          <div class="aiInfo">自檢累計使用次數（僅供參考）：0　｜　最後更新日期：2026-02-07</div>
         </div>
       </div>
     </section>
@@ -594,6 +602,21 @@
         event.preventDefault();
       }
     });
+
+   
+    const COUNTER_API = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
+
+     fetch(COUNTER_API)
+       .then(res => res.json())
+       .then(data => {
+         document.getElementById("usageCount").textContent = data.count;
+       })
+       .catch(() => {
+         document.getElementById("usageCount").textContent = "—";
+      });
+
+
+
   </script>
 
 </body>
