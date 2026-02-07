@@ -514,7 +514,7 @@
           <li>建議於作品排版與內容已接近完成後再進行檢核，以提升檢核效益。</li>
           <li>如需釐清規範細節，請以官方公告之格式規範文件為準。</li>
           <li>小論文寫作旨在培養學生思辨及正確運用資料之能力，文章內容（含摘要、翻譯、改寫）不得以任何AI工具生成。</li>
-          <li>相關說明請到 "中學生網站" 下載 全國高級中等學校小論文寫作比賽格式說明暨評審要點</li>
+          <li>相關說明請到 "中學生網站" 下載 全國高級中等學校小論文寫作比賽格式說明暨評審要點。</li>
         </ul>
 
         <h3>四、隱私與資料處理（可依實際情況調整）</h3>
@@ -605,18 +605,19 @@
 
     incrementCounterAndRefresh(); // ✅ 只加一次
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-  });
+    });
 
   // ✅ GEM：點一次 = +1（先計數，再照原本連結開新分頁）
     goGemBtn.addEventListener("click", (event) => {
       if (!termsAgree.checked) {
-    event.preventDefault();
-    return;
-  }
+       event.preventDefault();
+       return;
+      }
+      goGemBtn.style.pointerEvents = "none";   // ✅ 立刻禁止再點
+      incrementCounterAndRefresh();
+      setTimeout(()=>{ goGemBtn.style.pointerEvents = ""; }, 800);
+    });
 
-    incrementCounterAndRefresh(); // ✅ 只加一次
-    // 不要 preventDefault，讓 <a> 自己開新分頁（你已經 target=_blank）
-  });
 
 
    
@@ -643,14 +644,24 @@
        return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
     }
 
-    function incrementCounterAndRefresh(){
-      const rid = makeRid();
-      const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
+    let __incBusy = false;
 
-    fetch(incUrl, { cache: "no-store", keepalive: true })
-      .then(() => readCounter())   // 立刻刷新畫面
-      .catch(() => {});
-   }
+    function incrementCounterAndRefresh(){
+       if (__incBusy) return;          // ✅ 防止同一瞬間觸發兩次
+       __incBusy = true;
+
+    const rid = makeRid();
+    const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
+
+       fetch(incUrl, { cache: "no-store", keepalive: true })
+        .then(() => readCounter())
+        .catch(() => {})
+        .finally(() => {
+      // ✅ 很短的延遲就夠了，避免 double click / 重複事件
+         setTimeout(() => { __incBusy = false; }, 400);
+        });
+    }
+
 
    readCounter();
 
