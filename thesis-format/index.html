@@ -609,17 +609,16 @@
 
   // ✅ GEM：點一次 = +1（先計數，再照原本連結開新分頁）
     goGemBtn.addEventListener("click", (event) => {
-      if (!termsAgree.checked) {
-       event.preventDefault();
-       return;
-      }
-      goGemBtn.style.pointerEvents = "none";   // ✅ 立刻禁止再點
-      incrementCounterAndRefresh();
-      setTimeout(()=>{ goGemBtn.style.pointerEvents = ""; }, 800);
+     if (!termsAgree.checked) {
+      event.preventDefault();
+     return;
+    }
+
+    event.preventDefault(); // ✅ 阻止 <a> 自己導頁（避免 +2）
+
+      incrementCounterAndRefresh(); // ✅ 只算一次
+    window.open(GEM_CHECK_URL, "_blank", "noopener,noreferrer");
     });
-
-
-
    
     const COUNTER_API_BASE = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
 
@@ -640,32 +639,54 @@
     }
 
     function makeRid(){
-       if (crypto && crypto.randomUUID) return crypto.randomUUID();
-       return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+/**
+ * 去重策略：
+ * - 3 秒內如果重複觸發，就沿用同一個 rid
+ * - 後端（GAS）看到同 rid 會擋掉第二次
+ */
+function getStableRid(){
+  const key = "counter_rid_v1";
+  const now = Date.now();
+  try{
+    const raw = sessionStorage.getItem(key);
+    if (raw){
+      const obj = JSON.parse(raw);
+      if (obj && obj.rid && (now - obj.ts) < 3000){
+        return obj.rid; // 3 秒內沿用同一個 rid
+      }
     }
+  }catch(_){}
 
-    let __incBusy = false;
+  const rid = makeRid();
+  try{
+    sessionStorage.setItem(key, JSON.stringify({ rid, ts: now }));
+  }catch(_){}
+  return rid;
+}
 
-    function incrementCounterAndRefresh(){
-       if (__incBusy) return;          // ✅ 防止同一瞬間觸發兩次
-       __incBusy = true;
+let __incBusy = false;
 
-    const rid = makeRid();
-    const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
+function incrementCounterAndRefresh(){
+  if (__incBusy) return;
+  __incBusy = true;
 
-       fetch(incUrl, { cache: "no-store", keepalive: true })
-        .then(() => readCounter())
-        .catch(() => {})
-        .finally(() => {
-      // ✅ 很短的延遲就夠了，避免 double click / 重複事件
-         setTimeout(() => { __incBusy = false; }, 400);
-        });
-    }
+  const rid = getStableRid();
+  const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
 
+  fetch(incUrl, { cache: "no-store" })
+    .then(() => readCounter())
+    .catch(() => {})
+    .finally(() => {
+      // 給久一點，避免某些瀏覽器/刷新/跳頁造成重送
+      setTimeout(() => { __incBusy = false; }, 1200);
+    });
+}
 
    readCounter();
-
-
 
   </script>
 
