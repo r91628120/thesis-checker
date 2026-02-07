@@ -172,6 +172,33 @@
       box-shadow:0 18px 30px rgba(0,0,0,.18);
     }
     .btnPrimary:hover{ filter:brightness(1.02); box-shadow:0 22px 40px rgba(0,0,0,.22); }
+    .btn[disabled],
+    .btn[aria-disabled="true"]{
+      opacity:.55;
+      cursor:not-allowed;
+      filter:saturate(.8);
+      pointer-events:none;
+    }
+
+    .aiEntryNote{
+      margin:10px 0 8px;
+      color:rgba(255,255,255,.88);
+      font-size:14px;
+      font-weight:700;
+    }
+    .aiEntryRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btnGhost{
+      color:#ffffff;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.28);
+      box-shadow:0 14px 26px rgba(0,0,0,.18);
+    }
+    .btnGhost:hover{ filter:brightness(1.06); box-shadow:0 18px 34px rgba(0,0,0,.22); }
 
     /* ---------- Warning Strip ---------- */
     .warnStrip{
@@ -407,6 +434,11 @@
             </label>
             <button class="btn btnPrimary" id="goCheckBtn" type="button">🚀 開始進行小論文格式檢核</button>
           </div>
+          <p class="aiEntryNote">本系統提供兩種 AI 入口，使用者可依慣用平台選擇 ChatGPT（GPT）或 Gemini（GEM）進行格式輔助檢核。</p>
+          <div class="aiEntryRow">
+            <button class="btn btnGhost" id="goGptBtn" type="button">ChatGPT（GPT）</button>
+            <a class="btn btnGhost" id="goGemBtn" href="https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing" target="_blank" rel="noopener noreferrer">Gemini（GEM）</a>
+          </div>
         </div>
       </div>
     </section>
@@ -433,6 +465,7 @@
       </div>
 
       <div class="termsBody">
+        <p>本系統僅提供不同 AI 平台之入口導向，所有檢核內容皆為 AI 依文件可見內容產出之格式輔助參考，不具評分、合格認定或行政效力，且不影響承辦單位與評審老師之最終認定與裁量。</p>
         <h3>一、工具定位與責任切割</h3>
         <ul>
           <li>本系統提供由 AI（GPT）執行之「小論文格式與結構」輔助檢核建議，協助學生與教師進行自我檢查。</li>
@@ -516,21 +549,36 @@
     // TODO：改成你們正式 GPT 檢核網址
     // =========================
     const GPT_CHECK_URL = "https://chatgpt.com/g/g-6981a04f211881919fef2b895ea253d2-gao-zhong-zhi-xiao-lun-wen-jian-he-fen-xi-yin-qing-gpt-a-public-v1-0-wen-ding-ban"; // ← 改這裡
+    const GEM_CHECK_URL = "https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing";
 
     // Footer year
     document.getElementById("yearNow").textContent = new Date().getFullYear();
 
     // Go to GPT checker
     const goCheckBtn = document.getElementById("goCheckBtn");
+    const goGptBtn = document.getElementById("goGptBtn");
+    const goGemBtn = document.getElementById("goGemBtn");
     const termsAgree = document.getElementById("termsAgree");
     function goCheck(){
       window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
     }
     goCheckBtn.disabled = true;
+    goGptBtn.disabled = true;
+    goGemBtn.href = GEM_CHECK_URL;
+    goGemBtn.setAttribute("aria-disabled", "true");
     termsAgree.addEventListener("change", () => {
-      goCheckBtn.disabled = !termsAgree.checked;
+      const enabled = termsAgree.checked;
+      goCheckBtn.disabled = !enabled;
+      goGptBtn.disabled = !enabled;
+      goGemBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
     });
     goCheckBtn.addEventListener("click", goCheck);
+    goGptBtn.addEventListener("click", goCheck);
+    goGemBtn.addEventListener("click", (event) => {
+      if (!termsAgree.checked){
+        event.preventDefault();
+      }
+    });
   </script>
 
 </body>
