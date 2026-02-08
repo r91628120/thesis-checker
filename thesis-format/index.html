@@ -417,16 +417,16 @@
      box-shadow: none;
     }
     
-    /* 預設：尚未勾選 → 淺紅色提醒 */
-    .termsText span {
-      color: #e57373;
-      font-weight: 500;
-   }
+    /* 尚未勾選：淺紅色提醒 */
+     .termsText span {
+        color: #e57373;          /* 淺紅 */
+        transition: color 0.25s ease;
+    }
 
-    /* 勾選後 → 中性深灰（安心感） */
-     #termsAgree:checked + span {
-      color: #555;
-      font-weight: 500;
+    /* ✅ 勾選後：亮綠色（完成 / 安心） */
+      #termsAgree:checked + span {
+        color: #2e7d32;          /* 穩定亮綠，不刺眼 */
+        font-weight: 500;
     }
 
 
