@@ -461,7 +461,8 @@
           <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
           <div class="aiEntryRow">
             <button class="btn btnSoftGpt" id="goGptBtn" type="button">ChatGPT（GPT）</button>
-            <a class="btn btnSoftGem" id="goGemBtn" href="https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing" target="_blank" rel="noopener noreferrer">Gemini（GEM）</a>
+            <button class="btn btnSoftGem" id="goGemBtn" type="button">Gemini（GEM）</button>
+
           </div>
           <div class="aiInfo">自檢累計使用次數（僅供參考）：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
           </div>
@@ -574,72 +575,50 @@
 
   <script>
     // =========================
-    // TODO：改成你們正式 GPT 檢核網址
-    // =========================
-    const GPT_CHECK_URL = "https://chatgpt.com/g/g-6981a04f211881919fef2b895ea253d2-gao-zhong-zhi-xiao-lun-wen-jian-he-fen-xi-yin-qing-gpt-a-public-v1-0-wen-ding-ban"; // ← 改這裡
-    const GEM_CHECK_URL = "https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing";
+// TODO：改成你們正式 GPT 檢核網址
+// =========================
+const GPT_CHECK_URL = "https://chatgpt.com/g/g-6981a04f211881919fef2b895ea253d2-gao-zhong-zhi-xiao-lun-wen-jian-he-fen-xi-yin-qing-gpt-a-public-v1-0-wen-ding-ban";
+const GEM_CHECK_URL = "https://gemini.google.com/gem/1SPxMRf7v40vT8wWjhETSQjooQ0vuVMcs?usp=sharing";
 
-    // Footer year
-    document.getElementById("yearNow").textContent = new Date().getFullYear();
+// Footer year
+document.getElementById("yearNow").textContent = new Date().getFullYear();
 
-    // Go to GPT checker
-     const goGptBtn = document.getElementById("goGptBtn");
-     const goGemBtn = document.getElementById("goGemBtn");
-     const termsAgree = document.getElementById("termsAgree");
+// Buttons / checkbox
+const goGptBtn = document.getElementById("goGptBtn");
+const goGemBtn = document.getElementById("goGemBtn");
+const termsAgree = document.getElementById("termsAgree");
 
-    // 初始狀態
-     goGptBtn.disabled = true;
-     goGemBtn.href = GEM_CHECK_URL;
-     goGemBtn.setAttribute("aria-disabled", "true");
+// 初始狀態
+goGptBtn.disabled = true;
+goGemBtn.disabled = true; // ✅ Gemini 已改成 button 才能這樣控
 
-   // 勾選才可點
-     termsAgree.addEventListener("change", () => {
-     const enabled = termsAgree.checked;
-     goGptBtn.disabled = !enabled;
-     goGemBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
-  });
+// 勾選才可點
+termsAgree.addEventListener("change", () => {
+  const enabled = termsAgree.checked;
+  goGptBtn.disabled = !enabled;
+  goGemBtn.disabled = !enabled;
+});
 
-  // ✅ GPT：點一次 = +1（先計數，再開新分頁）
-    goGptBtn.addEventListener("click", () => {
-      if (!termsAgree.checked) return;
+const COUNTER_API_BASE =
+  "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
 
-    incrementCounterAndRefresh();   // ✅ 只在這裡 +1
-    window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-  });
+function updateCounterDisplay(data) {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById("usageCount").textContent = data?.count ?? "—";
+  document.getElementById("lastUpdated").textContent = data?.lastUpdated || today;
+}
 
-
-  // ✅ GEM：點一次 = +1（先計數，再照原本連結開新分頁）
-    goGemBtn.addEventListener("click", (event) => {
-      if (!termsAgree.checked) {
-      event.preventDefault();
-      return;
-    }
-
-      event.preventDefault();         // ❗ 必須
-      incrementCounterAndRefresh();   // ✅ 只在這裡 +1
-    window.open(GEM_CHECK_URL, "_blank", "noopener,noreferrer");
+function readCounter() {
+  fetch(`${COUNTER_API_BASE}?action=read&t=${Date.now()}`, { cache: "no-store" })
+    .then((res) => res.json())
+    .then(updateCounterDisplay)
+    .catch(() => {
+      document.getElementById("usageCount").textContent = "—";
+      document.getElementById("lastUpdated").textContent = "—";
     });
+}
 
-   
-    const COUNTER_API_BASE = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
-
-    function updateCounterDisplay(data){
-      const today = new Date().toISOString().slice(0, 10);
-      document.getElementById("usageCount").textContent = data?.count ?? "—";
-      document.getElementById("lastUpdated").textContent = data?.lastUpdated || today;
-    }
-
-    function readCounter(){
-      fetch(`${COUNTER_API_BASE}?action=read&t=${Date.now()}`, { cache: "no-store" })
-        .then(res => res.json())
-        .then(updateCounterDisplay)
-        .catch(() => {
-          document.getElementById("usageCount").textContent = "—";
-          document.getElementById("lastUpdated").textContent = "—";
-        });
-    }
-
-    function makeRid(){
+function makeRid() {
   if (crypto && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
@@ -649,44 +628,62 @@
  * - 3 秒內如果重複觸發，就沿用同一個 rid
  * - 後端（GAS）看到同 rid 會擋掉第二次
  */
-function getStableRid(){
+function getStableRid() {
   const key = "counter_rid_v1";
   const now = Date.now();
-  try{
+  try {
     const raw = sessionStorage.getItem(key);
-    if (raw){
+    if (raw) {
       const obj = JSON.parse(raw);
-      if (obj && obj.rid && (now - obj.ts) < 3000){
-        return obj.rid; // 3 秒內沿用同一個 rid
-      }
+      if (obj && obj.rid && now - obj.ts < 3000) return obj.rid;
     }
-  }catch(_){}
+  } catch (_) {}
 
   const rid = makeRid();
-  try{
+  try {
     sessionStorage.setItem(key, JSON.stringify({ rid, ts: now }));
-  }catch(_){}
+  } catch (_) {}
   return rid;
 }
 
 let __incBusy = false;
 
-function incrementCounterAndRefresh(){
+function incrementCounterAndRefresh() {
   if (__incBusy) return;
   __incBusy = true;
 
   const rid = getStableRid();
   const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}`;
 
-  fetch(incUrl, { cache: "no-store" })
+  // ✅ 不用 keepalive，避免刷新/離開頁面時「重送」造成 +1
+  return fetch(incUrl, { cache: "no-store" })
     .then(() => readCounter())
     .finally(() => {
-      setTimeout(() => { __incBusy = false; }, 1200);
+      setTimeout(() => {
+        __incBusy = false;
+      }, 1200);
     });
 }
 
+/**
+ * ✅ 核心修正：用 onclick 覆寫，避免 addEventListener 被重複綁造成 +2
+ * 且：按一次只會進來一次。
+ */
+goGptBtn.onclick = () => {
+  if (!termsAgree.checked) return;
+  incrementCounterAndRefresh();
+  window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
+};
 
-   readCounter();
+goGemBtn.onclick = () => {
+  if (!termsAgree.checked) return;
+  incrementCounterAndRefresh();
+  window.open(GEM_CHECK_URL, "_blank", "noopener,noreferrer");
+};
+
+// ✅ 只讀取，不計數
+readCounter();
+
 
   </script>
 
