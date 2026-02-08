@@ -1,4 +1,4 @@
-﻿<!doctype html>
+﻿﻿<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
@@ -454,7 +454,7 @@
           <div class="ctaRow">
             <label>
               <input id="termsAgree" type="checkbox" />
-              <strong class="em"></strong>我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，且不得作為申訴或爭議依據。</strong>
+              我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，且不得作為申訴或爭議依據。
             </label>
           </div>
           <p class="aiEntryNote">本系統提供兩種 AI 入口，使用者可依慣用平台選擇 ChatGPT（GPT）或 Gemini（GEM）進行格式輔助檢核。</p>
@@ -654,20 +654,12 @@ function incrementCounterAndRefresh(){
 
   const rid = getStableRid();
 
-   function incrementCounterAndRefresh(){
-  if (__incBusy) return;
-  __incBusy = true;
-
-  const rid = getStableRid();
-  const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}&t=${Date.now()}`;
-
-  fetch(incUrl, { cache: "no-store", keepalive: true })
-    .then(() => readCounter())
-    .finally(() => {
-      setTimeout(() => { __incBusy = false; }, 1200);
-    });
-}
-
+  fetch(COUNTER_API_BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rid }),
+    cache: "no-store",
+  })
   .then(() => readCounter())
   .finally(() => {
     setTimeout(() => { __incBusy = false; }, 1200);
