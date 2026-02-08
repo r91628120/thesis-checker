@@ -604,9 +604,16 @@ const COUNTER_API_BASE =
 
 function updateCounterDisplay(data) {
   const today = new Date().toISOString().slice(0, 10);
+
   document.getElementById("usageCount").textContent = data?.count ?? "—";
-  document.getElementById("lastUpdated").textContent = data?.lastUpdated || today;
+
+  const dateOnly = data?.lastUpdated
+    ? data.lastUpdated.slice(0, 10)   // ⭐ 只取 YYYY-MM-DD
+    : today;
+
+  document.getElementById("lastUpdated").textContent = dateOnly;
 }
+
 
 function readCounter() {
   fetch(`${COUNTER_API_BASE}?action=read&t=${Date.now()}`, { cache: "no-store" })
@@ -648,23 +655,25 @@ function getStableRid() {
 
 let __incBusy = false;
 
-function incrementCounterAndRefresh(){
+function incrementCounterAndRefresh() {
   if (__incBusy) return;
   __incBusy = true;
 
   const rid = getStableRid();
+  const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}&t=${Date.now()}`;
 
-  fetch(COUNTER_API_BASE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ rid }),
-    cache: "no-store",
-  })
-  .then(() => readCounter())
-  .finally(() => {
-    setTimeout(() => { __incBusy = false; }, 1200);
-  });
+  fetch(incUrl, { cache: "no-store" })
+    .then((res) => res.json())
+    .then(updateCounterDisplay)  // 直接用回傳值更新畫面（更快）
+    .catch(() => {
+      // 如果被擋/失敗，至少不要卡住
+    })
+    .finally(() => {
+      setTimeout(() => { __incBusy = false; }, 1200);
+    });
 }
+
+
 
 
 /**
