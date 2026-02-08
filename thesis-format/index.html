@@ -603,22 +603,23 @@
     goGptBtn.addEventListener("click", () => {
       if (!termsAgree.checked) return;
 
-    incrementCounterAndRefresh(); // ✅ 只加一次
-      window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-    });
+    incrementCounterAndRefresh();   // ✅ 只在這裡 +1
+    window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
+  });
+
 
   // ✅ GEM：點一次 = +1（先計數，再照原本連結開新分頁）
     goGemBtn.addEventListener("click", (event) => {
-     if (!termsAgree.checked) {
+      if (!termsAgree.checked) {
       event.preventDefault();
-     return;
+      return;
     }
 
-    event.preventDefault(); // ✅ 阻止 <a> 自己導頁（避免 +2）
-
-      incrementCounterAndRefresh(); // ✅ 只算一次
+      event.preventDefault();         // ❗ 必須
+      incrementCounterAndRefresh();   // ✅ 只在這裡 +1
     window.open(GEM_CHECK_URL, "_blank", "noopener,noreferrer");
     });
+
    
     const COUNTER_API_BASE = "https://script.google.com/macros/s/AKfycbxuRHsTQGOVrOPRwLNYkBiXzGhtMKJkKTEnNo60RkE_DsCOSnsxZulHpmyxlxReNLSUBA/exec";
 
@@ -679,12 +680,11 @@ function incrementCounterAndRefresh(){
 
   fetch(incUrl, { cache: "no-store" })
     .then(() => readCounter())
-    .catch(() => {})
     .finally(() => {
-      // 給久一點，避免某些瀏覽器/刷新/跳頁造成重送
       setTimeout(() => { __incBusy = false; }, 1200);
     });
 }
+
 
    readCounter();
 
