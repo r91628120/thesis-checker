@@ -417,17 +417,20 @@
      box-shadow: none;
     }
     
-    /* 尚未勾選：淺紅色提醒 */
+    /* 未勾選：淺紅色提醒 */
      .termsText span {
-        color: #e57373;          /* 淺紅 */
-        transition: color 0.25s ease;
+      color: #e57373;              /* 淺紅 */
+      font-weight: 400;
+      transition: color 0.25s ease, font-weight 0.25s ease;
     }
 
-    /* ✅ 勾選後：亮綠色（完成 / 安心） */
+    /* ✅ 勾選後：白色＋加粗（最清楚、不被藍底吃掉） */
       #termsAgree:checked + span {
-        color: #2e7d32;          /* 穩定亮綠，不刺眼 */
-        font-weight: 500;
+      color: #ffffff;              /* 白色 */
+      font-weight: 600;            /* 加粗但不過重 */
+      text-shadow: 0 0 2px rgba(255,255,255,0.25);
     }
+
 
 
     
