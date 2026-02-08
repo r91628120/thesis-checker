@@ -416,6 +416,19 @@
      border-top: none;
      box-shadow: none;
     }
+    
+    /* 預設：尚未勾選 → 淺紅色提醒 */
+    .termsText span {
+      color: #e57373;
+      font-weight: 500;
+   }
+
+    /* 勾選後 → 中性深灰（安心感） */
+     #termsAgree:checked + span {
+      color: #555;
+      font-weight: 500;
+    }
+
 
     
   </style>
@@ -452,11 +465,15 @@
           </p>
           
           <div class="ctaRow">
-            <label>
-              <input id="termsAgree" type="checkbox" />
-              我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，且不得作為申訴或爭議依據。
+            <label class="termsText">
+             <input id="termsAgree" type="checkbox" />
+             <span>
+                我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，
+                且不得作為申訴或爭議依據。
+             </span>
             </label>
           </div>
+
           <p class="aiEntryNote">本系統提供兩種 AI 入口，使用者可依慣用平台選擇 ChatGPT（GPT）或 Gemini（GEM）進行格式輔助檢核。</p>
           <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
           <div class="aiEntryRow">
@@ -464,7 +481,7 @@
             <button class="btn btnSoftGem" id="goGemBtn" type="button">Gemini（GEM）</button>
 
           </div>
-          <div class="aiInfo">自檢累計使用次數（僅供參考）：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
+          <div class="aiInfo">自檢累計使用次數：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
           </div>
         </div>
       </div>
