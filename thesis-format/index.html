@@ -431,7 +431,19 @@
       text-shadow: 0 0 2px rgba(255,255,255,0.25);
     }
 
+     .modeHint{
+      margin:8px 0 6px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
 
+     .modeItem{
+      font-size:13px;
+      color:rgba(255,255,255,.85);
+      font-weight:700;
+      line-height:1.5;
+    }
 
     
   </style>
@@ -478,6 +490,19 @@
           </div>
 
           <p class="aiEntryNote">本系統提供兩種 AI 入口，使用者可依慣用平台選擇 ChatGPT（GPT A）或 ChatGPT（GPT B）進行格式輔助檢核。</p>
+           
+            <div class="modeHint">
+            <div class="modeItem">
+               <strong>GPT A｜完整流程型檢核模式</strong><br>
+                         適合正式送交前的最終確認
+            </div>
+
+            <div class="modeItem">
+               <strong>GPT B｜結構觀察型模式</strong><br>
+                         適合課堂教學、分項指導與局部修正使用
+            </div>
+          </div>
+
           <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
           <div class="aiEntryRow">
             <button class="btn btnSoftGpt" id="goGptBtn" type="button">ChatGPT（GPT A）</button>
