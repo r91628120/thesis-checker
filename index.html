@@ -168,7 +168,7 @@ footer{margin-top:24px;text-align:center;color:#6b7280;font-size:13px}
     <h1>高中職小論文格式自檢系統</h1>
     <p class="meta">
       目前累積自檢人次：<b id="counter">載入中…</b>
-      <span class="mono">｜v=2026-02-26d</span>
+      <span class="mono">｜v=2026-02-26e</span>
       ｜© 2026 CTVS 凡事皆正面
     </p>
    <!--
@@ -496,6 +496,13 @@ const fileTag  = document.getElementById('fileTag');
 const downloadHtmlBtn = document.getElementById('downloadHtml');
 const gptALink = document.getElementById('gptA');
 const gptBLink = document.getElementById('gptB');
+
+// ✅ 點 GPT B 也累加人次
+gptBLink.addEventListener('click', async () => {
+  await bumpCounterEveryTime();
+  setTimeout(fetchCounter, 300); // 更新畫面數字
+});
+
 const extPanel = document.getElementById('extSearchPanel');
 const searchLinksEl = document.getElementById('searchLinks');
 const jsonPreviewEl = document.getElementById('jsonPreview');
