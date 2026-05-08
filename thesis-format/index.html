@@ -452,6 +452,104 @@
   color:#0b2b52;
 }
 
+  .promptBuilder{
+  margin-top:18px;
+  margin-bottom:24px;
+  border-radius:22px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(203,213,225,.9);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+
+.promptBuilder h2{
+  margin:0 0 10px;
+  color:var(--navy);
+  font-size:26px;
+  font-weight:950;
+  text-align:center;
+}
+
+.promptBuilder p{
+  margin:8px 0;
+  color:#334155;
+  font-size:16px;
+  font-weight:750;
+  line-height:1.8;
+  text-align:center;
+}
+
+.builderNote{
+  color:#b91c1c !important;
+  font-weight:950 !important;
+}
+
+.checkGrid{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.checkGrid label{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:12px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  font-weight:850;
+  color:#0f172a;
+}
+
+.builderBtns{
+  margin-top:16px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.builderBtn{
+  border:0;
+  border-radius:16px;
+  padding:13px 18px;
+  background:linear-gradient(135deg,#0b2b52,#0a3a6b);
+  color:#fff;
+  font-weight:950;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(11,43,82,.2);
+}
+
+.builderBtn.secondary{
+  background:#e5e7eb;
+  color:#334155;
+  box-shadow:none;
+}
+
+.promptOutput{
+  width:100%;
+  min-height:180px;
+  margin-top:16px;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(203,213,225,.95);
+  background:#f8fafc;
+  color:#0f172a;
+  font-size:14px;
+  line-height:1.7;
+  resize:vertical;
+}
+
+@media (max-width:768px){
+  .checkGrid{
+    grid-template-columns:1fr;
+  }
+}
+
+
+
 
     @media (max-width:520px){
       .howTitle{ font-size:20px; }
@@ -749,9 +847,9 @@
        <section class="guideCard">
             <h2>📘 看不懂 AI 檢核報告嗎？</h2>
               <p>可依照報告中的第 1–18 項編號，快速查詢每一項代表的意思。</p>
-               <a class="guideBtn" href="./report-guide.html">
-                 🔍 進入 AI 檢核報告閱讀說明
-               </a>
+               <a class="guideBtn" id="goGuideBtn" href="./report-guide.html">
+                   🔍 進入 AI 檢核報告閱讀說明
+              </a>
        </section>
      
      
@@ -781,10 +879,10 @@
           <p class="aiEntryNote">本系統提供 AI（GPT）小論文格式輔助檢核入口，請詳閱上方使用說明後再開始使用。</p>
            
            
-          <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
+          <p class="ctaHint">🚀 開始進行完整小論文格式檢核</p>
           <div class="aiEntryRow">
             
-            <button class="btn btnSoftGem" id="goGemBtn" type="button">開始進入小論文檢查</button>
+            <button class="btn btnSoftGem" id="goGemBtn" type="button">開始進入完整小論文檢查</button>
 
           </div>
           <div class="aiInfo">自檢累計使用次數：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
@@ -793,13 +891,46 @@
       </div>
     </section>
 
+    <section class="promptBuilder" aria-label="小論文細項檢查指令產生器">
+                 <h2>🧩 小論文細項檢查指令產生器</h2>
+                     <p>
+                        請勾選想加強檢查的「格式項目」，系統會自動產生 JSON 指令。
+                        複製後貼到 GPT 使用，可針對特定格式細項進行補充檢查。
+                      </p>
+                      <p class="builderNote">
+                          ⚠️ 本功能僅限格式、引註、頁面、圖表來源等可觀察項目，不進行內容評分、研究品質判定或合格認定。
+                      </p>
+
+               <div class="checkGrid">
+                 <label><input type="checkbox" class="checkItem" value="全篇頁數與是否落在 4–10 頁範圍"> 全篇頁數</label>
+                 <label><input type="checkbox" class="checkItem" value="六大章節是否完整、順序是否正確"> 六大章節與順序</label>
+                 <label><input type="checkbox" class="checkItem" value="頁首篇名、頁尾頁碼是否逐頁存在且一致"> 頁首／頁尾</label>
+                 <label><input type="checkbox" class="checkItem" value="直接引文是否以引號標示，並檢查是否超過 50 字"> 引號字數</label>
+                 <label><input type="checkbox" class="checkItem" value="內文引註 C 與參考文獻 R 是否逐筆對應"> C/R 引註對應</label>
+                 <label><input type="checkbox" class="checkItem" value="引而未列 C−R：內文有引用但參考文獻未列"> 引而未列 C−R</label>
+                 <label><input type="checkbox" class="checkItem" value="列而未引 R−C：參考文獻有列但內文未引用"> 列而未引 R−C</label>
+                 <label><input type="checkbox" class="checkItem" value="引註格式是否符合作者與年代標示"> 引註格式</label>
+                 <label><input type="checkbox" class="checkItem" value="參考文獻是否至少 3 篇，且檢查來源類型"> 參考文獻數量與類型</label>
+                 <label><input type="checkbox" class="checkItem" value="圖表編號、標題、來源與是否列入參考文獻"> 圖表來源</label>
+                 <label><input type="checkbox" class="checkItem" value="是否有封面頁或不應出現的額外頁面"> 封面頁檢查</label>
+                 <label><input type="checkbox" class="checkItem" value="附錄是否出現足以辨識作者身分的資料"> 附錄個資風險</label>
+                </div>
+
+                <div class="builderBtns">
+                    <button class="builderBtn" type="button" id="buildPromptBtn">✨ 產生並複製 JSON 指令</button>
+                    <button class="builderBtn secondary" type="button" id="clearPromptBtn">清除勾選</button>
+                </div>
+
+              
+         </section>
+       
 
 
     <!-- Footer（只留官方密度） -->
     <footer aria-label="頁尾資訊">
       <div class="footTop">
         <div class="tag">© <span id="yearNow"></span></div>
-        <div class="tag">版本：<span id="ver">v1.0.0</span></div>
+        <div class="tag">版本：<span id="ver">v1.0.1</span></div>
         <div class="tag">聯絡信箱：r91628120@ctvs.ptc.edu.tw</div>
         
         <div class="tag">網站建置與維護：小論文格式檢查設計團隊</div>
@@ -881,7 +1012,7 @@ function incrementCounterAndRefresh() {
   const rid = getStableRid();
   const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}&t=${Date.now()}`;
 
-  fetch(incUrl, { cache: "no-store" })
+  fetch(incUrl, { cache: "no-store", keepalive: true })
     .then((res) => res.json())
     .then(updateCounterDisplay)
     .finally(() => {
@@ -894,6 +1025,70 @@ goGemBtn.onclick = () => {
   incrementCounterAndRefresh();
   window.open(CHECK_URL, "_blank", "noopener,noreferrer");
 };
+
+const goGuideBtn = document.getElementById("goGuideBtn");
+
+goGuideBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  incrementCounterAndRefresh();
+
+  setTimeout(() => {
+    window.location.href = "./report-guide.html";
+  }, 250);
+});
+
+ const buildPromptBtn = document.getElementById("buildPromptBtn");
+const clearPromptBtn = document.getElementById("clearPromptBtn");
+const promptOutput = document.getElementById("promptOutput");
+
+buildPromptBtn.addEventListener("click", async () => {
+  const selected = Array.from(document.querySelectorAll(".checkItem:checked"))
+    .map(item => item.value);
+
+  if (selected.length === 0) {
+    alert("請至少勾選一個想檢查的項目。");
+    return;
+  }
+
+  const promptJson = {
+    mode: "高中職小論文格式細項補充檢查",
+    task: "請依我上傳的小論文 PDF 進行指定格式項目檢查",
+    selected_checks: selected,
+    analysis_scope: [
+      "僅依 PDF 可見內容檢查",
+      "僅列出可觀察事實",
+      "不得進行作品品質評分",
+      "不得判定合格或不合格",
+      "不得作為申訴、爭議或對抗評審之依據"
+    ],
+    output_request: [
+      "請依勾選項目逐項列出檢查結果",
+      "每一項請包含：觀察結果、出現頁碼或位置、需人工確認處",
+      "若資料不足，請標示：未提供或無法判讀",
+      "請使用學生看得懂的文字說明"
+    ],
+    reminder: "本指令僅用於格式輔助檢查，不進行研究內容評分或研究品質判定。"
+  };
+
+  const text = JSON.stringify(promptJson, null, 2);
+  alert("✅ 已自動複製格式檢查指令！\n請回到 GPT 貼上後使用。");
+
+  try {
+    await navigator.clipboard.writeText(text);
+    incrementCounterAndRefresh();
+    alert("✅ 已複製 JSON 指令！請再按下方「開始進入小論文檢查」，貼到 GPT 使用。");
+  } catch (err) {
+    alert("已產生 JSON 指令，請手動複製文字框內容。");
+  }
+});
+
+clearPromptBtn.addEventListener("click", () => {
+  document.querySelectorAll(".checkItem").forEach(item => item.checked = false);
+  promptOutput.value = "";
+});
+
+
+
 
 readCounter();
 </script>
