@@ -430,7 +430,27 @@
   filter:brightness(1.05);
 }
 
+ .guideCard{
+  margin-top:18px;
+  margin-bottom:24px;
+}
 
+.hero{
+  margin-top:18px;
+} 
+
+.btnSoftGem[disabled]{
+  background:linear-gradient(135deg,#e5e7eb,#f1f5f9);
+  color:#64748b;
+  box-shadow:none;
+  opacity:1;
+  cursor:not-allowed;
+}
+
+.btnSoftGem:not([disabled]){
+  background:linear-gradient(135deg,#fff1e6,#fff8f2);
+  color:#0b2b52;
+}
 
 
     @media (max-width:520px){
@@ -726,13 +746,13 @@
          </p> 
 
      
-    <section class="guideCard">
-        <h2>📘 看不懂 AI 檢核報告嗎？</h2>
-        <p>可依照報告中的第 1–18 項編號，快速查詢每一項代表的意思。</p>
-          <a class="guideBtn" href="./report-guide.html">
-            🔍 進入 AI 檢核報告閱讀說明
-          </a>
-    </section>
+       <section class="guideCard">
+            <h2>📘 看不懂 AI 檢核報告嗎？</h2>
+              <p>可依照報告中的第 1–18 項編號，快速查詢每一項代表的意思。</p>
+               <a class="guideBtn" href="./report-guide.html">
+                 🔍 進入 AI 檢核報告閱讀說明
+               </a>
+       </section>
      
      
          <section class="hero" aria-label="主要入口">
@@ -789,29 +809,17 @@
   </div>
 
   <script>
-    // =========================
-// TODO：改成你們正式 GPT 檢核網址
-// =========================
-const GPT_CHECK_URL = "https://chatgpt.com/g/g-6981a1058f4081919bf0372ee8774bac-gao-zhong-zhi-xiao-lun-wen-jian-he-bao-gao-sheng-cheng-yin-qing-gpt-a";
-const GEM_CHECK_URL = "https://chatgpt.com/g/g-6981a04f211881919fef2b895ea253d2-gao-zhong-zhi-xiao-lun-wen-jian-he-fen-xi-yin-qing-gpt-a-public-v1-0-wen-ding-ban";
+const CHECK_URL = "https://chatgpt.com/g/g-6981a04f211881919fef2b895ea253d2";
 
-// Footer year
 document.getElementById("yearNow").textContent = new Date().getFullYear();
 
-// Buttons / checkbox
-const goGptBtn = document.getElementById("goGptBtn");
 const goGemBtn = document.getElementById("goGemBtn");
 const termsAgree = document.getElementById("termsAgree");
 
-// 初始狀態
-goGptBtn.disabled = true;
-goGemBtn.disabled = true; // ✅ Gemini 已改成 button 才能這樣控
+goGemBtn.disabled = true;
 
-// 勾選才可點
 termsAgree.addEventListener("change", () => {
-  const enabled = termsAgree.checked;
-  goGptBtn.disabled = !enabled;
-  goGemBtn.disabled = !enabled;
+  goGemBtn.disabled = !termsAgree.checked;
 });
 
 const COUNTER_API_BASE =
@@ -819,16 +827,14 @@ const COUNTER_API_BASE =
 
 function updateCounterDisplay(data) {
   const today = new Date().toISOString().slice(0, 10);
-
   document.getElementById("usageCount").textContent = data?.count ?? "—";
 
   const dateOnly = data?.lastUpdated
-    ? data.lastUpdated.slice(0, 10)   // ⭐ 只取 YYYY-MM-DD
+    ? data.lastUpdated.slice(0, 10)
     : today;
 
   document.getElementById("lastUpdated").textContent = dateOnly;
 }
-
 
 function readCounter() {
   fetch(`${COUNTER_API_BASE}?action=read&t=${Date.now()}`, { cache: "no-store" })
@@ -845,14 +851,10 @@ function makeRid() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-/**
- * 去重策略：
- * - 3 秒內如果重複觸發，就沿用同一個 rid
- * - 後端（GAS）看到同 rid 會擋掉第二次
- */
 function getStableRid() {
   const key = "counter_rid_v1";
   const now = Date.now();
+
   try {
     const raw = sessionStorage.getItem(key);
     if (raw) {
@@ -862,9 +864,11 @@ function getStableRid() {
   } catch (_) {}
 
   const rid = makeRid();
+
   try {
     sessionStorage.setItem(key, JSON.stringify({ rid, ts: now }));
   } catch (_) {}
+
   return rid;
 }
 
@@ -879,39 +883,20 @@ function incrementCounterAndRefresh() {
 
   fetch(incUrl, { cache: "no-store" })
     .then((res) => res.json())
-    .then(updateCounterDisplay)  // 直接用回傳值更新畫面（更快）
-    .catch(() => {
-      // 如果被擋/失敗，至少不要卡住
-    })
+    .then(updateCounterDisplay)
     .finally(() => {
       setTimeout(() => { __incBusy = false; }, 1200);
     });
 }
 
-
-
-
-/**
- * ✅ 核心修正：用 onclick 覆寫，避免 addEventListener 被重複綁造成 +2
- * 且：按一次只會進來一次。
- */
-goGptBtn.onclick = () => {
-  if (!termsAgree.checked) return;
-  incrementCounterAndRefresh();
-  window.open(GPT_CHECK_URL, "_blank", "noopener,noreferrer");
-};
-
 goGemBtn.onclick = () => {
   if (!termsAgree.checked) return;
   incrementCounterAndRefresh();
-  window.open(GEM_CHECK_URL, "_blank", "noopener,noreferrer");
+  window.open(CHECK_URL, "_blank", "noopener,noreferrer");
 };
 
-// ✅ 只讀取，不計數
 readCounter();
-
-
-  </script>
+</script>
 
 </body>
 </html>
