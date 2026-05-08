@@ -296,6 +296,19 @@
       color:var(--danger);
       font-weight:950;
     }
+   
+    .dangerText{
+      color:#b91c1c;
+      font-weight:900;
+    }
+
+    .finalReminder{
+      margin-top:18px;
+      text-align:center;
+      color:#b91c1c;
+      font-weight:950;
+      font-size:16px;
+    }
 
     @media (max-width:520px){
       .termsTitle{ font-size:20px; }
@@ -445,7 +458,76 @@
       line-height:1.5;
     }
 
-    
+     /* ---------- Intro Banner ---------- */
+
+.introBanner{
+  margin-top:10px;
+  border-radius:24px;
+  background:
+    linear-gradient(135deg,
+    rgba(255,255,255,.92),
+    rgba(240,249,255,.92));
+  border:1px solid rgba(203,213,225,.8);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.introInner{
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:28px;
+}
+
+.introImg{
+  width:220px;
+  max-width:42%;
+}
+
+.introText h2{
+  margin:0 0 10px;
+  color:var(--navy);
+  font-size:30px;
+  font-weight:950;
+}
+
+.introText p{
+  margin:6px 0;
+  font-size:17px;
+  color:#334155;
+  font-weight:700;
+  line-height:1.8;
+}
+
+.introHint{
+  color:#b91c1c !important;
+  font-weight:950 !important;
+  font-size:18px !important;
+}
+
+@media (max-width:768px){
+
+  .introInner{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .introImg{
+    width:180px;
+    max-width:80%;
+  }
+
+  .introText h2{
+    font-size:24px;
+  }
+
+  .introText p{
+    font-size:15px;
+  }
+
+}
+
+   
   </style>
 </head>
 
@@ -465,55 +547,37 @@
       </div>
     </div>
 
-    <!-- Hero -->
-    <section class="hero" aria-label="主要入口">
-      <div class="heroInner">
-        <div class="heroCopy">
-          <div class="badge"><span class="spark"></span>請勾選我已閱讀並同意 網站服務條款，才可以 "一鍵前往格式檢核"</div>
-          <h2 class="heroTitle">一鍵前往格式檢核<br/>上傳 PDF 後立即產出檢核建議</h2>
-          <p class="heroDesc">
-            本系統提供，係由AI（GPT）依使用者上傳文件之「可見內容」所產出之格式輔助分析與檢核建議，僅供學習與自我檢查參考。
-            <strong>不具評分或認定合格之效力</strong>；競賽評審結果以評審老師專業判定為準。
-          </p>
-          <p class="heroDesc">
-            ⚠️ AI有時會出錯，如對檢核有疑義，請以小論文比賽計畫、評審要點及格式範例為最終判斷依據。
-          </p>
-          
-          <div class="ctaRow">
-            <label class="termsText">
-             <input id="termsAgree" type="checkbox" />
-             <span>
-                我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，
-                且不得作為申訴或爭議依據。
-             </span>
-            </label>
-          </div>
+      <!-- Intro Banner -->
+<section class="introBanner">
 
-          <p class="aiEntryNote">本系統提供兩種 AI 入口，使用者可依慣用平台選擇 ChatGPT（GPT A）或 ChatGPT（GPT B）進行格式輔助檢核。</p>
-           
-            <div class="modeHint">
-            <div class="modeItem">
-              <strong>GPT A｜完整流程型檢核模式</strong><br>
-               適合正式送交前的最終確認
-            </div>
+  <div class="introInner">
 
-            <div class="modeItem">
-               <strong>GPT B｜結構觀察型模式</strong><br>
-                適合課堂教學、分項指導與局部修正使用
-            </div>
-            </div>
+    <img src="./assets/study-cute.png"
+         alt="閱讀提醒"
+         class="introImg">
 
-          <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
-          <div class="aiEntryRow">
-            <button class="btn btnSoftGpt" id="goGptBtn" type="button">ChatGPT（GPT A）</button>
-            <button class="btn btnSoftGem" id="goGemBtn" type="button">ChatGPT（GPT B）</button>
+    <div class="introText">
+      <h2>📘 開始小論文檢查前</h2>
 
-          </div>
-          <div class="aiInfo">自檢累計使用次數：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
-          </div>
-        </div>
-      </div>
-    </section>
+      <p>
+        請先詳閱本網站之使用說明、警語與注意事項內容。
+      </p>
+
+      <p>
+        「開始進入小論文檢查」按鈕位於本頁最下方。
+      </p>
+
+      <p class="introHint">
+        ⬇️ 請向下閱讀後再開始使用
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+      <!-- Hero -->
 
     <!-- Responsibility / Warning -->
     <section class="warnStrip" aria-label="重要說明">
@@ -549,11 +613,17 @@
         </ul>
 
         <h3>二、禁止不當引用</h3>
-        <ul>
-          <li>使用者不得以本系統檢核結果作為申訴、質疑或對抗評審老師評分之依據。</li>
-          <li>本系統結果不得作為要求更改成績、主張評審錯誤或任何爭議處理之證明文件。</li>
-          <li>本系統所呈現之任何顯示、說明或建議，均為 AI（GPT）依文件可見內容所產出之格式輔助參考資訊，不具任何評分、審查或認定效力，亦不影響承辦單位與評審老師之最終認定與裁量。</li>
-        </ul>
+        <li class="dangerText">
+              使用者不得以本系統檢核結果作為申訴、質疑或對抗評審老師評分之依據。
+        </li>
+
+        <li class="dangerText">
+              本系統結果不得作為要求更改成績、主張評審錯誤或任何爭議處理之證明文件。
+        </li>
+
+        <li class="dangerText">
+             本系統所呈現之任何顯示、說明或建議，均為 AI（GPT）依文件可見內容所產出之格式輔助參考資訊，不具任何評分、審查或認定效力，亦不影響承辦單位與評審老師之最終認定與裁量。
+        </li>
 
         <h3>三、使用建議</h3>
         <ul>
@@ -604,6 +674,50 @@
         </li>
       </ol>
     </section>
+
+         <p class="finalReminder">
+            ⚠️ 請確認已完整閱讀本頁注意事項後，再開始進入小論文格式檢查。
+         </p> 
+
+     <section class="hero" aria-label="主要入口">
+      <div class="heroInner">
+        <div class="heroCopy">
+          <div class="badge"><span class="spark"></span>請勾選我已閱讀並同意 網站服務條款，才可以 "一鍵前往格式檢核"</div>
+          <h2 class="heroTitle">一鍵前往格式檢核<br/>上傳 PDF 後立即產出檢核建議</h2>
+          <p class="heroDesc">
+            本系統提供，係由AI（GPT）依使用者上傳文件之「可見內容」所產出之格式輔助分析與檢核建議，僅供學習與自我檢查參考。
+            <strong>不具評分或認定合格之效力</strong>；競賽評審結果以評審老師專業判定為準。
+          </p>
+          <p class="heroDesc">
+            ⚠️ AI有時會出錯，如對檢核有疑義，請以小論文比賽計畫、評審要點及格式範例為最終判斷依據。
+          </p>
+          
+          <div class="ctaRow">
+            <label class="termsText">
+             <input id="termsAgree" type="checkbox" />
+             <span>
+                我已閱讀並同意網站服務條款，並理解本系統非評分、非合格認定，
+                且不得作為申訴或爭議依據。
+             </span>
+            </label>
+          </div>
+
+          <p class="aiEntryNote">本系統提供 AI（GPT）小論文格式輔助檢核入口，請詳閱上方使用說明後再開始使用。</p>
+           
+           
+          <p class="ctaHint">🚀 開始進行小論文格式檢核</p>
+          <div class="aiEntryRow">
+            
+            <button class="btn btnSoftGem" id="goGemBtn" type="button">開始進入小論文檢查</button>
+
+          </div>
+          <div class="aiInfo">自檢累計使用次數：<span id="usageCount">—</span> ｜ 最後更新日期：<span id="lastUpdated">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
 
     <!-- Footer（只留官方密度） -->
     <footer aria-label="頁尾資訊">
