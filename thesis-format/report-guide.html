@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI 檢核報告閱讀說明｜高中職小論文格式自我檢核輔助系統</title>
+  <meta name="description" content="依照 AI 小論文檢核報告第 1–18 項編號，說明每一項檢查結果的閱讀方式，協助學生看懂 AI 分析報告。" />
+  <meta name="theme-color" content="#0b2b52" />
+
+  <style>
+    :root{
+      --navy:#0b2b52;
+      --navy2:#0a3a6b;
+      --cyan:#18b6b6;
+      --cyan2:#3ce6d2;
+      --gold:#f8cc5c;
+      --bg:#f5f7fb;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --danger:#b91c1c;
+      --orange:#c2410c;
+      --green:#15803d;
+      --blue:#1d4ed8;
+      --shadow:0 18px 40px rgba(2, 12, 27, .10);
+      --shadow2:0 10px 22px rgba(2, 12, 27, .08);
+      --font: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;
+      --max:1040px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html{ scroll-behavior:smooth; }
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 520px at 12% 0%, rgba(24,182,182,.16), transparent 58%),
+        radial-gradient(820px 520px at 92% 8%, rgba(60,230,210,.14), transparent 60%),
+        radial-gradient(820px 520px at 50% 100%, rgba(248,204,92,.10), transparent 55%),
+        var(--bg);
+      color:var(--ink);
+      font-family:var(--font);
+      line-height:1.75;
+    }
+
+    a{ color:#2563eb; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 18px 46px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 0 14px;
+    }
+
+    .titleBox{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .siteTitle{
+      margin:0;
+      font-weight:950;
+      letter-spacing:.04em;
+      font-size:28px;
+      color:var(--navy);
+    }
+
+    .siteSub{
+      margin:0;
+      font-size:15px;
+      color:var(--muted);
+      font-weight:750;
+    }
+
+    .hero{
+      border-radius:26px;
+      background:
+        linear-gradient(135deg, rgba(11,43,82,.95), rgba(10,58,107,.92));
+      box-shadow:0 22px 55px rgba(11,43,82,.22);
+      color:#fff;
+      overflow:hidden;
+      position:relative;
+      border:1px solid rgba(255,255,255,.14);
+      padding:28px;
+    }
+
+    .hero h1{
+      margin:0 0 10px;
+      font-size:34px;
+      line-height:1.25;
+      letter-spacing:.02em;
+      font-weight:950;
+    }
+
+    .hero p{
+      margin:8px 0;
+      color:rgba(255,255,255,.88);
+      font-size:16px;
+      font-weight:700;
+    }
+
+    .heroNote{
+      margin-top:16px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.09);
+      border:1px solid rgba(255,255,255,.16);
+      color:#fff;
+      font-weight:900;
+      font-size:13px;
+    }
+
+    .quickBox{
+      margin-top:14px;
+      border-radius:20px;
+      background:rgba(255,255,255,.86);
+      border:1px solid rgba(226,232,240,.95);
+      box-shadow:var(--shadow2);
+      padding:18px;
+    }
+
+    .quickBox h2{
+      margin:0 0 10px;
+      color:var(--navy);
+      font-size:22px;
+      font-weight:950;
+    }
+
+    .quickGrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+    }
+
+    .quickLink{
+      display:block;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid rgba(203,213,225,.85);
+      color:#0f172a;
+      font-weight:850;
+      font-size:14px;
+      box-shadow:0 6px 14px rgba(15,23,42,.05);
+    }
+
+    .quickLink:hover{
+      text-decoration:none;
+      transform:translateY(-1px);
+      box-shadow:0 10px 20px rgba(15,23,42,.08);
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(185,28,28,.06);
+      border:1px solid rgba(185,28,28,.18);
+      box-shadow:var(--shadow2);
+    }
+
+    .notice h2{
+      margin:0 0 6px;
+      color:var(--danger);
+      font-size:20px;
+      font-weight:950;
+    }
+
+    .notice p{
+      margin:6px 0;
+      color:#334155;
+      font-weight:800;
+      font-size:15px;
+    }
+
+    .sectionTitle{
+      margin:24px 0 10px;
+      color:var(--navy);
+      font-size:26px;
+      font-weight:950;
+      letter-spacing:.02em;
+    }
+
+    .guideCard{
+      margin-top:14px;
+      border-radius:22px;
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(226,232,240,.95);
+      box-shadow:var(--shadow);
+      padding:20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .guideCard h3{
+      margin:0 0 10px;
+      color:var(--navy);
+      font-size:22px;
+      font-weight:950;
+      line-height:1.35;
+    }
+
+    .guideCard p{
+      margin:7px 0;
+      color:#334155;
+      font-size:15.5px;
+      font-weight:700;
+    }
+
+    .miniGrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .mini{
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+      border:1px solid rgba(203,213,225,.82);
+    }
+
+    .mini b{
+      display:block;
+      color:var(--navy);
+      margin-bottom:4px;
+      font-weight:950;
+    }
+
+    .mini span{
+      color:#475569;
+      font-size:14px;
+      font-weight:750;
+    }
+
+    .tagRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin:12px 0 4px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      font-weight:950;
+      border:1px solid rgba(203,213,225,.9);
+      background:#fff;
+      color:#334155;
+    }
+
+    .high{ color:#fff; background:var(--danger); border-color:rgba(185,28,28,.2); }
+    .mid{ color:#7c2d12; background:#ffedd5; border-color:#fed7aa; }
+    .low{ color:#14532d; background:#dcfce7; border-color:#bbf7d0; }
+    .info{ color:#1e3a8a; background:#dbeafe; border-color:#bfdbfe; }
+
+    .explain{
+      margin-top:12px;
+      border-radius:16px;
+      background:#f8fafc;
+      border:1px solid rgba(226,232,240,.96);
+      padding:12px 14px;
+    }
+
+    .explain h4{
+      margin:0 0 6px;
+      color:#0f172a;
+      font-size:16px;
+      font-weight:950;
+    }
+
+    .explain ul{
+      margin:6px 0 0 20px;
+      padding:0;
+    }
+
+    .explain li{
+      margin:4px 0;
+      color:#334155;
+      font-weight:750;
+    }
+
+    .example{
+      margin-top:12px;
+      padding:12px 14px;
+      border-left:5px solid var(--cyan);
+      background:rgba(24,182,182,.07);
+      border-radius:12px;
+      color:#334155;
+      font-weight:750;
+    }
+
+    .dangerBox{
+      border-left-color:var(--danger);
+      background:rgba(185,28,28,.07);
+    }
+
+    .orangeBox{
+      border-left-color:var(--orange);
+      background:rgba(194,65,12,.07);
+    }
+
+    .keyTable{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid rgba(203,213,225,.9);
+      margin-top:10px;
+      background:#fff;
+    }
+
+    .keyTable th,
+    .keyTable td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(226,232,240,.95);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+
+    .keyTable th{
+      background:#f1f5f9;
+      color:#0f172a;
+      font-weight:950;
+    }
+
+    .keyTable tr:last-child td{
+      border-bottom:none;
+    }
+
+    .backTop{
+      display:inline-block;
+      margin-top:12px;
+      font-size:13px;
+      font-weight:900;
+      color:#475569;
+    }
+
+    .footerActions{
+      margin-top:22px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:12px 16px;
+      border-radius:16px;
+      font-weight:950;
+      text-decoration:none;
+      border:1px solid rgba(203,213,225,.9);
+      background:#fff;
+      color:#0f172a;
+      box-shadow:0 8px 18px rgba(15,23,42,.08);
+    }
+
+    .btnPrimary{
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:#fff;
+      border-color:rgba(11,43,82,.1);
+    }
+
+    footer{
+      margin-top:28px;
+      padding:24px 0 34px;
+      color:#334155;
+      font-size:14px;
+      border-top:1px solid rgba(226,232,240,.9);
+    }
+
+    .footTop{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .footTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.85);
+      border:1px solid rgba(203,213,225,.9);
+      box-shadow:0 6px 16px rgba(15,23,42,.08);
+      font-weight:900;
+      font-size:13px;
+      color:#0f172a;
+    }
+
+    @media (max-width:800px){
+      .quickGrid,
+      .miniGrid{
+        grid-template-columns:1fr;
+      }
+
+      .hero{
+        padding:22px;
+      }
+
+      .hero h1{
+        font-size:28px;
+      }
+
+      .siteTitle{
+        font-size:24px;
+      }
+
+      .guideCard{
+        padding:16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header class="topbar">
+      <div class="titleBox">
+        <p class="siteSub">高中職小論文格式自我檢核輔助系統</p>
+        <h1 class="siteTitle">AI 檢核報告閱讀說明</h1>
+        <p class="siteSub">依照 AI 報告第 1–18 項編號，快速看懂每一項代表的意思。</p>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>📘 看不懂 AI 小論文檢核報告嗎？</h1>
+      <p>
+        這一頁是給學生與老師使用的「報告閱讀說明」。
+        當 AI 產出小論文檢核報告後，可以依照報告中的第 1–18 項編號，
+        回到本頁查詢每一項的意思。
+      </p>
+      <p>
+        這不是評分標準，也不是合格認定；本頁只協助你理解 AI 報告文字，
+        方便後續和老師討論與修正。
+      </p>
+      <div class="heroNote">💡 使用方法：看到報告第幾項不懂，就點下方相同編號查看說明。</div>
+    </section>
+
+    <section class="quickBox" id="top">
+      <h2>🔎 快速查詢 1–18 項</h2>
+      <div class="quickGrid">
+        <a class="quickLink" href="#item1">1 全篇頁數檢查</a>
+        <a class="quickLink" href="#item2">2 六大章節核對表</a>
+        <a class="quickLink" href="#item3">3 引號字數檢查表</a>
+        <a class="quickLink" href="#item4">4 錯別字檢查表</a>
+        <a class="quickLink" href="#item5">5 用詞建議表</a>
+        <a class="quickLink" href="#item6">6 標題名實相符檢查</a>
+        <a class="quickLink" href="#item7">7 頁首／頁尾檢查</a>
+        <a class="quickLink" href="#item8">8 引註與參考文獻對應</a>
+        <a class="quickLink" href="#item9">9 引註與參考文獻對應總表</a>
+        <a class="quickLink" href="#item10">10 整體雙向比對</a>
+        <a class="quickLink" href="#item11">11 引而未列 C−R</a>
+        <a class="quickLink" href="#item12">12 列而未引 R−C</a>
+        <a class="quickLink" href="#item13">13 引註錯誤或不存在</a>
+        <a class="quickLink" href="#item14">14 缺少來源疑慮</a>
+        <a class="quickLink" href="#item15">15 逐頁格式檢查表</a>
+        <a class="quickLink" href="#item16">16 圖表來源檢查表</a>
+        <a class="quickLink" href="#item17">17 AI 生成疑慮評估</a>
+        <a class="quickLink" href="#item18">18 最終結論</a>
+      </div>
+    </section>
+
+    <section class="notice">
+      <h2>⚠️ 先看這三個重點</h2>
+      <p>1. AI 報告是「輔助檢查」，不是評分結果。</p>
+      <p>2. 報告中的「疑似、風險、提醒」代表需要人工再確認，不代表一定錯誤。</p>
+      <p>3. 若 AI 報告與實際文件不同，請以官方格式規範、指導老師與評審要點為準。</p>
+    </section>
+
+    <h2 class="sectionTitle">🧭 先理解幾個常見符號</h2>
+
+    <section class="guideCard">
+      <h3>C / R / C−R / R−C 是什麼？</h3>
+      <p>這是 AI 報告中最常見、也最容易看不懂的部分。請先把下面四個意思記起來。</p>
+
+      <table class="keyTable">
+        <thead>
+          <tr>
+            <th>代號</th>
+            <th>意思</th>
+            <th>學生要怎麼看</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>C</strong></td>
+            <td>內文引註 Citation</td>
+            <td>文章內寫出的引用，例如：（王小明，2023）。</td>
+          </tr>
+          <tr>
+            <td><strong>R</strong></td>
+            <td>參考文獻 Reference</td>
+            <td>文章最後「陸、參考文獻」列出的完整資料。</td>
+          </tr>
+          <tr>
+            <td><strong>C−R</strong></td>
+            <td>引而未列</td>
+            <td>內文有引用，但參考文獻沒有列出，通常要優先檢查。</td>
+          </tr>
+          <tr>
+            <td><strong>R−C</strong></td>
+            <td>列而未引</td>
+            <td>參考文獻有列，但內文沒有引用，通常要確認是否真的有使用。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="example">
+        例子：如果內文寫「（王為一，2025）」，但參考文獻列的是「王為一（2005）」，AI 可能會提示「名稱或年代不一致」。這時不是立刻判定錯誤，而是要回到原文與參考文獻確認年份是否打錯。
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">📑 18 項檢查項目逐項說明</h2>
+
+    <section class="guideCard" id="item1">
+      <h3>1️⃣ 全篇頁數檢查</h3>
+      <div class="tagRow"><span class="pill info">格式觀察</span><span class="pill mid">重要程度：中</span></div>
+      <p>這一項是在看整份小論文 PDF 總共有幾頁，並觀察是否落在規定頁數範圍內。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看「總頁數」是否正確。</li>
+          <li>如果頁數太少或太多，要回去確認 PDF 是否輸出錯誤。</li>
+          <li>附錄若包含在 PDF 內，也通常會一起算進總頁數。</li>
+        </ul>
+      </div>
+      <div class="example">如果 AI 顯示「總頁數 8 頁」，表示它讀到的 PDF 是 8 頁。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item2">
+      <h3>2️⃣ 六大章節核對表（實際 vs 正確）</h3>
+      <div class="tagRow"><span class="pill high">優先檢查</span><span class="pill">結構檢查</span></div>
+      <p>這一項是在看小論文是否有出現六大章節，以及章節名稱是否與規定結構一致。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>檢查「壹、前言」到「陸、參考文獻」是否都有出現。</li>
+          <li>注意章節順序是否正確。</li>
+          <li>如果 AI 顯示「未出現」或「⚠」，要回到 PDF 檢查章節標題。</li>
+        </ul>
+      </div>
+      <div class="example">範例：如果「伍、研究結論與建議」被寫成「伍、結論」，AI 可能會提示章名不一致。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item3">
+      <h3>3️⃣ 引號字數檢查表</h3>
+      <div class="tagRow"><span class="pill high">優先檢查</span><span class="pill">直接引用</span></div>
+      <p>這一項是在檢查文章中使用「」或『』標示的直接引用文字，並統計引號內文字長度。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看 AI 是否列出所有引號內容。</li>
+          <li>注意「字數」欄位，尤其是接近或超過 50 字的引用。</li>
+          <li>如果 AI 提示超過 50 字，應優先回去確認是否需要改寫、縮短或調整引用方式。</li>
+          <li>短引號如專有名詞、題目關鍵字，也可能被列出；這不一定代表錯誤。</li>
+        </ul>
+      </div>
+      <div class="example">範例：AI 若顯示某一筆直接引文為 50 字，表示已接近上限，建議人工再次確認。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item4">
+      <h3>4️⃣ 錯別字檢查表</h3>
+      <div class="tagRow"><span class="pill mid">建議修正</span><span class="pill">文字檢查</span></div>
+      <p>這一項是在列出 AI 觀察到的疑似錯字、贅字、重複字或明顯語句問題。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看「原文」是否真的出現在自己的文章中。</li>
+          <li>看「問題」欄位了解 AI 為什麼覺得可疑。</li>
+          <li>「建議」不一定要完全照抄，可以和老師討論後修正。</li>
+        </ul>
+      </div>
+      <div class="example">範例：「樣型態」可能是「樣」和「型態」重複，建議改為「植株型態」。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item5">
+      <h3>5️⃣ 用詞建議表（非扣分）</h3>
+      <div class="tagRow"><span class="pill low">可參考</span><span class="pill">非扣分項</span></div>
+      <p>這一項是 AI 對語句流暢度、學術語氣或用詞精準度提出的建議。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>這通常不是嚴重錯誤。</li>
+          <li>可以用來讓文章更清楚、更正式。</li>
+          <li>不要盲目全部替換，要確認是否符合原本意思。</li>
+        </ul>
+      </div>
+      <div class="example">如果 AI 建議把「可行性較佳」改成「可行性較高」，這是語氣優化，不是一定錯誤。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item6">
+      <h3>6️⃣ 標題名實相符檢查（逐段掃描）</h3>
+      <div class="tagRow"><span class="pill mid">建議修正</span><span class="pill">內容對應</span></div>
+      <p>這一項是在看每個段落標題和底下內容是否相符。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>如果標題是「研究方法」，內容應該真的在說研究方法。</li>
+          <li>如果 AI 顯示「無內容」，代表可能只有標題但沒有寫內容。</li>
+          <li>如果顯示「疑似偏離標題」，代表內容可能和標題方向不同。</li>
+        </ul>
+      </div>
+      <div class="example">範例：標題寫「研究結果」，但內容只是在介紹研究動機，AI 可能會提醒疑似偏離。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item7">
+      <h3>7️⃣ 頁首／頁尾檢查</h3>
+      <div class="tagRow"><span class="pill high">優先檢查</span><span class="pill">版面格式</span></div>
+      <p>這一項是在看每頁是否有頁首篇名，以及頁尾頁碼是否存在且一致。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>頁首通常應出現小論文篇名。</li>
+          <li>頁尾應有頁碼。</li>
+          <li>如果某一頁缺頁首或頁碼，要回 Word 或 PDF 檔修正。</li>
+        </ul>
+      </div>
+      <div class="example">如果 AI 顯示第 1 頁至第 8 頁均有頁碼，代表它在每頁都觀察到頁碼。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item8">
+      <h3>8️⃣ 引註與參考文獻對應檢查表（逐頁 C + 逐頁 R）</h3>
+      <div class="tagRow"><span class="pill high">非常重要</span><span class="pill">C/R 基礎資料</span></div>
+      <p>這一項是後面第 9–13 項的基礎資料。AI 會先列出內文引用 C，再列出參考文獻 R。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>A 表是內文引註 C，例如：（作者，年代）。</li>
+          <li>B 表是參考文獻 R，也就是文章最後的完整資料。</li>
+          <li>先看 C 總數與 R 總數，再看是否有缺作者、缺年代或標點格式問題。</li>
+        </ul>
+      </div>
+      <table class="keyTable">
+        <thead>
+          <tr>
+            <th>表格</th>
+            <th>代表意思</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A. 逐頁 C 表格</td>
+            <td>文章內文出現的每一筆引用。</td>
+          </tr>
+          <tr>
+            <td>B. 逐頁 R 表格</td>
+            <td>參考文獻章節中列出的每一筆資料。</td>
+          </tr>
+          <tr>
+            <td>C = ? / R = ?</td>
+            <td>引用筆數與參考文獻筆數統計。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="example dangerBox">如果 AI 顯示「疑似缺少作者」或「疑似缺少年代」，通常要優先回到原文檢查。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item9">
+      <h3>9️⃣ 引註與參考文獻對應總表</h3>
+      <div class="tagRow"><span class="pill high">非常重要</span><span class="pill">對應檢查</span></div>
+      <p>這一項是在把每一筆內文引用 C，逐一對應到參考文獻 R。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看每一筆 C 是否都有對應的 R 編號。</li>
+          <li>如果顯示「✔ 對應成功」，代表 AI 找到相符資料。</li>
+          <li>如果顯示「✘ 無對應 R」，代表內文引用可能沒有列入參考文獻。</li>
+          <li>如果顯示「名稱或年代不一致」，代表作者或年份可能對不起來。</li>
+        </ul>
+      </div>
+      <div class="example">範例：C3 王為一+2025 對應到 R3 卻顯示年代不一致，可能代表內文年份和參考文獻年份不同。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item10">
+      <h3>🔟 引註 vs 參考文獻整體雙向比對</h3>
+      <div class="tagRow"><span class="pill high">非常重要</span><span class="pill">整體結果</span></div>
+      <p>這一項是在總結內文引註 C 和參考文獻 R 是否彼此一致。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>如果整體結果是「一致 ✔」，代表 AI 沒看到明顯 C/R 對應問題。</li>
+          <li>如果整體結果是「不一致 ✘」，要接著看第 11、12、13 項。</li>
+          <li>這一項不是只看數量，而是看作者與年代是否能對應。</li>
+        </ul>
+      </div>
+      <div class="example dangerBox">如果 |C| = 9、|R| = 11，但有些引用找不到對應資料，整體仍可能顯示不一致。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item11">
+      <h3>1️⃣1️⃣ 引而未列（C − R）</h3>
+      <div class="tagRow"><span class="pill high">最優先修正</span><span class="pill">高風險</span></div>
+      <p>這一項代表：文章內文有引用，但在參考文獻中找不到對應資料。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看到這一項時，通常要優先處理。</li>
+          <li>回到 AI 列出的頁碼，找到該筆內文引用。</li>
+          <li>確認參考文獻是否漏列、作者寫錯、年份寫錯，或引用格式不完整。</li>
+        </ul>
+      </div>
+      <div class="example dangerBox">例子：內文有「（2025）」，但沒有作者名稱，AI 可能無法找到對應參考文獻。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item12">
+      <h3>1️⃣2️⃣ 列而未引（R − C）</h3>
+      <div class="tagRow"><span class="pill high">優先檢查</span><span class="pill">參考文獻問題</span></div>
+      <p>這一項代表：參考文獻有列出資料，但內文沒有找到對應引用。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>確認這筆參考文獻是否真的有在文章內使用。</li>
+          <li>如果有使用，可能是內文忘記標示作者與年代。</li>
+          <li>如果完全沒用到，可能要考慮刪除該筆參考文獻。</li>
+        </ul>
+      </div>
+      <div class="example orangeBox">注意：不是參考文獻越多越好。列出的資料應該和內文引用互相對應。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item13">
+      <h3>1️⃣3️⃣ 引註錯誤或不存在</h3>
+      <div class="tagRow"><span class="pill high">最優先修正</span><span class="pill">高風險</span></div>
+      <p>這一項會列出 AI 觀察到的引註問題，例如作者、年代或參考文獻對不上。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>先檢查年份是否打錯。</li>
+          <li>再檢查作者名稱是否一致。</li>
+          <li>如果內文只有年份、沒有作者，通常需要修正。</li>
+          <li>AI 會標示「疑似」，仍需人工確認。</li>
+        </ul>
+      </div>
+      <div class="example dangerBox">範例：「（王為一，2025）」與參考文獻「王為一（2005）」年份不同，應回原始資料確認正確年份。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item14">
+      <h3>1️⃣4️⃣ 缺少來源疑慮檢查</h3>
+      <div class="tagRow"><span class="pill mid">建議檢查</span><span class="pill">來源透明度</span></div>
+      <p>這一項是在提醒：文章中某些數據、結論、圖表或說法，可能需要補充資料來源。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>看到「可疑片段」時，回到該頁確認這段資料從哪裡來。</li>
+          <li>如果是自己調查或實驗，要清楚說明資料取得方式。</li>
+          <li>如果是引用別人的資料，要補上引註與參考文獻。</li>
+        </ul>
+      </div>
+      <div class="example">例如問卷數據、統計圖表、研究結果，都應該讓讀者知道資料來源或產生方式。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item15">
+      <h3>1️⃣5️⃣ 逐頁格式檢查表（摘要）</h3>
+      <div class="tagRow"><span class="pill mid">建議檢查</span><span class="pill">版面摘要</span></div>
+      <p>這一項是 AI 逐頁觀察字型、字級、行距、邊界、頁首與頁尾。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>如果顯示「一致」或「正常」，代表 AI 沒看到明顯異常。</li>
+          <li>如果某頁顯示異常，回該頁檢查排版。</li>
+          <li>AI 對 PDF 版面判讀可能受檔案輸出方式影響，建議仍用原始 Word 檔確認。</li>
+        </ul>
+      </div>
+      <div class="example orangeBox">注意：AI 不一定能做到毫米級精準判定，所以邊界與行距仍建議人工確認。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item16">
+      <h3>1️⃣6️⃣ 圖表來源檢查表</h3>
+      <div class="tagRow"><span class="pill high">優先檢查</span><span class="pill">圖表來源</span></div>
+      <p>這一項是在逐一檢查文章中的圖與表：圖號、表號、標題、來源與是否需要列入參考文獻。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>每一張圖、每一個表都應該有清楚編號與標題。</li>
+          <li>如果是自己拍攝、自己繪製、自己整理，來源可寫清楚。</li>
+          <li>如果引用外部圖表或資料，通常要能對應參考文獻。</li>
+          <li>看圖數、表數是否一致，避免漏列。</li>
+        </ul>
+      </div>
+      <div class="example">如果 AI 顯示「實際圖總數：6、表格中圖列數：6」，代表它列出的圖數和觀察到的圖數一致。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item17">
+      <h3>1️⃣7️⃣ AI 生成疑慮評估（僅風險提示）</h3>
+      <div class="tagRow"><span class="pill mid">風險提示</span><span class="pill">不可當作判定</span></div>
+      <p>這一項只是在觀察文章是否有 AI 生成風格的疑慮。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>風險等級低、中、高，並不代表一定是 AI 寫的。</li>
+          <li>AI 無法真正證明文章是否由 AI 生成。</li>
+          <li>如果顯示中或高風險，可以檢查文章是否缺少個人研究過程、實作紀錄或真實資料。</li>
+        </ul>
+      </div>
+      <div class="example orangeBox">重點：這一項只能當作提醒，不能拿來定罪，也不能直接判定作弊。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <section class="guideCard" id="item18">
+      <h3>1️⃣8️⃣ 最終結論｜簡單檢核說明</h3>
+      <div class="tagRow"><span class="pill info">總整理</span><span class="pill">閱讀摘要</span></div>
+      <p>這一項是 AI 對前面檢查結果做簡短總結，提醒學生可優先注意哪些地方。</p>
+      <div class="explain">
+        <h4>學生要注意什麼？</h4>
+        <ul>
+          <li>先看是否有「疑似抄襲引文」。</li>
+          <li>再看最終提示提到哪些修正方向。</li>
+          <li>這不是合格或不合格判定，只是簡單提醒。</li>
+        </ul>
+      </div>
+      <div class="example">如果最終提示寫「可進一步檢視引註年份一致性」，表示前面第 8–13 項可能有需要修正的地方。</div>
+      <a class="backTop" href="#top">↑ 回到快速查詢</a>
+    </section>
+
+    <h2 class="sectionTitle">✅ 最後怎麼使用這份教學頁？</h2>
+
+    <section class="guideCard">
+      <h3>建議閱讀順序</h3>
+
+      <div class="miniGrid">
+        <div class="mini">
+          <b>第一步</b>
+          <span>先看第 11、12、13 項，確認引註與參考文獻有沒有明顯問題。</span>
+        </div>
+        <div class="mini">
+          <b>第二步</b>
+          <span>再看第 3、7、16 項，確認引號、頁首頁尾與圖表來源。</span>
+        </div>
+        <div class="mini">
+          <b>第三步</b>
+          <span>最後看第 4、5、6、14、15、17、18 項，逐步修正文字與提醒項目。</span>
+        </div>
+      </div>
+
+      <div class="example dangerBox">
+        再提醒一次：AI 檢核結果是學習輔助，不代表正式評分、合格認定或最終審查結果。若有疑義，請和指導老師討論，並以官方格式規範與評審要點為準。
+      </div>
+    </section>
+
+    <div class="footerActions">
+      <a class="btn btnPrimary" href="./index.html">← 回到小論文檢核首頁</a>
+      <a class="btn" href="#top">↑ 回到快速查詢</a>
+    </div>
+
+    <footer>
+      <div class="footTop">
+        <div class="footTag">© <span id="yearNow"></span></div>
+        <div class="footTag">頁面：AI 檢核報告閱讀說明</div>
+        <div class="footTag">用途：教學與自我檢核參考</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    document.getElementById("yearNow").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
