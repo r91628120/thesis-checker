@@ -387,6 +387,52 @@
       font-weight:800;
     }
 
+    .guideCard{
+  margin-top:18px;
+  border-radius:20px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(203,213,225,.9);
+  box-shadow:var(--shadow);
+  padding:22px;
+  text-align:center;
+}
+
+.guideCard h2{
+  margin:0 0 10px;
+  color:var(--navy);
+  font-size:26px;
+  font-weight:950;
+}
+
+.guideCard p{
+  margin:8px 0;
+  color:#334155;
+  font-size:16px;
+  line-height:1.8;
+  font-weight:700;
+}
+
+.guideBtn{
+  display:inline-block;
+  margin-top:14px;
+  padding:14px 22px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#0b2b52,#0a3a6b);
+  color:#fff;
+  font-weight:900;
+  text-decoration:none;
+  box-shadow:0 12px 26px rgba(11,43,82,.22);
+  transition:.2s ease;
+}
+
+.guideBtn:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.05);
+}
+
+
+
+
     @media (max-width:520px){
       .howTitle{ font-size:20px; }
       .howLine{ font-size:15px; }
@@ -679,7 +725,17 @@
             ⚠️ 請確認已完整閱讀本頁注意事項後，再開始進入小論文格式檢查。
          </p> 
 
-     <section class="hero" aria-label="主要入口">
+     
+    <section class="guideCard">
+        <h2>📘 看不懂 AI 檢核報告嗎？</h2>
+        <p>可依照報告中的第 1–18 項編號，快速查詢每一項代表的意思。</p>
+          <a class="guideBtn" href="./report-guide.html">
+            🔍 進入 AI 檢核報告閱讀說明
+          </a>
+    </section>
+     
+     
+         <section class="hero" aria-label="主要入口">
       <div class="heroInner">
         <div class="heroCopy">
           <div class="badge"><span class="spark"></span>請勾選我已閱讀並同意 網站服務條款，才可以 "一鍵前往格式檢核"</div>
