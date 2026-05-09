@@ -484,6 +484,15 @@
   font-weight:950 !important;
 }
 
+.builderSubHint{
+  margin-top:6px;
+  color:#64748b;
+  font-size:14px;
+  font-weight:700;
+  text-align:center;
+  line-height:1.7;
+}
+
 .checkGrid{
   margin-top:16px;
   display:grid;
@@ -765,7 +774,7 @@
       </div>
 
       <div class="termsBody">
-        <p>本系統僅提供不同 AI 平台之入口導向，所有檢核內容皆為 AI 依文件可見內容產出之格式輔助參考，不具評分、合格認定或行政效力，且不影響承辦單位與評審老師之最終認定與裁量。</p>
+        <p>本系統僅提供 AI平台之入口導向，所有檢核內容皆為 AI 依文件可見內容產出之格式輔助參考，不具評分、合格認定或行政效力，且不影響承辦單位與評審老師之最終認定與裁量。</p>
         <h3>一、工具定位與責任切割</h3>
         <ul>
           <li>本系統提供由 AI（GPT）執行之「小論文格式與結構」輔助檢核建議，協助學生與教師進行小論文作品檢查。</li>
@@ -824,7 +833,7 @@
         <li class="howStep">
           <div class="howNum">2</div>
           <div>
-            <div class="howLine"><strong>前往檢核：</strong>點選上方「開始進行小論文格式檢核」，進入工具並上傳 PDF。</div>
+            <div class="howLine"><strong>前往檢核：</strong>點選上方「開始進行小論文格式檢核」，進入GPT工具並上傳 PDF。</div>
             <div class="howSub">（若在手機操作，建議先確認檔案可正常上傳）</div>
           </div>
         </li>
@@ -894,9 +903,14 @@
     <section class="promptBuilder" aria-label="小論文細項檢查指令產生器">
                  <h2>🧩 小論文細項檢查指令產生器</h2>
                      <p>
-                        請勾選想加強檢查的「格式項目」，系統會自動產生 JSON 指令。
-                        複製後貼到 GPT 使用及小論PDF，可針對特定格式細項進行補充檢查。
+                        請勾選想加強檢查的「格式項目」，系統會自動產生 細項檢查指令。
+                        複製後貼到 GPT 使用及貼上小論文PDF，可針對特定格式細項進行補充檢查。
                       </p>
+                      <p class="builderSubHint">
+                       建議先完成「完整格式檢查」後，
+                       再使用本功能進行補充細項檢查。
+                      </p>
+
                       <p class="builderNote">
                           ⚠️ 本功能僅限格式、引註、頁面、圖表來源等可觀察項目，不進行內容評分、研究品質判定或合格認定。
                       </p>
@@ -1071,14 +1085,15 @@ buildPromptBtn.addEventListener("click", async () => {
   };
 
   const text = JSON.stringify(promptJson, null, 2);
-  alert("✅ 已自動複製格式檢查指令！\n請回到 GPT 貼上後使用。");
 
-  try {
-    await navigator.clipboard.writeText(text);
-    incrementCounterAndRefresh();
-    alert("✅ 已複製 JSON 指令！請再按下方「開始進入小論文檢查」，貼到 GPT 使用。");
+     try {
+           await navigator.clipboard.writeText(text);
+           incrementCounterAndRefresh();
+
+         alert("✅ 已複製細項檢查指令！\n請再按下方「開始進入小論文檢查」，貼到 GPT 使用。");
+
   } catch (err) {
-    alert("已產生 JSON 指令，請手動複製文字框內容。");
+         alert("已產生細項檢查指令，請手動複製內容。");
   }
 });
 
