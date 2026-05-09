@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>使用聲明與免責說明 v2｜高中職小論文格式自我檢核輔助系統</title>
+  <meta name="description" content="高中職小論文格式自我檢核輔助系統使用聲明與免責說明 v2，說明系統定位、使用範圍、AI限制、資料處理與禁止用途。" />
+  <meta name="theme-color" content="#0b2b52" />
+
+  <style>
+    :root{
+      --navy:#0b2b52;
+      --navy2:#0a3a6b;
+      --cyan:#18b6b6;
+      --gold:#f8cc5c;
+      --bg:#f5f7fb;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --danger:#b91c1c;
+      --orange:#c2410c;
+      --green:#15803d;
+      --shadow:0 18px 40px rgba(2, 12, 27, .10);
+      --shadow2:0 10px 22px rgba(2, 12, 27, .08);
+      --font: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC","PingFang TC",sans-serif;
+      --max:1040px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 520px at 12% 0%, rgba(24,182,182,.16), transparent 58%),
+        radial-gradient(820px 520px at 92% 8%, rgba(60,230,210,.14), transparent 60%),
+        radial-gradient(820px 520px at 50% 100%, rgba(248,204,92,.10), transparent 55%),
+        var(--bg);
+      color:var(--ink);
+      font-family:var(--font);
+      line-height:1.75;
+    }
+
+    a{ color:#2563eb; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 18px 46px;
+    }
+
+    .topbar{ padding:10px 0 14px; }
+
+    .siteTitle{
+      margin:0;
+      font-weight:950;
+      letter-spacing:.04em;
+      font-size:28px;
+      color:var(--navy);
+    }
+
+    .siteSub{
+      margin:4px 0 0;
+      font-size:15px;
+      color:var(--muted);
+      font-weight:750;
+    }
+
+    .hero{
+      border-radius:26px;
+      background:linear-gradient(135deg, rgba(11,43,82,.95), rgba(10,58,107,.92));
+      box-shadow:0 22px 55px rgba(11,43,82,.22);
+      color:#fff;
+      overflow:hidden;
+      position:relative;
+      border:1px solid rgba(255,255,255,.14);
+      padding:28px;
+      margin-top:10px;
+    }
+
+    .hero h1{
+      margin:0 0 10px;
+      font-size:34px;
+      line-height:1.25;
+      letter-spacing:.02em;
+      font-weight:950;
+    }
+
+    .hero p{
+      margin:8px 0;
+      color:rgba(255,255,255,.9);
+      font-size:16px;
+      font-weight:700;
+    }
+
+    .heroNote{
+      margin-top:16px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.09);
+      border:1px solid rgba(255,255,255,.16);
+      color:#fff;
+      font-weight:900;
+      font-size:13px;
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(185,28,28,.06);
+      border:1px solid rgba(185,28,28,.18);
+      box-shadow:var(--shadow2);
+    }
+
+    .notice h2{
+      margin:0 0 6px;
+      color:var(--danger);
+      font-size:20px;
+      font-weight:950;
+    }
+
+    .notice p{
+      margin:6px 0;
+      color:#334155;
+      font-weight:800;
+      font-size:15px;
+    }
+
+    .sectionTitle{
+      margin:24px 0 10px;
+      color:var(--navy);
+      font-size:26px;
+      font-weight:950;
+      letter-spacing:.02em;
+    }
+
+    .card{
+      margin-top:14px;
+      border-radius:22px;
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(226,232,240,.95);
+      box-shadow:var(--shadow);
+      padding:20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h3{
+      margin:0 0 10px;
+      color:var(--navy);
+      font-size:22px;
+      font-weight:950;
+      line-height:1.35;
+    }
+
+    .card p{
+      margin:7px 0;
+      color:#334155;
+      font-size:15.5px;
+      font-weight:700;
+    }
+
+    .card ul{
+      margin:8px 0 0 20px;
+      padding:0;
+    }
+
+    .card li{
+      margin:7px 0;
+      color:#334155;
+      font-weight:750;
+    }
+
+    .dangerText{
+      color:var(--danger) !important;
+      font-weight:950 !important;
+    }
+
+    .miniGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .mini{
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+      border:1px solid rgba(203,213,225,.82);
+    }
+
+    .mini b{
+      display:block;
+      color:var(--navy);
+      margin-bottom:6px;
+      font-weight:950;
+      font-size:16px;
+    }
+
+    .mini span{
+      color:#475569;
+      font-size:14px;
+      font-weight:750;
+    }
+
+    .ok{ border-left:5px solid var(--green); }
+    .no{ border-left:5px solid var(--danger); }
+
+    .infoBox{
+      margin-top:12px;
+      padding:12px 14px;
+      border-left:5px solid var(--cyan);
+      background:rgba(24,182,182,.07);
+      border-radius:12px;
+      color:#334155;
+      font-weight:750;
+    }
+
+    .dangerBox{
+      border-left-color:var(--danger);
+      background:rgba(185,28,28,.07);
+    }
+
+    .orangeBox{
+      border-left-color:var(--orange);
+      background:rgba(194,65,12,.07);
+    }
+
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid rgba(203,213,225,.9);
+      margin-top:10px;
+      background:#fff;
+    }
+
+    .table th,
+    .table td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(226,232,240,.95);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+
+    .table th{
+      background:#f1f5f9;
+      color:#0f172a;
+      font-weight:950;
+    }
+
+    .table tr:last-child td{ border-bottom:none; }
+
+    .footerActions{
+      margin-top:22px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:12px 16px;
+      border-radius:16px;
+      font-weight:950;
+      text-decoration:none;
+      border:1px solid rgba(203,213,225,.9);
+      background:#fff;
+      color:#0f172a;
+      box-shadow:0 8px 18px rgba(15,23,42,.08);
+    }
+
+    .btnPrimary{
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:#fff;
+      border-color:rgba(11,43,82,.1);
+    }
+
+    footer{
+      margin-top:28px;
+      padding:24px 0 34px;
+      color:#334155;
+      font-size:14px;
+      border-top:1px solid rgba(226,232,240,.9);
+    }
+
+    .footTop{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .footTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.85);
+      border:1px solid rgba(203,213,225,.9);
+      box-shadow:0 6px 16px rgba(15,23,42,.08);
+      font-weight:900;
+      font-size:13px;
+      color:#0f172a;
+    }
+
+    @media (max-width:800px){
+      .miniGrid{ grid-template-columns:1fr; }
+      .hero{ padding:22px; }
+      .hero h1{ font-size:28px; }
+      .siteTitle{ font-size:24px; }
+      .card{ padding:16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header class="topbar">
+      <h1 class="siteTitle">高中職小論文格式自我檢核輔助系統</h1>
+      <p class="siteSub">使用聲明與免責說明 v2｜教學與自我檢核參考用途</p>
+    </header>
+
+    <section class="hero">
+      <h1>📘 使用聲明與免責說明 v2</h1>
+      <p>
+        本頁說明本系統之定位、使用範圍、AI 分析限制、資料處理提醒與禁止用途。
+        使用本系統前，請先完整閱讀本頁內容。
+      </p>
+      <p>
+        本系統僅作為高中職小論文格式自我檢核與教學輔助參考，
+        不代表任何官方審查、競賽評分或合格認定結果。
+      </p>
+      <div class="heroNote">版本：v2.0｜小論文格式檢查設計團隊</div>
+    </section>
+
+    <section class="notice">
+      <h2>⚠️ 重要提醒</h2>
+      <p>本系統檢核結果不得作為申訴、質疑或對抗評審老師評分之依據。</p>
+      <p>AI 產出內容可能存在誤判、漏判或 PDF 判讀限制，仍須由使用者與指導老師人工確認。</p>
+    </section>
+
+    <h2 class="sectionTitle">一、系統定位</h2>
+
+    <section class="card">
+      <h3>本系統是什麼？</h3>
+      <p>
+        本系統為高中職小論文格式自我檢核輔助工具，主要協助學生與教師檢視
+        PDF 文件中可觀察之格式項目，例如頁數、章節、頁首頁尾、引註、參考文獻、
+        圖表來源、封面頁與附錄個資風險等。
+      </p>
+      <div class="infoBox">
+        本系統之目的在於協助學習者進行「格式自我檢查」與「教師教學輔助」，
+        並非取代指導教師、評審老師或主辦單位之專業判斷。
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">二、適用與不適用範圍</h2>
+
+    <section class="card">
+      <h3>適用範圍與不適用範圍</h3>
+      <div class="miniGrid">
+        <div class="mini ok">
+          <b>✅ 適用</b>
+          <span>
+            高中職小論文格式自檢、課堂教學示範、學生修正前參考、
+            指導老師協助檢視格式問題、正式送交前之格式提醒。
+          </span>
+        </div>
+        <div class="mini no">
+          <b>❌ 不適用</b>
+          <span>
+            作品品質評分、研究水準判定、合格或不合格認定、
+            競賽結果預測、申訴佐證、爭議處理或對抗評審依據。
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">三、AI 分析範圍與限制</h2>
+
+    <section class="card">
+      <h3>AI 可協助檢查的內容</h3>
+      <ul>
+        <li>PDF 頁數是否落在指定範圍。</li>
+        <li>是否具備小論文基本章節架構與順序。</li>
+        <li>頁首篇名、頁尾頁碼是否可見且一致。</li>
+        <li>內文引註與參考文獻是否可能對應。</li>
+        <li>是否有引而未列、列而未引、年代或作者不一致等疑慮。</li>
+        <li>圖表是否有編號、標題、來源與必要之參考文獻對應。</li>
+        <li>是否可見封面頁、空白頁、附錄個資或其他格式風險。</li>
+      </ul>
+
+      <h3 style="margin-top:18px;">AI 不應被用來判定的內容</h3>
+      <ul>
+        <li class="dangerText">不得要求 AI 判定作品是否合格或不合格。</li>
+        <li class="dangerText">不得要求 AI 判定作品分數、名次、獎項或競賽結果。</li>
+        <li class="dangerText">不得要求 AI 取代評審老師進行研究內容評分。</li>
+        <li class="dangerText">不得將 AI 檢核結果作為申訴、爭議或對抗評審之依據。</li>
+      </ul>
+    </section>
+
+    <h2 class="sectionTitle">四、教師與評審之最終判定權</h2>
+
+    <section class="card">
+      <h3>最終判定仍以人工專業判斷為準</h3>
+      <p>
+        本系統產生之檢核建議，僅為 AI 依使用者上傳 PDF 可見內容所產出之格式輔助參考。
+        作品是否符合競賽規範、是否需修正、是否影響評分，仍應由指導老師、
+        承辦單位或評審老師依正式規範與專業判斷決定。
+      </p>
+      <div class="infoBox dangerBox">
+        本系統結果不具任何評分、審查、認定、保證或行政效力。
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">五、禁止用途</h2>
+
+    <section class="card">
+      <h3>使用者不得以下列方式使用本系統</h3>
+      <ul>
+        <li class="dangerText">不得將檢核結果作為申訴、質疑或對抗評審老師評分之依據。</li>
+        <li class="dangerText">不得將本系統結果作為要求更改成績、推翻評審判斷或處理爭議之證明文件。</li>
+        <li class="dangerText">不得宣稱本系統可判定作品合格、不合格、得獎或不得獎。</li>
+        <li>不得上傳含有過度敏感個資或與小論文檢核無關之文件。</li>
+        <li>不得使用本系統產出內容進行不當引用、誤導宣傳或違反學術倫理之行為。</li>
+      </ul>
+    </section>
+
+    <h2 class="sectionTitle">六、資料與隱私提醒</h2>
+
+    <section class="card">
+      <h3>上傳文件前請先檢查個資</h3>
+      <p>
+        使用者應自行確認上傳 PDF 是否含有個人資料或敏感資訊。若非檢核必要，
+        建議避免上傳下列內容：
+      </p>
+      <ul>
+        <li>身分證字號、電話、住址、私人 Email 等個資。</li>
+        <li>可直接辨識作者身分之照片或個人資訊。</li>
+        <li>非小論文檢核必要之個人資料、家庭資料或第三方資料。</li>
+      </ul>
+      <div class="infoBox orangeBox">
+        若文件中含有作者、學校、班級或指導老師等資訊，AI 可能會依可見內容提出提醒，
+        但是否需移除仍應依正式投稿規範與老師指導為準。
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">七、AI 可能誤判與 PDF 判讀限制</h2>
+
+    <section class="card">
+      <h3>AI 檢核仍可能發生限制</h3>
+      <p>
+        AI 分析 PDF 時，可能因檔案格式、掃描品質、圖片解析度、文字擷取、
+        表格排版或頁面結構複雜而產生誤判或漏判。
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>可能情況</th>
+            <th>說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>頁面判讀不完整</td>
+            <td>掃描版、圖片式 PDF 或特殊排版可能影響辨識。</td>
+          </tr>
+          <tr>
+            <td>圖表與文字混合</td>
+            <td>表格、圖片與文字過度密集時，AI 可能漏看部分資訊。</td>
+          </tr>
+          <tr>
+            <td>字體與行距判斷</td>
+            <td>AI 不一定能進行毫米級、精準排版判定。</td>
+          </tr>
+          <tr>
+            <td>引註對應誤差</td>
+            <td>作者名稱、年份、網址或換行格式可能造成比對不完全。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="infoBox">
+        若 AI 檢核結果與實際文件不同，請以原始 PDF、正式規範與指導老師確認結果為準。
+      </div>
+    </section>
+
+    <h2 class="sectionTitle">八、學生寫作倫理提醒</h2>
+
+    <section class="card">
+      <h3>小論文寫作仍應由學生自行完成</h3>
+      <p>
+        小論文寫作的核心在於培養學生蒐集資料、整理文獻、進行研究、
+        分析結果與形成結論的能力。本系統僅協助格式自我檢核，
+        不應被用於取代學生之寫作、思考、研究或改寫工作。
+      </p>
+      <ul>
+        <li>學生應自行完成研究與文字表達。</li>
+        <li>引用他人資料應依規定標明作者與年代，並列入參考文獻。</li>
+        <li>直接引用應依規定標示，不得未適當引註。</li>
+        <li>不得以 AI 工具生成文章內容、摘要、翻譯或改寫作為作品本文。</li>
+      </ul>
+    </section>
+
+    <h2 class="sectionTitle">九、建議使用流程</h2>
+
+    <section class="card">
+      <h3>建議依下列流程使用</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>步驟</th>
+            <th>建議做法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. 完成初稿</td>
+            <td>先由學生完成小論文內容與基本排版。</td>
+          </tr>
+          <tr>
+            <td>2. 輸出 PDF</td>
+            <td>確認頁數、頁首、頁尾、圖表與參考文獻後，再輸出 PDF。</td>
+          </tr>
+          <tr>
+            <td>3. 使用完整格式檢查</td>
+            <td>先進行完整格式檢核，取得整體檢查報告。</td>
+          </tr>
+          <tr>
+            <td>4. 使用細項補充檢查</td>
+            <td>若有特定疑慮，再使用細項檢查指令產生器進行補充檢查。</td>
+          </tr>
+          <tr>
+            <td>5. 人工確認</td>
+            <td>依 AI 建議與正式規範，由學生與指導老師再次確認。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2 class="sectionTitle">十、聲明更新</h2>
+
+    <section class="card">
+      <h3>本頁內容可能依實際使用情況調整</h3>
+      <p>
+        本使用聲明與免責說明可能因系統功能、使用情境、教學需求或正式規範調整而更新。
+        使用者應以網站公告之最新版本為準。
+      </p>
+      <div class="infoBox">
+        建議版本標示：usage-policy-v2.html｜最後更新日期：2026-05
+      </div>
+    </section>
+
+    <div class="footerActions">
+      <a class="btn btnPrimary" href="./index.html">← 回到小論文檢核首頁</a>
+    </div>
+
+    <footer>
+      <div class="footTop">
+        <div class="footTag">© <span id="yearNow"></span></div>
+        <div class="footTag">頁面：使用聲明與免責說明 v2</div>
+        <div class="footTag">用途：教學與自我檢核參考</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    document.getElementById("yearNow").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
