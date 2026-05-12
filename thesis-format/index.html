@@ -717,7 +717,83 @@
 
 }
 
-   
+   /* ---------- 高精度細項檢查 ---------- */
+.precisionBuilder{
+  margin-top:18px;
+  margin-bottom:24px;
+  border-radius:22px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(203,213,225,.9);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+
+.precisionBuilder h2{
+  margin:0 0 10px;
+  color:var(--navy);
+  font-size:26px;
+  font-weight:950;
+  text-align:center;
+}
+
+.precisionBuilder p{
+  margin:8px 0;
+  color:#334155;
+  font-size:16px;
+  font-weight:750;
+  line-height:1.8;
+  text-align:center;
+}
+
+.precisionGrid{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.precisionCard{
+  border-radius:18px;
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  padding:18px;
+  box-shadow:0 8px 18px rgba(15,23,42,.06);
+}
+
+.precisionCard h3{
+  margin:0 0 8px;
+  color:var(--navy);
+  font-size:20px;
+  font-weight:950;
+}
+
+.precisionCard p{
+  text-align:left;
+  font-size:15px;
+  color:#475569;
+}
+
+.precisionBtn{
+  margin-top:12px;
+  width:100%;
+  border:0;
+  border-radius:16px;
+  padding:13px 18px;
+  background:linear-gradient(135deg,#0b2b52,#0a3a6b);
+  color:#fff;
+  font-weight:950;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(11,43,82,.2);
+}
+
+@media (max-width:768px){
+  .precisionGrid{
+    grid-template-columns:1fr;
+  }
+}
+
+  
+  
   </style>
 </head>
 
@@ -962,7 +1038,39 @@
               
          </section>
        
+         <section class="precisionBuilder" aria-label="高精度細項檢查">
+                          <h2>🔬 高精度細項檢查</h2>
+                             <p>
+                               適用於需要更精密分析的格式項目。建議先完成「完整格式檢查」後，
+                               再使用本區產生專用指令。
+                            </p>
+                            <p class="builderNote">
+                              ⚠️ 本功能僅提供格式輔助檢查，不進行內容評分、研究品質判定或合格認定。
+                            </p>
 
+                    <div class="precisionGrid">
+                           <div class="precisionCard">
+                            <h3>📏 第 3 項｜引號 50 字精算</h3>
+                              <p>
+                               逐頁檢查「」與『』內的直接引文，排除標點符號後進行 Token 標號，
+                               協助確認是否超過 50 字。
+                              </p>
+                            <button class="precisionBtn" type="button" id="buildQuote50Btn">
+                              產生並複製｜引號 50 字精算指令
+                            </button>
+                       </div>
+
+                       <div class="precisionCard">
+                           <h3>📚 參考文獻格式檢查</h3>
+                            <p>
+                              逐筆檢查「陸、參考文獻」條目是否具備作者、年代、篇名、來源等可觀察格式元素。
+                            </p>
+                          <button class="precisionBtn" type="button" id="buildReferenceBtn">
+                            產生並複製｜參考文獻格式檢查指令
+                          </button>
+                       </div>
+                    </div>
+         </section>
 
     <!-- Footer（只留官方密度） -->
     <footer aria-label="頁尾資訊">
@@ -1077,7 +1185,7 @@ goGuideBtn.addEventListener("click", (e) => {
 
  const buildPromptBtn = document.getElementById("buildPromptBtn");
 const clearPromptBtn = document.getElementById("clearPromptBtn");
-const promptOutput = document.getElementById("promptOutput");
+
 
 buildPromptBtn.addEventListener("click", async () => {
   const selected = Array.from(document.querySelectorAll(".checkItem:checked"))
@@ -1123,10 +1231,81 @@ buildPromptBtn.addEventListener("click", async () => {
 
 clearPromptBtn.addEventListener("click", () => {
   document.querySelectorAll(".checkItem").forEach(item => item.checked = false);
-  promptOutput.value = "";
+ 
 });
 
+  async function copyPrecisionPrompt(promptObj, successMessage) {
+  const text = JSON.stringify(promptObj, null, 2);
 
+  try {
+    await navigator.clipboard.writeText(text);
+    incrementCounterAndRefresh();
+    alert(successMessage);
+  } catch (err) {
+    alert("⚠️ 無法自動複製，請改用瀏覽器手動複製。");
+  }
+}
+
+const buildQuote50Btn = document.getElementById("buildQuote50Btn");
+const buildReferenceBtn = document.getElementById("buildReferenceBtn");
+
+buildQuote50Btn.addEventListener("click", () => {
+  const quotePrompt = {
+    mode: "高中職小論文高精度細項檢查｜第3項引號50字精算",
+    task: [
+      "請依我上傳的小論文 PDF，逐頁檢查所有直接引文。",
+      "僅擷取「」與『』內文字。",
+      "僅列出計算後 N ≥ 11 的引文。",
+      "括號及括號內文字不列入計算。",
+      "標點符號不列入計算。",
+      "中文每一字 = 1 Token。",
+      "英文、數字、英數混合連續字串 = 1 Token。",
+      "必須逐 Token 標號，例如：(1)詞 (2)詞。",
+      "最後標號 N 即為字數。",
+      "N > 50 時標示：⚠ 超過 50 字。",
+      "不得進行作品評分、合格判定或內容修改建議。"
+    ],
+    output_request: [
+      "請輸出表格：頁碼｜原始引文｜Token標號｜字數N｜是否超過50字",
+      "若無符合條件之引文，請標示：未發現 N ≥ 11 的直接引文。",
+      "若 PDF 文字無法判讀，請標示：無法判讀，需人工確認。"
+    ],
+    reminder: "本指令僅用於格式輔助檢查，不作為評分、申訴或爭議依據。"
+  };
+
+  copyPrecisionPrompt(
+    quotePrompt,
+    "✅ 已複製「引號 50 字精算指令」！\n請按上方「開始進入完整小論文檢查」，貼到 GPT 後再上傳 PDF。"
+  );
+});
+
+buildReferenceBtn.addEventListener("click", () => {
+  const referencePrompt = {
+    mode: "高中職小論文高精度細項檢查｜參考文獻格式檢查",
+    task: [
+      "請依我上傳的小論文 PDF，逐筆檢查『陸、參考文獻』段落。",
+      "僅依 PDF 可見內容分析。",
+      "不得自行補齊資料。",
+      "不得推測缺漏資訊。",
+      "逐筆列出每一條參考文獻。",
+      "檢查每筆是否可觀察到作者、年代、篇名、來源。",
+      "檢查格式順序是否疑似符合常見參考文獻格式。",
+      "若格式不完整，僅標示：格式疑似缺漏。",
+      "不得進行作品評分、合格判定或內容品質評價。"
+    ],
+    output_request: [
+      "請輸出表格：R編號｜頁碼｜完整原文｜可觀察格式元素｜疑似問題｜需人工確認處",
+      "若找不到參考文獻段落，請標示：未發現『陸、參考文獻』段落。",
+      "若條目無法清楚分辨，請標示：無法判讀，需人工確認。"
+    ],
+    reminder: "本指令僅用於參考文獻格式輔助檢查，不作為評分、申訴或爭議依據。"
+  };
+
+  copyPrecisionPrompt(
+    referencePrompt,
+    "✅ 已複製「參考文獻格式檢查指令」！\n請按上方「開始進入完整小論文檢查」，貼到 GPT 後再上傳 PDF。"
+  );
+});
 
 
 readCounter();
