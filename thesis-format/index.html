@@ -1128,43 +1128,24 @@ function makeRid() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function getStableRid() {
-  const key = "counter_rid_v1";
-  const now = Date.now();
 
-  try {
-    const raw = sessionStorage.getItem(key);
-    if (raw) {
-      const obj = JSON.parse(raw);
-      if (obj && obj.rid && now - obj.ts < 3000) return obj.rid;
-    }
-  } catch (_) {}
+
+function incrementCounterAndRefresh() {
 
   const rid = makeRid();
 
-  try {
-    sessionStorage.setItem(key, JSON.stringify({ rid, ts: now }));
-  } catch (_) {}
+  const incUrl =
+    `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}&t=${Date.now()}`;
 
-  return rid;
-}
-
-let __incBusy = false;
-
-function incrementCounterAndRefresh() {
-  if (__incBusy) return;
-  __incBusy = true;
-
-  const rid = getStableRid();
-  const incUrl = `${COUNTER_API_BASE}?action=inc&rid=${encodeURIComponent(rid)}&t=${Date.now()}`;
-
-  fetch(incUrl, { cache: "no-store", keepalive: true })
+  fetch(incUrl, {
+    cache: "no-store",
+    keepalive: true
+  })
     .then((res) => res.json())
     .then(updateCounterDisplay)
-    .finally(() => {
-      setTimeout(() => { __incBusy = false; }, 1200);
-    });
+    .catch(() => {});
 }
+
 
 goGemBtn.onclick = () => {
   if (!termsAgree.checked) return;
